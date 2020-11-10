@@ -2,11 +2,17 @@ package cs10.apps.desktop.statsforspotify.model;
 
 import java.text.DecimalFormat;
 
-public class Song {
+public class Song implements Comparable<Song> {
     private Status status;
     private String name, artists, infoStatus;
     private int rank, change, previousRank;
     private long timestamp;
+
+    public Song(){ }
+
+    public Song(String name) {
+        this.setName(name);
+    }
 
     public int getPreviousRank() {
         return previousRank;
@@ -77,6 +83,7 @@ public class Song {
         if (infoStatus.isEmpty()){
             setStatus(Status.NOTHING);
         } else if (infoStatus.charAt(0) == 'T'){
+            setInfoStatus("NEW");
             setStatus(Status.NEW);
         } else {
             setChange(Integer.parseInt(infoStatus));
@@ -93,9 +100,18 @@ public class Song {
                 " (" + (getChange() > 0 ? "+" + getChange() : getChange()) + ")";
     }
 
-    @Override
-    public String toString() {
+    public String toStringForRanking() {
         return "#" + new DecimalFormat("#00").format(getRank()) + " - " + getName() +
                 " - " + getArtists() + " (" + (getChange() > 0 ? "+" + getChange() : getChange()) + ")";
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
+
+    @Override
+    public int compareTo(Song o) {
+        return this.getName().compareTo(o.getName());
     }
 }

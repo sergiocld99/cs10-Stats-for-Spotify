@@ -26,7 +26,7 @@ public class StatsFrame extends JFrame {
         setSize(800,600);
 
         String[] columnNames = new String[]{
-            "Icon", "Actual Rank", "Song Name", "Artists", "Change from Previous"
+            "Icon", "Rank", "Song Name", "Artists", "Status Info"
         };
 
         model = new RankingModel(columnNames, 0);
@@ -46,16 +46,18 @@ public class StatsFrame extends JFrame {
 
     private Object[] toRow(Song song){
         return new Object[]{IOUtils.getImageIcon(song.getStatus()), song.getRank(),
-                song.getName(), song.getArtists(), song.getChange()};
+                song.getName(), song.getArtists(), song.getInfoStatus()};
     }
 
 
     private void customizeTexts(){
         DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
         cellRenderer.setHorizontalAlignment(JLabel.CENTER);
-        //cellRenderer.setFont(new Font("Arial", Font.BOLD, 20));
 
-        // ignoramos la 0 porque es un icon
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(0);
+        table.getColumnModel().getColumn(2).setPreferredWidth(250);
+        table.getColumnModel().getColumn(3).setPreferredWidth(250);
 
         for (int i=1; i<model.getColumnCount(); i++){
             table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);

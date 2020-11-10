@@ -1,8 +1,6 @@
 package cs10.apps.desktop.statsforspotify.utils;
 
-import cs10.apps.desktop.statsforspotify.model.Ranking;
-import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.desktop.statsforspotify.model.Status;
+import cs10.apps.desktop.statsforspotify.model.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,8 +11,6 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class IOUtils {
     private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
@@ -90,7 +86,11 @@ public class IOUtils {
 
         File file = new File("logs//" + ranking.getCode() + ".txt");
         if (file.exists()){
-            System.err.println("File already exists, skipping writing");
+            JOptionPane.showMessageDialog(null,
+                    "This ranking and the one created at " +
+                            dateFormat.format(new Date(file.lastModified())) + " are the same",
+                    "IOUtils says...", JOptionPane.INFORMATION_MESSAGE
+                    );
             return;
         }
 
@@ -103,7 +103,7 @@ public class IOUtils {
         ranking.sortByDefault();
 
         for (Song s : ranking){
-            bufferedWriter.write(s.toString() + "\n");
+            bufferedWriter.write(s.toStringForRanking() + "\n");
             appendArtistLog(s, filepath);
         }
 
@@ -113,7 +113,7 @@ public class IOUtils {
 
     private static void appendArtistLog(Song song, String filepath) throws IOException {
         // Do not include invariant ranks
-        if (song.getChange() == 0) return;
+        if (song.getStatus() == Status.NOTHING) return;
 
         String[] artists = song.getArtists().split(",");
 
@@ -129,6 +129,53 @@ public class IOUtils {
             bufferedWriter.write(song.toStringWithoutArtists() + "\n");
             bufferedWriter.close();
             fileWriter.close();
+        }
+    }
+
+    public static Library getArtistsFromLogs() throws IOException {
+        Library library = new Library();
+
+        File logsDir = new File("logs//");
+        File[] rankFolders = logsDir.listFiles(File::isDirectory);
+        if (rankFolders != null){
+            for (int i=0; i<rankFolders.length; i++){
+                File[] logs = rankFolders[i].listFiles();
+                if (logs != null){
+                    for (File log : logs) {
+                        String name = log.getName().replace(".txt", "");
+                        Artist a = library.findByName(name);
+                        if (a == null) {
+                            a = new Artist();
+                            a.setName(name);
+                            updateSongList(log, a);
+                            library.add(a);
+                        }
+                        a.addScore(log.length(), i);
+                    }
+                }
+            }
+        }
+
+        return library;
+    }
+
+    private static void updateSongList(File file, Artist artist) throws IOException {
+        FileReader fileReader = new FileReader(file);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        String line;
+
+        while ((line = bufferedReader.readLine()) != null) {
+            String name = line.split("-")[4].trim();
+            int parenthesisIndex = name.indexOf("(");
+            try {
+                if (parenthesisIndex > 0){
+                    name = name.substring(0, parenthesisIndex).trim();
+                }
+                if (!artist.hasSong(name)) artist.addSong(name);
+            } catch (StringIndexOutOfBoundsException e) {
+                System.err.println("An error occurred with the song " + name +
+                        " on file " + file.getAbsolutePath());
+            }
         }
     }
 

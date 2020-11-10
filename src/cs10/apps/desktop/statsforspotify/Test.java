@@ -1,5 +1,7 @@
 package cs10.apps.desktop.statsforspotify;
 
+import cs10.apps.desktop.statsforspotify.model.Artist;
+import cs10.apps.desktop.statsforspotify.model.Library;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.utils.IOUtils;
 import cs10.apps.desktop.statsforspotify.view.StatsFrame;
@@ -15,9 +17,20 @@ public class Test {
             StatsFrame statsFrame = new StatsFrame(ranking);
             statsFrame.init();
             statsFrame.setVisible(true);
+
+            // Save and update logs
             IOUtils.saveFile(ranking);
+
+            // Select random
+            Library library = IOUtils.getArtistsFromLogs();
+            Artist random = library.selectRandomByScore();
+            JOptionPane.showMessageDialog(null, "I've selected this song: " +
+                            random.selectRandomSong() + " by " + random.getName().toUpperCase(),
+                    "Test says...", JOptionPane.QUESTION_MESSAGE);
+
         } catch (IOException e){
-            JOptionPane.showMessageDialog(new JTextField("Error"), e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage(),
+                    "Test says...", JOptionPane.WARNING_MESSAGE);
         }
     }
 }

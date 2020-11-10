@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="Stats for Spotify:jar">
+    <output-path>$PROJECT_DIR$/</output-path>
+    <root id="archive" name="Stats for Spotify.jar">
+      <element id="module-output" name="Stats for Spotify" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/jsoup-1.13.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

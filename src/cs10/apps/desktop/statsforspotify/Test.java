@@ -23,8 +23,13 @@ public class Test {
                 return;
             }
 
-            // Select random
+            // Load library with all data
             Library library = IOUtils.getArtistsFromLogs();
+            for (Artist a : library){
+                System.out.println(a.toStringDetailed());
+            }
+
+            // Select random to show
             Artist random = library.selectRandomByScore();
             JOptionPane.showMessageDialog(null, "I've selected this song: " +
                             random.selectRandomSong() + " by " + random.getName().toUpperCase(),

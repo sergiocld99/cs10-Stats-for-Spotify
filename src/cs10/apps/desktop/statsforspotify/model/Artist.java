@@ -61,6 +61,11 @@ public class Artist {
         return timesOn[index];
     }
 
+    public String toStringDetailed(){
+        return getName() + " has a recent score of " + getRecentScore() + ". Times On: " +
+                Arrays.toString(timesOn);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

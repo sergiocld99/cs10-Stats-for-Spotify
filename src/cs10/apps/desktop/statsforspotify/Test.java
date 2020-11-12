@@ -19,7 +19,9 @@ public class Test {
             statsFrame.setVisible(true);
 
             // Save and update logs
-            IOUtils.saveFile(ranking);
+            if (IOUtils.saveFile(ranking)){
+                return;
+            }
 
             // Select random
             Library library = IOUtils.getArtistsFromLogs();

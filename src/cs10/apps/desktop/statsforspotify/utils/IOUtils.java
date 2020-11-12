@@ -72,7 +72,7 @@ public class IOUtils {
         return sb;
     }
 
-    public static void saveFile(Ranking ranking) throws IOException {
+    public static boolean saveFile(Ranking ranking) throws IOException {
         String filteredTitle = ranking.getTitle().substring(
                 ranking.getTitle().indexOf("(")+1,ranking.getTitle().indexOf(")"));
         String filepath = "logs//" + filteredTitle + "//";
@@ -91,7 +91,7 @@ public class IOUtils {
                             dateFormat.format(new Date(file.lastModified())) + " are the same",
                     "IOUtils says...", JOptionPane.INFORMATION_MESSAGE
                     );
-            return;
+            return false;
         }
 
         FileWriter fileWriter = new FileWriter(file);
@@ -109,6 +109,7 @@ public class IOUtils {
 
         bufferedWriter.close();
         fileWriter.close();
+        return true;
     }
 
     private static void appendArtistLog(Song song, String filepath) throws IOException {

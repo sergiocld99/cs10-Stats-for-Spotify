@@ -6,10 +6,12 @@ public class Artist {
     private String name;
     private final List<Song> songs;
     private final long[] scores;
+    private final int[] timesOn;
 
     public Artist() {
         this.songs = new ArrayList<>();
         this.scores = new long[3];
+        this.timesOn = new int[5];
     }
 
     public String getName() {
@@ -49,6 +51,14 @@ public class Artist {
 
     public void sortSongs(){
         Collections.sort(songs);
+    }
+
+    public void addTimeOn(int rank){
+        this.timesOn[(rank-1)/10]++;
+    }
+
+    public int getTimesOn(int index){
+        return timesOn[index];
     }
 
     @Override

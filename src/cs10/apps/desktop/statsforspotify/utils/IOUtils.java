@@ -98,8 +98,8 @@ public class IOUtils {
         BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         bufferedWriter.write(ranking.getTitle() + " - ");
         bufferedWriter.write(dateFormat.format(new Date(System.currentTimeMillis())) + "\n");
-        bufferedWriter.write("biggest gain: " + ranking.getBiggestGain() + "\n");
-        bufferedWriter.write("biggest loss: " + ranking.getBiggestLoss() + "\n\n");
+        bufferedWriter.write("biggest gain: " + ranking.getBiggestGain().toStringForRanking() + "\n");
+        bufferedWriter.write("biggest loss: " + ranking.getBiggestLoss().toStringForRanking() + "\n\n");
         ranking.sortByDefault();
 
         for (Song s : ranking){
@@ -148,7 +148,7 @@ public class IOUtils {
                         if (a == null) {
                             a = new Artist();
                             a.setName(name);
-                            updateSongList(log, a);
+                            updateArtist(log, a);
                             library.add(a);
                         }
                         a.addScore(log.length(), i);
@@ -160,21 +160,27 @@ public class IOUtils {
         return library;
     }
 
-    private static void updateSongList(File file, Artist artist) throws IOException {
+    private static void updateArtist(File file, Artist artist) throws IOException {
         FileReader fileReader = new FileReader(file);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         String line;
 
         while ((line = bufferedReader.readLine()) != null) {
-            String name = line.split("-")[4].trim();
+            String[] params = line.split(" - ");
+            String rank = params[1].replace("#", "").trim();
+            String name = params[2].trim();
             int parenthesisIndex = name.indexOf("(");
             try {
                 if (parenthesisIndex > 0){
                     name = name.substring(0, parenthesisIndex).trim();
                 }
                 if (!artist.hasSong(name)) artist.addSong(name);
+                artist.addTimeOn(Integer.parseInt(rank));
             } catch (StringIndexOutOfBoundsException e) {
                 System.err.println("An error occurred with the song " + name +
+                        " on file " + file.getAbsolutePath());
+            } catch (NumberFormatException e){
+                System.err.println("An error occurred with the rank " + rank +
                         " on file " + file.getAbsolutePath());
             }
         }

@@ -25,14 +25,12 @@ public class Test {
 
             // Load library with all data
             Library library = IOUtils.getArtistsFromLogs();
-            for (Artist a : library){
-                System.out.println(a.toStringDetailed());
-            }
 
             // Select random to show
             Artist random = library.selectRandomByScore();
             JOptionPane.showMessageDialog(null, "I've selected this song: " +
-                            random.selectRandomSong() + " by " + random.getName().toUpperCase(),
+                            random.selectRandomSong() + " by " + random.getName().toUpperCase() +
+                            ". \n\n" + random.getTimesOnDetails(),
                     "Test says...", JOptionPane.QUESTION_MESSAGE);
 
         } catch (IOException e){

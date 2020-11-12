@@ -13,21 +13,24 @@ public class Test {
 
     public static void main(String[] args) {
         try {
+            // Load new data
             Ranking ranking = IOUtils.parseSongs("Top Tracks - Stats for Spotify.html");
-            StatsFrame statsFrame = new StatsFrame(ranking);
-            statsFrame.init();
-            statsFrame.setVisible(true);
 
             // Save and update logs
-            if (IOUtils.saveFile(ranking)){
-                return;
-            }
+            IOUtils.saveFile(ranking);
 
             // Load library with all data
             Library library = IOUtils.getArtistsFromLogs();
 
+            // Show Main UI
+            StatsFrame statsFrame = new StatsFrame(ranking, library);
+            statsFrame.init();
+            statsFrame.setVisible(true);
+
             // Select random to show
             Artist random = library.selectRandomByScore();
+            if (random == null) return;
+
             JOptionPane.showMessageDialog(null, "I've selected this song: " +
                             random.selectRandomSong() + " by " + random.getName().toUpperCase() +
                             ". \n\n" + random.getTimesOnDetails(),

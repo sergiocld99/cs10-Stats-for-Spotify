@@ -1,5 +1,7 @@
 package cs10.apps.desktop.statsforspotify.view;
 
+import cs10.apps.desktop.statsforspotify.model.Artist;
+import cs10.apps.desktop.statsforspotify.model.Library;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.utils.IOUtils;
@@ -7,17 +9,18 @@ import cs10.apps.desktop.statsforspotify.utils.IOUtils;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class StatsFrame extends JFrame {
     private final Ranking ranking;
+    private final Library library;
     private RankingModel model;
     private JTable table;
 
-    // SORT BUTTONS
-    //JButton btnSort1, btnSort2, btnSort3, btnSort4, btnSort5;
-
-    public StatsFrame(Ranking ranking){
+    public StatsFrame(Ranking ranking, Library library){
         this.ranking = ranking;
+        this.library = library;
     }
 
     public void init(){
@@ -33,6 +36,15 @@ public class StatsFrame extends JFrame {
         table = new JTable(model);
         table.setRowHeight(50);
         table.setAutoCreateRowSorter(true);
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
+                String mainName = artistsNames.split(",")[0];
+                Artist artist = library.findByName(mainName.toLowerCase());
+                if (artist != null) openArtistWindow(artist);
+            }
+        });
         customizeTexts();
 
         for (Song s : ranking){
@@ -62,5 +74,11 @@ public class StatsFrame extends JFrame {
         for (int i=1; i<model.getColumnCount(); i++){
             table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
         }
+    }
+
+    private void openArtistWindow(Artist artist){
+        ArtistFrame artistFrame = new ArtistFrame(artist);
+        artistFrame.init();
+        artistFrame.setVisible(true);
     }
 }

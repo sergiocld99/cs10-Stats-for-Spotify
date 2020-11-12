@@ -9,6 +9,11 @@ public class RankingModel extends DefaultTableModel {
     }
 
     @Override
+    public boolean isCellEditable(int row, int column) {
+        return false;
+    }
+
+    @Override
     public Class<?> getColumnClass(int columnIndex) {
         return this.getValueAt(0, columnIndex).getClass();
     }

@@ -57,6 +57,10 @@ public class Artist {
         this.timesOn[(rank-1)/10]++;
     }
 
+    public int getTimesOn(int index){
+        return timesOn[index];
+    }
+
     public String getTimesOnDetails(){
         int max = 0, maxIndex = 0, sum = 0;
 
@@ -68,7 +72,7 @@ public class Artist {
             }
         }
 
-        return "The artist has been between rank #" + (maxIndex * 10 + 1) + " and " +
+        return "The artist has been between rank #" + (maxIndex * 10 + 1) + " and #" +
                 ((maxIndex + 1) * 10) + " the " + (max * 100 / sum) + "% of their time";
     }
 

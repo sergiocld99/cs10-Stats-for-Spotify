@@ -146,9 +146,9 @@ public class OldIOUtils {
                         if (a == null) {
                             a = new Artist();
                             a.setName(name);
-                            updateArtist(log, a);
                             library.add(a);
                         }
+                        updateArtist(log, a);
                         a.addScore(log.length(), i);
                     }
                 }

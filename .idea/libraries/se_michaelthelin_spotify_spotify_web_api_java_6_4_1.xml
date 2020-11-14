@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="se.michaelthelin.spotify:spotify-web-api-java:6.4.1" type="repository">
+    <properties maven-id="se.michaelthelin.spotify:spotify-web-api-java:6.4.1" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/se/michaelthelin/spotify/spotify-web-api-java/6.4.1/spotify-web-api-java-6.4.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-databind/2.11.2/jackson-databind-2.11.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-annotations/2.11.2/jackson-annotations-2.11.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.11.2/jackson-core-2.11.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.8.6/gson-2.8.6.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/neovisionaries/nv-i18n/1.27/nv-i18n-1.27.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/httpcomponents/client5/httpclient5-cache/5.0.3/httpclient5-cache-5.0.3.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/httpcomponents/client5/httpclient5/5.0.3/httpclient5-5.0.3.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/httpcomponents/core5/httpcore5/5.0.2/httpcore5-5.0.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/httpcomponents/core5/httpcore5-h2/5.0.2/httpcore5-h2-5.0.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.13/commons-codec-1.13.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

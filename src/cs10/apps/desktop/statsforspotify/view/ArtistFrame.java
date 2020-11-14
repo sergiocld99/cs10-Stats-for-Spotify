@@ -73,6 +73,7 @@ public class ArtistFrame extends JFrame {
         gbc.weighty = 1.0;
         gbc.insets = new Insets(0, 30, 0, 30);
         pContenedorPrincipal.add(pContenedorHistograma, gbc);
+        setResizable(false);
         pack();
     }
 }

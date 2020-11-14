@@ -12,7 +12,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class IOUtils {
+public class OldIOUtils {
     private static final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
     public static Ranking parseSongs(String filename) throws IOException {
@@ -72,7 +72,7 @@ public class IOUtils {
         return sb;
     }
 
-    public static boolean saveFile(Ranking ranking) throws IOException {
+    public static void saveFile(Ranking ranking) throws IOException {
         String filteredTitle = ranking.getTitle().substring(
                 ranking.getTitle().indexOf("(")+1,ranking.getTitle().indexOf(")"));
         String filepath = "logs//" + filteredTitle + "//";
@@ -91,7 +91,6 @@ public class IOUtils {
                             dateFormat.format(new Date(file.lastModified())) + " are the same",
                     "IOUtils says...", JOptionPane.INFORMATION_MESSAGE
                     );
-            return false;
         }
 
         FileWriter fileWriter = new FileWriter(file);
@@ -109,20 +108,19 @@ public class IOUtils {
 
         bufferedWriter.close();
         fileWriter.close();
-        return true;
     }
 
-    private static void appendArtistLog(Song song, String filepath) throws IOException {
+    public static void appendArtistLog(Song song, String filepath) throws IOException {
         // Do not include invariant ranks
         if (song.getStatus() == Status.NOTHING) return;
 
-        String[] artists = song.getArtists().split(",");
+        String[] artists = song.getArtists().split(", ");
 
         for (String a : artists){
             // FIX: Axwell /\ Ingrosso
-            a = a.replace("/", "").replace("\\", "");
+            a = a.replace("/\\", "");
 
-            File file = new File( filepath + a.trim().toLowerCase() + ".txt");
+            File file = new File( filepath + a.trim() + ".txt");
             FileWriter fileWriter = new FileWriter(file, true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 

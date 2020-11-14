@@ -1,5 +1,7 @@
 package cs10.apps.web.statsforspotify;
 
+import cs10.apps.desktop.statsforspotify.model.Library;
+import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
@@ -23,14 +25,15 @@ public class Test {
             // Attempt reading previous code
             String code = IOUtils.retrieveLastCode();
 
-            // Ask for permission
-            int result = OptionPanes.askForPermission();
-            if (result != 0) System.exit(2);
-
-            // Open browser
+            // Ask and open browser
             if (code == null || code.isEmpty()){
+                int result = OptionPanes.askForPermission();
+                if (result != 0) System.exit(2);
                 apiUtils.openGrantPermissionPage();
-            } else apiUtils.openReconfirmPermissionPage();
+            } else {
+                OptionPanes.showPleaseLogin();
+                apiUtils.openReconfirmPermissionPage();
+            }
 
             // Await for code
             Socket socket = serverSocket.accept();
@@ -46,8 +49,11 @@ public class Test {
             OptionPanes.showCanCloseBrowser();
             socket.close();
 
+            // Load saved library (old version)
+            Library library = OldIOUtils.getArtistsFromLogs();
+
             // Request something
-            StatsFrame statsFrame = new StatsFrame(apiUtils);
+            StatsFrame statsFrame = new StatsFrame(apiUtils, library);
             statsFrame.init();
         } else {
             OptionPanes.showCredentialsError();

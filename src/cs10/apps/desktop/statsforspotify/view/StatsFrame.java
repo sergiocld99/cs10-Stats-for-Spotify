@@ -4,7 +4,7 @@ import cs10.apps.desktop.statsforspotify.model.Artist;
 import cs10.apps.desktop.statsforspotify.model.Library;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.desktop.statsforspotify.utils.IOUtils;
+import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -57,7 +57,7 @@ public class StatsFrame extends JFrame {
     }
 
     private Object[] toRow(Song song){
-        return new Object[]{IOUtils.getImageIcon(song.getStatus()), song.getRank(),
+        return new Object[]{OldIOUtils.getImageIcon(song.getStatus()), song.getRank(),
                 song.getName(), song.getArtists(), song.getInfoStatus()};
     }
 

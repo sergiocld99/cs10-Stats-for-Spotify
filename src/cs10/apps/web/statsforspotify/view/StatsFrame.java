@@ -1,42 +1,42 @@
 package cs10.apps.web.statsforspotify.view;
 
-import cs10.apps.desktop.statsforspotify.model.Ranking;
-import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.desktop.statsforspotify.utils.IOUtils;
+import cs10.apps.desktop.statsforspotify.model.*;
+import cs10.apps.desktop.statsforspotify.view.ArtistFrame;
 import cs10.apps.desktop.statsforspotify.view.RankingModel;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.utils.IOUtils;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 public class StatsFrame extends JFrame {
     private final ApiUtils apiUtils;
+    private final Library library;
     private RankingModel model;
     private Ranking ranking;
     private JTable table;
+    private String username;
 
-    public StatsFrame(ApiUtils apiUtils) throws HeadlessException {
+    public StatsFrame(ApiUtils apiUtils, Library library) throws HeadlessException {
         this.apiUtils = apiUtils;
+        this.library = library;
     }
 
     public void init() throws Exception {
-        if (apiUtils != null) {
-            setTitle(apiUtils.getUser().getDisplayName() + " - Your Spotify Stats");
-        } else return;
-
+        username = apiUtils.getUser().getDisplayName();
+        setTitle(username + " - Your Spotify Stats");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(800, 600);
+        setSize(900, 600);
 
         // Menu Bar
         JMenuBar menuBar = new JMenuBar();
@@ -45,7 +45,11 @@ public class StatsFrame extends JFrame {
         JMenuItem jmiSave = new JMenuItem("Save");
         JMenuItem jmiSaveAs = new JMenuItem("Save As...");
         jmiOpen.addActionListener(e -> System.out.println("Open pressed"));
-        jmiSave.addActionListener(e -> System.out.println("Saved as " + ranking.getCode() + ".txt"));
+        jmiSave.addActionListener(e -> {
+            if (IOUtils.saveRanking(ranking, true)){
+                OptionPanes.showSavedSuccessfully();
+            } else OptionPanes.showSaveError();
+        });
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
         fileMenu.add(jmiOpen);
         fileMenu.add(jmiSave);
@@ -60,9 +64,9 @@ public class StatsFrame extends JFrame {
         JButton buttonShortTerm = new JButton(TopTerms.SHORT.getDescription());
         JButton buttonMediumTerm = new JButton(TopTerms.MEDIUM.getDescription());
         JButton buttonLongTerm = new JButton(TopTerms.LONG.getDescription());
-        buttonShortTerm.addActionListener(e -> show(apiUtils.getRanking(TopTerms.SHORT)));
-        buttonMediumTerm.addActionListener(e -> show(apiUtils.getRanking(TopTerms.MEDIUM)));
-        buttonLongTerm.addActionListener(e -> show(apiUtils.getRanking(TopTerms.LONG)));
+        buttonShortTerm.addActionListener(e -> show(TopTerms.SHORT));
+        buttonMediumTerm.addActionListener(e -> show(TopTerms.MEDIUM));
+        buttonLongTerm.addActionListener(e -> show(TopTerms.LONG));
         buttonsPanel.setBorder(new EmptyBorder(8, 16, 0, 16));
         buttonsPanel.add(buttonShortTerm);
         buttonsPanel.add(buttonMediumTerm);
@@ -70,12 +74,21 @@ public class StatsFrame extends JFrame {
 
         // Table
         String[] columnNames = new String[]{
-                "Album", "Rank", "Song Name", "Artists", "Popularity"
+                "Status", "Album", "Rank", "Song Name", "Artists", "Popularity"
         };
 
         model = new RankingModel(columnNames, 0);
         table = new JTable(model);
         table.setRowHeight(50);
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 4);
+                String mainName = artistsNames.split(", ")[0];
+                Artist artist = library.findByName(mainName);
+                if (artist != null) openArtistWindow(artist);
+            }
+        });
         customizeTexts();
 
         // Add Components
@@ -90,17 +103,26 @@ public class StatsFrame extends JFrame {
         cellRenderer.setHorizontalAlignment(JLabel.CENTER);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setPreferredWidth(0);
-        table.getColumnModel().getColumn(2).setPreferredWidth(250);
+        table.getColumnModel().getColumn(1).setPreferredWidth(50);
+        table.getColumnModel().getColumn(2).setPreferredWidth(0);
         table.getColumnModel().getColumn(3).setPreferredWidth(250);
+        table.getColumnModel().getColumn(4).setPreferredWidth(250);
 
-        for (int i=1; i<model.getColumnCount(); i++){
+        for (int i=2; i<model.getColumnCount(); i++){
             table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
         }
     }
 
-    private void show(Ranking ranking){
-        this.ranking = ranking;
+    private void show(TopTerms term) {
+        setTitle("Please wait...");
+        this.ranking = apiUtils.getRanking(term);
+        this.ranking.setTitle(term.getDescription());
+
+        // auto save
+        IOUtils.saveRanking(ranking, false);
+
+        // load previous
+        this.loadChanges(term);
 
         while (model.getRowCount() > 0){
             model.removeRow(0);
@@ -109,10 +131,13 @@ public class StatsFrame extends JFrame {
         for (Song s : ranking){
             model.addRow(toRow(s));
         }
+
+        setTitle(username + " - " + term.getDescription());
     }
 
     private Object[] toRow(Song song){
-        return new Object[]{downloadImage(song.getImageUrl()), song.getRank(),
+        return new Object[]{IOUtils.getImageIcon(song.getStatus()),
+                downloadImage(song.getImageUrl()), song.getRank(),
                 song.getName(), song.getArtists(), song.getPopularity()};
     }
 
@@ -132,8 +157,23 @@ public class StatsFrame extends JFrame {
         return null;
     }
 
-    public static void main(String[] args) throws Exception {
-        StatsFrame statsFrame = new StatsFrame(null);
-        statsFrame.init();
+    private void loadChanges(TopTerms term){
+        Ranking previousR = IOUtils.getLastSavedRanking(term);
+        if (previousR == null) return;
+
+        for (Song s : ranking){
+            Song prevS = previousR.getSong(s.getId());
+            if (prevS == null) s.setStatus(Status.NEW);
+            else {
+                s.setPreviousRank(prevS.getRank());
+                s.validateWeb();
+            }
+        }
+    }
+
+    private void openArtistWindow(Artist artist){
+        ArtistFrame artistFrame = new ArtistFrame(artist);
+        artistFrame.init();
+        artistFrame.setVisible(true);
     }
 }

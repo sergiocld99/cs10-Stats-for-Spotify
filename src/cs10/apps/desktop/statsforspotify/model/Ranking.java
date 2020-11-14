@@ -54,4 +54,14 @@ public class Ranking extends ArrayList<Song> {
         this.sortByChange();
         return get(0);
     }
+
+    public Song getSong(String id){
+        for (Song s : this){
+            if (s.getId().equals(id)){
+                return s;
+            }
+        }
+
+        return null;
+    }
 }

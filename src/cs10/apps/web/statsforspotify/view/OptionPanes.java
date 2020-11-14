@@ -22,9 +22,27 @@ public class OptionPanes {
                 Constants.APP_NAME, JOptionPane.YES_NO_OPTION);
     }
 
+    public static void showPleaseLogin(){
+        JOptionPane.showMessageDialog(null,
+                "Welcome again! Please, log in to continue",
+                Constants.APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+    }
+
     public static void showCanCloseBrowser(){
         JOptionPane.showMessageDialog(null,
                 "Authentication successful, you can close the browser :)",
                 Constants.APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public static void showSavedSuccessfully(){
+        JOptionPane.showMessageDialog(null,
+                "The actual ranking was saved successfully",
+                Constants.APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public static void showSaveError(){
+        JOptionPane.showMessageDialog(null,
+                "Unable to save file",
+                Constants.APP_NAME, JOptionPane.WARNING_MESSAGE);
     }
 }

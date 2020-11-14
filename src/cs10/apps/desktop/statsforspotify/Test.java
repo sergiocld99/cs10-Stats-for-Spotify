@@ -3,7 +3,7 @@ package cs10.apps.desktop.statsforspotify;
 import cs10.apps.desktop.statsforspotify.model.Artist;
 import cs10.apps.desktop.statsforspotify.model.Library;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
-import cs10.apps.desktop.statsforspotify.utils.IOUtils;
+import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.desktop.statsforspotify.view.StatsFrame;
 
 import javax.swing.*;
@@ -14,13 +14,13 @@ public class Test {
     public static void main(String[] args) {
         try {
             // Load new data
-            Ranking ranking = IOUtils.parseSongs("Top Tracks - Stats for Spotify.html");
+            Ranking ranking = OldIOUtils.parseSongs("Top Tracks - Stats for Spotify.html");
 
             // Save and update logs
-            IOUtils.saveFile(ranking);
+            OldIOUtils.saveFile(ranking);
 
             // Load library with all data
-            Library library = IOUtils.getArtistsFromLogs();
+            Library library = OldIOUtils.getArtistsFromLogs();
 
             // Show Main UI
             StatsFrame statsFrame = new StatsFrame(ranking, library);

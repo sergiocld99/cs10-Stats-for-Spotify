@@ -5,16 +5,16 @@ import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
-import com.wrapper.spotify.model_objects.specification.*;
+import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
+import com.wrapper.spotify.model_objects.specification.Paging;
+import com.wrapper.spotify.model_objects.specification.Track;
+import com.wrapper.spotify.model_objects.specification.User;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 import org.apache.hc.core5.http.ParseException;
-import retrofit2.Retrofit;
-import retrofit2.Retrofit.Builder;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.awt.*;
 import java.io.IOException;
@@ -25,7 +25,6 @@ public class ApiUtils {
     private final boolean ready;
 
     // This URI should equal to the saved URI on the App Dashboard
-    private static final URI redirectUri0 = SpotifyHttpManager.makeUri("http://example.com/callback/");
     private static final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost:8080");
 
 
@@ -106,8 +105,10 @@ public class ApiUtils {
                 song.setName(tracks[i].getName());
                 song.setArtists(combineArtists(tracks[i].getArtists()));
                 song.setRank(i+1);
+                song.setTimestamp(System.currentTimeMillis());
                 song.setStatus(Status.NEW);
                 song.setImageUrl(tracks[i].getAlbum().getImages()[0].getUrl());
+                song.setId(tracks[i].getId());
                 song.setPopularity(tracks[i].getPopularity());
                 ranking.add(song);
             }

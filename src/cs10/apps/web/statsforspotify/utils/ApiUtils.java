@@ -5,9 +5,12 @@ import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
-import com.wrapper.spotify.model_objects.specification.Artist;
-import com.wrapper.spotify.model_objects.specification.User;
+import com.wrapper.spotify.model_objects.specification.*;
+import cs10.apps.desktop.statsforspotify.model.Ranking;
+import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.web.statsforspotify.app.Private;
+import cs10.apps.web.statsforspotify.model.TopTerms;
 import org.apache.hc.core5.http.ParseException;
 import retrofit2.Retrofit;
 import retrofit2.Retrofit.Builder;
@@ -48,6 +51,10 @@ public class ApiUtils {
         }
     }
 
+    public boolean isReady() {
+        return ready;
+    }
+
     public void openGrantPermissionPage() throws IOException {
         URI uri = spotifyApi.authorizationCodeUri()
                 .scope("user-top-read")
@@ -65,22 +72,39 @@ public class ApiUtils {
         spotifyApi.setRefreshToken(credentials.getRefreshToken());
     }
 
-    public boolean isReady() {
-        return ready;
-    }
-
-    /**
-     * @param id the Spotify URI without the words spotify:artist
-     */
-    public Artist getArtist(String id) throws Exception {
-        return spotifyApi.getArtist(id).build().execute();
-    }
-
-    public void getRanking() throws Exception{
-        System.out.println(spotifyApi.getUsersTopTracks().build().execute());
-    }
-
     public User getUser() throws Exception {
         return spotifyApi.getCurrentUsersProfile().build().execute();
+    }
+
+    public Ranking getRanking(TopTerms term){
+        Ranking ranking = new Ranking();
+
+        try {
+            Paging<Track> paging = spotifyApi.getUsersTopTracks()
+                    .time_range(term.getKey()).limit(50).build().execute();
+
+            Track[] tracks = paging.getItems();
+
+            for (int i=0; i<paging.getTotal(); i++){
+                Song song = new Song();
+                song.setName(tracks[i].getName());
+                song.setArtists(combineArtists(tracks[i].getArtists()));
+                song.setRank(i+1);
+                song.setStatus(Status.NEW);
+                song.setImageUrl(tracks[i].getAlbum().getImages()[0].getUrl());
+                song.setPopularity(tracks[i].getPopularity());
+                ranking.add(song);
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return ranking;
+    }
+
+    private String combineArtists(ArtistSimplified[] arr){
+        StringBuilder sb = new StringBuilder(arr[0].getName());
+        for (int i=1; i<arr.length; i++) sb.append(", ").append(arr[i].getName());
+        return sb.toString();
     }
 }

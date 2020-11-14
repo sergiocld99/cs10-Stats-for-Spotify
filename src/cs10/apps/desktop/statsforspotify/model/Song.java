@@ -1,5 +1,6 @@
 package cs10.apps.desktop.statsforspotify.model;
 
+import java.awt.*;
 import java.text.DecimalFormat;
 
 public class Song implements Comparable<Song> {
@@ -7,6 +8,10 @@ public class Song implements Comparable<Song> {
     private String name, artists, infoStatus;
     private int rank, change, previousRank;
     private long timestamp;
+
+    // For web
+    private String imageUrl;
+    private int popularity;
 
     public Song(){ }
 
@@ -76,6 +81,22 @@ public class Song implements Comparable<Song> {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public int getPopularity() {
+        return popularity;
+    }
+
+    public void setPopularity(int popularity) {
+        this.popularity = popularity;
     }
 
     // PERSONAL METHODS

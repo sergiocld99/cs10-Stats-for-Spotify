@@ -22,13 +22,9 @@ public class OptionPanes {
                 Constants.APP_NAME, JOptionPane.YES_NO_OPTION);
     }
 
-    /**
-     * @return -1 if the user closed the window,
-     * 0 if the user pressed the button
-     */
-    public static int confirmPermissionGrant(){
-        return JOptionPane.showConfirmDialog(null,
-                "Please, press the following button when you grant the permission",
-                Constants.APP_NAME, JOptionPane.DEFAULT_OPTION);
+    public static void showCanCloseBrowser(){
+        JOptionPane.showMessageDialog(null,
+                "Authentication successful, you can close the browser :)",
+                Constants.APP_NAME, JOptionPane.INFORMATION_MESSAGE);
     }
 }

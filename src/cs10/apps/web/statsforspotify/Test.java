@@ -1,6 +1,7 @@
 package cs10.apps.web.statsforspotify;
 
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.StatsFrame;
 
@@ -19,11 +20,17 @@ public class Test {
         // Spotify Connection
         ApiUtils apiUtils = new ApiUtils();
         if (apiUtils.isReady()){
+            // Attempt reading previous code
+            String code = IOUtils.retrieveLastCode();
+
+            // Ask for permission
             int result = OptionPanes.askForPermission();
             if (result != 0) System.exit(2);
 
             // Open browser
-            apiUtils.openGrantPermissionPage();
+            if (code == null || code.isEmpty()){
+                apiUtils.openGrantPermissionPage();
+            } else apiUtils.openReconfirmPermissionPage();
 
             // Await for code
             Socket socket = serverSocket.accept();
@@ -31,10 +38,13 @@ public class Test {
             // Read code (it's in the first line)
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String line = br.readLine();
-            String code = line.split(" ")[1].replace("/?code=","");
+            code = line.split(" ")[1].replace("/?code=","");
+            IOUtils.writeCode(code);
 
             // Update
             apiUtils.refreshToken(code);
+            OptionPanes.showCanCloseBrowser();
+            socket.close();
 
             // Request something
             StatsFrame statsFrame = new StatsFrame(apiUtils);

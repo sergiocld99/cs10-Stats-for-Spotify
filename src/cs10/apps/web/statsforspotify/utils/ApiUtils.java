@@ -66,10 +66,26 @@ public class ApiUtils {
         }
     }
 
-    public void refreshToken(String code) throws Exception {
-        AuthorizationCodeCredentials credentials = spotifyApi.authorizationCode(code).build().execute();
-        spotifyApi.setAccessToken(credentials.getAccessToken());
-        spotifyApi.setRefreshToken(credentials.getRefreshToken());
+    public void openReconfirmPermissionPage() throws IOException {
+        URI uri = spotifyApi.authorizationCodeUri()
+                .scope("user-top-read")
+                .build().execute();
+
+        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+            Desktop.getDesktop().browse(uri);
+        }
+    }
+
+    public void refreshToken(String code) {
+        try {
+            System.out.println("Attempting to connect with " + code);
+            AuthorizationCodeCredentials credentials = spotifyApi.authorizationCode(code).build().execute();
+            System.out.println("These credentials expires in " + credentials.getExpiresIn());
+            spotifyApi.setAccessToken(credentials.getAccessToken());
+            spotifyApi.setRefreshToken(credentials.getRefreshToken());
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public User getUser() throws Exception {

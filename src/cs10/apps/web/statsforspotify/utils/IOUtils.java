@@ -172,7 +172,7 @@ public class IOUtils {
             }
         }
 
-        try (PrintWriter pw = new PrintWriter(new FileWriter(file))){
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file, true))){
             pw.print(dateFormat.format(new Date(System.currentTimeMillis())));
             pw.println(" -- " + song.getRank() + " -- " + song.getName() + " -- " + song.getArtists());
         } catch (FileNotFoundException e){

@@ -20,13 +20,17 @@ public class PlaybackService {
     private final JTable jTable;
     private final JFrame jFrame;
     private Ranking ranking;
-    private boolean running, allowWaiting;
+    private boolean running;
     private final DecimalFormat decimalFormat = new DecimalFormat("#00");
 
     // Version 3
     private Thread thread;
     private JProgressBar progressBar;
     private int time;
+
+    // Version 4
+    private Song lastSelectedSong;
+    private int magicNumber;
 
     public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame, JProgressBar progressBar) {
         this.apiUtils = apiUtils;
@@ -57,60 +61,66 @@ public class PlaybackService {
         try {
             Track track = (Track) currentlyPlaying.getItem();
             jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
-            selectCurrentRow(track.getId());
+            selectCurrentRow(track.getId(), track.getName().charAt(0)-'A'+1);
 
             time = currentlyPlaying.getProgress_ms() / 1000;
             int maximum = track.getDurationMs() / 1000;
             progressBar.setMaximum(maximum);
+            running = true;
 
             ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
             scheduledExecutorService.scheduleAtFixedRate(() -> {
-                running = true;
                 progressBar.setValue(time);
                 int seconds = time % 60;
                 int minutes = time / 60;
                 progressBar.setString(minutes + ":" + decimalFormat.format(seconds));
-                if (time >= maximum){
+                if (time >= maximum || !running){
                     scheduledExecutorService.shutdown();
-                    allowWaiting = true;
                     getCurrentData();
                 } else time++;
             }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
-            if (allowWaiting){
-                allowWaiting = false;
-                retryIn15();
-            } else {
-                jFrame.setTitle("(C) 2020 - Calderón Sergio - Personal Chart History");
-                OptionPanes.showPlaybackStopped();
-                running = false;
-            }
+            retryIn30();
         }
     }
 
-    private void retryIn15(){
+    private void retryIn30(){
         try {
-            int secondsToSleep = new Random().nextInt(60) + 15;
-            jFrame.setTitle("Retrying in " + secondsToSleep + " seconds...");
-            Thread.sleep(secondsToSleep * 1000);
+            jFrame.setTitle("Retrying in " + 30 + " seconds...");
+            Thread.sleep(30000);
             getCurrentData();
         } catch (InterruptedException e){
             e.printStackTrace();
         }
     }
 
-    private void selectCurrentRow(String id){
+    private void selectCurrentRow(String id, int firstCharNumber){
         Song song = ranking.getSong(id);
         if (song != null){
+            lastSelectedSong = song;
+            magicNumber = 0;
+
             System.out.println("Current Song Rank: " + song.getRank());
             int i = song.getRank()-1;
             jTable.getSelectionModel().setSelectionInterval(i,i);
             scrollToCenter(jTable, i, 4);
-            //Rectangle cellRect = jTable.getCellRect(i, 0, true);
-            //jTable.scrollRectToVisible(cellRect);
             jFrame.repaint();
-        } else System.err.println("Current Song is not in ranking");
+        } else {
+            System.err.println("Current Song is not in ranking");
+            if (lastSelectedSong != null){
+                magicNumber += firstCharNumber;
+                System.out.println("Current magic number: " + magicNumber);
+                if (magicNumber > 30){
+                    int rankSelected = (int) (lastSelectedSong.getRank() +
+                            magicNumber * 0.01 * lastSelectedSong.getPopularity());
+                    if (rankSelected <= ranking.size()){
+                        System.out.println("I've selected the track #" + rankSelected);
+                        apiUtils.addToQueue(ranking.get(rankSelected-1).getId());
+                    }
+                }
+            }
+        }
     }
 
     public boolean isRunning() {

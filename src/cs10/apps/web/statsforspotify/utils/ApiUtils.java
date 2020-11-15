@@ -27,6 +27,7 @@ public class ApiUtils {
 
     // This URI should equal to the saved URI on the App Dashboard
     private static final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost:8080");
+    private static final String SCOPE = "user-top-read  user-read-currently-playing user-modify-playback-state";
 
 
     public ApiUtils(){
@@ -57,7 +58,7 @@ public class ApiUtils {
 
     public void openGrantPermissionPage() throws IOException {
         URI uri = spotifyApi.authorizationCodeUri()
-                .scope("user-top-read user-read-currently-playing")
+                .scope(SCOPE)
                 .show_dialog(true)
                 .build().execute();
 
@@ -68,7 +69,7 @@ public class ApiUtils {
 
     public void openReconfirmPermissionPage() throws IOException {
         URI uri = spotifyApi.authorizationCodeUri()
-                .scope("user-top-read  user-read-currently-playing")
+                .scope(SCOPE)
                 .build().execute();
 
         if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
@@ -136,6 +137,14 @@ public class ApiUtils {
         } catch (Exception e){
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public void addToQueue(String id){
+        try {
+            spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+id).build().execute();
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 }

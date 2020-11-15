@@ -57,11 +57,7 @@ public class StatsFrame extends JFrame {
         JMenuItem jmiSave = new JMenuItem("Save");
         JMenuItem jmiSaveAs = new JMenuItem("Save As...");
         jmiOpen.addActionListener(e -> System.out.println("Open pressed"));
-        jmiSave.addActionListener(e -> {
-            if (IOUtils.saveRanking(ranking, true)){
-                OptionPanes.showSavedSuccessfully();
-            } else OptionPanes.showSaveError();
-        });
+        jmiSave.addActionListener(e -> System.out.println("Save pressed"));
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
         fileMenu.add(jmiOpen);
         fileMenu.add(jmiSave);

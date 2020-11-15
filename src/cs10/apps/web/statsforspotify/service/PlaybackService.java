@@ -116,7 +116,9 @@ public class PlaybackService {
                             magicNumber * 0.01 * lastSelectedSong.getPopularity());
                     if (rankSelected <= ranking.size()){
                         System.out.println("I've selected the track #" + rankSelected);
-                        apiUtils.addToQueue(ranking.get(rankSelected-1).getId());
+                        lastSelectedSong = ranking.get(rankSelected-1);
+                        apiUtils.addToQueue(lastSelectedSong);
+                        magicNumber = 0;
                     }
                 }
             }

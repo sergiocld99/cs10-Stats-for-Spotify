@@ -162,8 +162,28 @@ public class IOUtils {
         }
     }
 
+    public static void addFailedRecommendation(Song song){
+        File file = new File("failed_recommendations.txt");
+        if (!file.exists()){
+            try {
+                System.out.println(file.getPath() + " created: " + file.createNewFile());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))){
+            pw.print(dateFormat.format(new Date(System.currentTimeMillis())));
+            pw.println(" -- " + song.getRank() + " -- " + song.getName() + " -- " + song.getArtists());
+        } catch (FileNotFoundException e){
+            System.err.println(file.getPath() + " doesn't exist!");
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
     // -------------------------------- VERSION 2 --------------------------------------------
-    public static boolean saveRanking(Ranking ranking, boolean replace){
+    public static void saveRanking(Ranking ranking, boolean replace){
         File directory = new File("ranking//");
 
         if (!directory.exists() && directory.mkdirs())
@@ -171,14 +191,12 @@ public class IOUtils {
 
         File file = new File(directory.getPath() + "//" + ranking.getCode());
 
-        if (!replace & file.exists()) return false;
+        if (!replace & file.exists()) return;
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))){
             writer.println(dateFormat.format(new Date(System.currentTimeMillis())));
             for (Song s : ranking) writer.println(s.getRank() + "--" + s.getId());
-            return true;
         } catch (IOException e){
             e.printStackTrace();
-            return false;
         }
     }
 

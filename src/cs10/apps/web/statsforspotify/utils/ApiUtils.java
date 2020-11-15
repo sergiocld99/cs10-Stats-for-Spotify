@@ -140,11 +140,12 @@ public class ApiUtils {
         }
     }
 
-    public void addToQueue(String id){
+    public void addToQueue(Song song){
         try {
-            spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+id).build().execute();
+            spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+song.getId()).build().execute();
         } catch (Exception e){
-            e.printStackTrace();
+            System.err.println("You don't have Premium :(");
+            IOUtils.addFailedRecommendation(song);
         }
     }
 }

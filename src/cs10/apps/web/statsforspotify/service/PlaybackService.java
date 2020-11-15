@@ -91,7 +91,7 @@ public class PlaybackService {
 
     private void retryIn15(){
         try {
-            int secondsToSleep = new Random().nextInt(15) + 15;
+            int secondsToSleep = new Random().nextInt(60) + 15;
             jFrame.setTitle("Retrying in " + secondsToSleep + " seconds...");
             Thread.sleep(secondsToSleep * 1000);
             getCurrentData();

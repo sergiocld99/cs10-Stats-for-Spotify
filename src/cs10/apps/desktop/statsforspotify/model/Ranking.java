@@ -28,6 +28,14 @@ public class Ranking extends ArrayList<Song> {
     }
 
     public long getCode(){
+        if (super.size() > 50) {
+            try {
+                throw new RuntimeException("Wrong class -- You should use BigRanking");
+            } catch (RuntimeException e){
+                e.printStackTrace();
+            }
+        }
+
         long sum = 0;
 
         for (Song s : this){

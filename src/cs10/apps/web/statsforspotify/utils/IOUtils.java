@@ -2,6 +2,7 @@ package cs10.apps.web.statsforspotify.utils;
 
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 
 import java.io.*;
@@ -17,24 +18,26 @@ public class IOUtils {
         return ! new File(DATA_FILE).exists();
     }
 
-    public static long readLastRankingCode(){
+    public static long[] readLastRankingCode(){
+        long[] result = new long[2];
+
         try (BufferedReader br = new BufferedReader(new FileReader(DATA_FILE))){
-            String line = br.readLine();
-            return Long.parseLong(line.split("=")[1]);
+            result[0] = Long.parseLong(br.readLine().split("=")[1]);
+            result[1] = Long.parseLong(br.readLine().split("=")[1]);
         } catch (FileNotFoundException e){
             System.err.println("The file " + DATA_FILE + " doesn't exist!");
-        } catch (IOException e){
-            e.printStackTrace();
         } catch (NumberFormatException e){
             System.err.println("The ranking code is not a number");
         } catch (ArrayIndexOutOfBoundsException e){
             System.err.println("The file " + DATA_FILE + " has an invalid format");
+        } catch (Exception e){
+            e.printStackTrace();
         }
 
-        return 0;
+        return result;
     }
 
-    public static void saveLastRankingCode(long code){
+    public static void saveLastRankingCode(long compareCode, long actualCode){
         File file = new File(DATA_FILE);
         if (!file.exists()){
             try {
@@ -45,7 +48,8 @@ public class IOUtils {
         }
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(DATA_FILE))){
-            pw.println("code="+code);
+            pw.println("compare="+compareCode);
+            pw.println("actual="+actualCode);
         } catch (FileNotFoundException e){
             System.err.println("The file " + DATA_FILE + " doesn't exist!");
         } catch (IOException e){
@@ -88,6 +92,77 @@ public class IOUtils {
         }
     }
 
+    public static BigRanking loadPreviousRanking(){
+        BigRanking ranking = new BigRanking();
+        long code = readLastRankingCode()[0];
+        if (code == 0) return ranking;
+
+        try (BufferedReader br = new BufferedReader(new FileReader("ranking//" + code))){
+            // skip header
+            br.readLine();
+
+            // read ranking
+            String line;
+            while ((line = br.readLine()) != null){
+                String[] params = line.split("--");
+                Song song = new Song();
+                song.setRank(Integer.parseInt(params[0]));
+                song.setId(params[1]);
+                ranking.add(song);
+            }
+        } catch (FileNotFoundException e){
+            System.err.println("The previous ranking " + code + " doesn't exist!");
+        } catch (IOException e){
+            e.printStackTrace();
+        } catch (NumberFormatException e){
+            System.err.println("The rank column has an invalid format");
+        } catch (ArrayIndexOutOfBoundsException e){
+            System.err.println("The rows of Previous Ranking have an invalid format");
+        }
+
+        return ranking;
+    }
+
+    public static float[] getScores(String artist){
+        artist = artist.replace("/\\","");
+        float[] result = new float[5];
+
+        File file = new File("library//" + artist);
+        File[] songsFiles = file.listFiles();
+        if (songsFiles != null) {
+            for (File f : songsFiles)
+                readSongInfo(f, result);
+        }
+
+        return result;
+    }
+
+    private static void readSongInfo(File file, float[] scores){
+        try (BufferedReader br = new BufferedReader(new FileReader(file))){
+            // skip header
+            br.readLine();
+
+            // read info
+            String line;
+            while ((line = br.readLine()) != null){
+                String[] params = line.split("--");
+                int rank = Integer.parseInt(params[0]);
+                if (rank > 50) continue;
+                int popularity = Integer.parseInt(params[1]);
+                scores[(rank-1) / 10] += popularity / 100f;
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println(file.getPath() + " doesn't exist!");
+        } catch (NumberFormatException e) {
+            System.err.println("Columns aren't numbers!");
+        } catch (ArrayIndexOutOfBoundsException e){
+            System.err.println("Rows in " + file.getPath() + " don't have enough params");
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    // -------------------------------- VERSION 2 --------------------------------------------
     public static boolean saveRanking(Ranking ranking, boolean replace){
         File directory = new File("ranking//");
 

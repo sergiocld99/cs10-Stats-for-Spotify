@@ -1,8 +1,10 @@
 package cs10.apps.web.statsforspotify.view;
 
-import cs10.apps.desktop.statsforspotify.model.*;
+import cs10.apps.desktop.statsforspotify.model.Library;
+import cs10.apps.desktop.statsforspotify.model.Ranking;
+import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
-import cs10.apps.desktop.statsforspotify.view.ArtistFrame;
 import cs10.apps.desktop.statsforspotify.view.RankingModel;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
@@ -134,14 +136,16 @@ public class StatsFrame extends JFrame {
             public void mousePressed(MouseEvent e) {
                 String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 4);
                 String mainName = artistsNames.split(", ")[0];
-                Artist artist = library.findByName(mainName);
-                if (artist != null) openArtistWindow(artist);
+                //Artist artist = library.findByName(mainName);
+                //if (artist != null) openArtistWindow(artist);
+                openArtistWindow(mainName, IOUtils.getScores(mainName));
             }
         });
     }
 
     private void init3(){
         bigRanking = new BigRanking();
+        bigRanking.addRankingToCompare(IOUtils.loadPreviousRanking());
 
         progressBar.setString("Connecting to Spotify...");
         bigRanking.add(apiUtils.getPaging(TopTerms.SHORT));
@@ -166,9 +170,15 @@ public class StatsFrame extends JFrame {
         playbackService.run();
 
         // save file
-        IOUtils.saveLastRankingCode(bigRanking.getCode());
-        IOUtils.makeLibraryFiles(bigRanking);
-        IOUtils.saveRanking(bigRanking, true);
+        long prevR = IOUtils.readLastRankingCode()[1];
+        if (prevR == 0 || prevR != bigRanking.getCode()){
+            IOUtils.saveLastRankingCode(bigRanking.getCompareCode(), bigRanking.getCode());
+            IOUtils.makeLibraryFiles(bigRanking);
+            IOUtils.saveRanking(bigRanking, true);
+        } else {
+            System.out.println("Nothing to save");
+        }
+
     }
 
     private void customizeTexts(){
@@ -248,8 +258,8 @@ public class StatsFrame extends JFrame {
         }
     }
 
-    private void openArtistWindow(Artist artist){
-        ArtistFrame artistFrame = new ArtistFrame(artist);
+    private void openArtistWindow(String artist, float[] scores){
+        ArtistFrame artistFrame = new ArtistFrame(artist, scores);
         artistFrame.init();
         artistFrame.setVisible(true);
     }

@@ -9,7 +9,12 @@ import cs10.apps.web.statsforspotify.utils.CommonUtils;
 
 public class BigRanking extends Ranking {
     private static final int TOP_INDEX = 1;
+    private BigRanking rankingToCompare;
     private long code;
+
+    public void addRankingToCompare(BigRanking ranking){
+        rankingToCompare = ranking;
+    }
 
     public void add(Paging<Track> paging){
         if (super.isEmpty()) addWithoutCheckingRepeats(paging);
@@ -53,6 +58,17 @@ public class BigRanking extends Ranking {
         song.setReleaseDate(track.getAlbum().getReleaseDate());
         song.setPopularity(track.getPopularity());
         song.setStatus(Status.NOTHING);
+
+        // compare with previous ranking
+        Song prevS = rankingToCompare.getSong(track.getId());
+        if (prevS == null) song.setStatus(Status.NEW);
+        else {
+            song.setChange(prevS.getRank() - song.getRank());
+            if (song.getChange() == 0) song.setStatus(Status.NOTHING);
+            else if (song.getChange() < 0) song.setStatus(Status.DOWN);
+            else song.setStatus(Status.UP);
+        }
+
         super.add(song);
     }
 
@@ -64,7 +80,13 @@ public class BigRanking extends Ranking {
             for (Song s : this)
                 sum += s.getPopularity();
 
-            return sum;
-        } else return code;
+            code = sum;
+        }
+
+        return code;
+    }
+
+    public long getCompareCode(){
+        return rankingToCompare.getCode();
     }
 }

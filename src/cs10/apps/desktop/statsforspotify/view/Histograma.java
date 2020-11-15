@@ -6,6 +6,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
  * @version 1
  */
 public class Histograma extends JPanel{
+    private static final DecimalFormat df = new DecimalFormat("0.00");
 
     private int alturaHistograma = 200;
 
@@ -58,7 +60,7 @@ public class Histograma extends JPanel{
         if(max > 0)
             for(Barra barra: barras) {
                 //JLabel etiqueta = new JLabel(Integer.toString(barra.getValor()));
-                JLabel etiqueta = new JLabel(String.valueOf(barra.getValor()));
+                JLabel etiqueta = new JLabel(df.format(barra.getValor()));
 
                 etiqueta.setHorizontalTextPosition(JLabel.CENTER);
                 etiqueta.setHorizontalAlignment(JLabel.CENTER);
@@ -78,7 +80,7 @@ public class Histograma extends JPanel{
             }
         else
             for(Barra barra: barras) {
-                JLabel etiqueta = new JLabel(String.valueOf(barra.getValor()));
+                JLabel etiqueta = new JLabel(df.format(barra.getValor()));
 
                 etiqueta.setHorizontalTextPosition(JLabel.CENTER);
                 etiqueta.setHorizontalAlignment(JLabel.CENTER);

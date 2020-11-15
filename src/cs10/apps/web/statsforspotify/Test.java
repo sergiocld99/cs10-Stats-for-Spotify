@@ -1,7 +1,5 @@
 package cs10.apps.web.statsforspotify;
 
-import cs10.apps.desktop.statsforspotify.model.Library;
-import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
@@ -15,7 +13,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Test {
-    private static final String LIAM_PAYNE_ID = "5pUo3fmmHT8bhCyHE52hA6";
 
     public static void main(String[] args) throws Exception {
         // Server
@@ -48,9 +45,6 @@ public class Test {
             OptionPanes.showCanCloseBrowser();
             socket.close();
 
-            // Load saved library (old version)
-            Library library = OldIOUtils.getArtistsFromLogs();
-
             // Custom UI
             UIManager.put("nimbusOrange", Color.decode("#00c853"));
             try {
@@ -65,7 +59,7 @@ public class Test {
             }
 
             // Request something
-            StatsFrame statsFrame = new StatsFrame(apiUtils, library);
+            StatsFrame statsFrame = new StatsFrame(apiUtils);
             statsFrame.init();
 
             // Auto closeable (1 hour)

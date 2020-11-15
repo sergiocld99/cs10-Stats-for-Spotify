@@ -24,10 +24,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Random;
 
 public class StatsFrame extends JFrame {
     private final ApiUtils apiUtils;
-    private final Library library;
     private RankingModel model;
     private Ranking ranking;
     private JTable table;
@@ -37,10 +37,11 @@ public class StatsFrame extends JFrame {
     // version 3
     private JProgressBar progressBar;
     private BigRanking bigRanking;
+    private Random random;
 
-    public StatsFrame(ApiUtils apiUtils, Library library) throws HeadlessException {
+    public StatsFrame(ApiUtils apiUtils) throws HeadlessException {
         this.apiUtils = apiUtils;
-        this.library = library;
+        this.random = new Random();
     }
 
     public void init() throws Exception {
@@ -135,10 +136,13 @@ public class StatsFrame extends JFrame {
             @Override
             public void mousePressed(MouseEvent e) {
                 String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 4);
-                String mainName = artistsNames.split(", ")[0];
+                String[] artists = artistsNames.split(", ");
+                String mainName = artists[random.nextInt(artists.length)];
+                openArtistWindow(mainName, IOUtils.getScores(mainName));
+                //String mainName = artistsNames.split(", ")[0];
                 //Artist artist = library.findByName(mainName);
                 //if (artist != null) openArtistWindow(artist);
-                openArtistWindow(mainName, IOUtils.getScores(mainName));
+
             }
         });
     }

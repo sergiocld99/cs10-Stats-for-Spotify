@@ -126,9 +126,7 @@ public class StatsFrame extends JFrame {
         buttonLongTerm.addActionListener(e -> show(TopTerms.LONG));
         buttonNowPlaying.addActionListener(e -> {
             //playbackService.setRanking(ranking);
-            if (playbackService.isRunning()){
-                playbackService.restart();
-            } else playbackService.run();
+            playbackService.run();
         });
 
         table.addMouseListener(new MouseAdapter() {
@@ -144,7 +142,6 @@ public class StatsFrame extends JFrame {
 
     private void init3(){
         bigRanking = new BigRanking();
-        bigRanking.setTitle("big ranking");
 
         progressBar.setString("Connecting to Spotify...");
         bigRanking.add(apiUtils.getPaging(TopTerms.SHORT));
@@ -154,7 +151,6 @@ public class StatsFrame extends JFrame {
         bigRanking.add(apiUtils.getPaging(TopTerms.LONG));
         progressBar.setValue(100);
 
-        setTitle("Ranking #" + bigRanking.getCode());
         int i = 0;
 
         // show on table
@@ -170,6 +166,8 @@ public class StatsFrame extends JFrame {
         playbackService.run();
 
         // save file
+        IOUtils.saveLastRankingCode(bigRanking.getCode());
+        IOUtils.makeLibraryFiles(bigRanking);
         IOUtils.saveRanking(bigRanking, true);
     }
 

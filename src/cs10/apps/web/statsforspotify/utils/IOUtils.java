@@ -2,77 +2,104 @@ package cs10.apps.web.statsforspotify.utils;
 
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Date;
 
 public class IOUtils {
-    private static final String CODES_FILE = "appcode";
+    private static final String DATA_FILE = "appdata";
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-    public static void writeCode(String code){
-        File file = new File(CODES_FILE);
-        try {
-            if (!file.exists() && file.createNewFile()){
-                System.out.println(file.getAbsolutePath() + " has been just created");
-            }
+    public static boolean isFirstTime(){
+        return ! new File(DATA_FILE).exists();
+    }
 
-            try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-              writer.println(code);
+    public static long readLastRankingCode(){
+        try (BufferedReader br = new BufferedReader(new FileReader(DATA_FILE))){
+            String line = br.readLine();
+            return Long.parseLong(line.split("=")[1]);
+        } catch (FileNotFoundException e){
+            System.err.println("The file " + DATA_FILE + " doesn't exist!");
+        } catch (IOException e){
+            e.printStackTrace();
+        } catch (NumberFormatException e){
+            System.err.println("The ranking code is not a number");
+        } catch (ArrayIndexOutOfBoundsException e){
+            System.err.println("The file " + DATA_FILE + " has an invalid format");
+        }
+
+        return 0;
+    }
+
+    public static void saveLastRankingCode(long code){
+        File file = new File(DATA_FILE);
+        if (!file.exists()){
+            try {
+                System.out.println(DATA_FILE + " created: " + file.createNewFile());
+            } catch (IOException e){
+                e.printStackTrace();
             }
+        }
+
+        try (PrintWriter pw = new PrintWriter(new FileWriter(DATA_FILE))){
+            pw.println("code="+code);
+        } catch (FileNotFoundException e){
+            System.err.println("The file " + DATA_FILE + " doesn't exist!");
         } catch (IOException e){
             e.printStackTrace();
         }
     }
 
-    public static String retrieveLastCode(){
-        File file = new File(CODES_FILE);
-        if (!file.exists()) return null;
+    public static void makeLibraryFiles(Ranking ranking){
+        for (Song s : ranking){
+            String[] artists = s.getArtists().split(", ");
+            for (String a : artists) makeArtistFiles(a, s, ranking.getCode());
+        }
+    }
 
-        StringBuilder sb = new StringBuilder();
+    private static void makeArtistFiles(String artist, Song song, long code){
+        artist = artist.replace("/\\","");
+        boolean header = false;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))){
-            sb.append(br.readLine());
-            return sb.toString();
+        File directory = new File("library//"+artist);
+        if (!directory.exists()){
+            System.out.println(directory.getPath() + " created: " + directory.mkdirs());
+        }
+
+        File songFile = new File(directory.getAbsolutePath() + "//" + song.getId());
+        if (!songFile.exists()){
+            try {
+                header = songFile.createNewFile();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+
+        try (PrintWriter pw = new PrintWriter(new FileWriter(songFile, true))){
+            if (header) pw.println(song.getName());
+            pw.println(song.getRank()+"--"+song.getPopularity()+"--"+code);
         } catch (FileNotFoundException e){
-            System.err.println(file.getAbsolutePath() + " not found");
+            System.err.println(songFile.getPath() + " doesn't exist!");
         } catch (IOException e){
             e.printStackTrace();
         }
-
-        return sb.toString();
     }
 
     public static boolean saveRanking(Ranking ranking, boolean replace){
-        Calendar calendar = Calendar.getInstance();
-        File directory = new File("ranking//" + ranking.getTitle().toLowerCase());
-        if (!directory.exists() && directory.mkdirs()){
+        File directory = new File("ranking//");
+
+        if (!directory.exists() && directory.mkdirs())
             System.out.println(directory.getAbsolutePath() + " has been just created");
-        }
 
-        File file = new File(directory.getAbsolutePath() + "//" +
-                dateFormat.format(calendar.getTime()) + ".txt");
-
-        String filepath = "logs//" + ranking.getTitle().toLowerCase() + "//";
-
-        File dir1 = new File(filepath);
-        if (!dir1.exists()) {
-            if (dir1.mkdirs()){
-                System.out.println("Directory created successfully");
-            }
-        }
+        File file = new File(directory.getPath() + "//" + ranking.getCode());
 
         if (!replace & file.exists()) return false;
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))){
-            for (Song s : ranking){
-                writer.println(s.getRank() + "--" + s.getId() + "--" + s.getName() + "--" +
-                        s.getArtists() + "--" + s.getPopularity());
-                OldIOUtils.appendArtistLog(s, filepath);
-            }
+            writer.println(dateFormat.format(new Date(System.currentTimeMillis())));
+            for (Song s : ranking) writer.println(s.getRank() + "--" + s.getId());
             return true;
         } catch (IOException e){
             e.printStackTrace();

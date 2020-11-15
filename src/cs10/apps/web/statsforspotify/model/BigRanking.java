@@ -9,6 +9,7 @@ import cs10.apps.web.statsforspotify.utils.CommonUtils;
 
 public class BigRanking extends Ranking {
     private static final int TOP_INDEX = 1;
+    private long code;
 
     public void add(Paging<Track> paging){
         if (super.isEmpty()) addWithoutCheckingRepeats(paging);
@@ -57,11 +58,13 @@ public class BigRanking extends Ranking {
 
     @Override
     public long getCode() {
-        long sum = 0;
+        if (code == 0){
+            long sum = 0;
 
-        for (Song s : this)
-            sum += s.getPopularity();
+            for (Song s : this)
+                sum += s.getPopularity();
 
-        return sum;
+            return sum;
+        } else return code;
     }
 }

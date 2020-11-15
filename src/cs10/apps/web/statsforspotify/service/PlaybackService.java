@@ -35,10 +35,6 @@ public class PlaybackService {
         this.progressBar = progressBar;
     }
 
-    public void restart(){
-        this.run();
-    }
-
     public void run() {
         if (isRunning()) return;
         running = true;

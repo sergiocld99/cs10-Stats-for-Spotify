@@ -24,11 +24,9 @@ public class Test {
         // Spotify Connection
         ApiUtils apiUtils = new ApiUtils();
         if (apiUtils.isReady()){
-            // Attempt reading previous code
-            String code = IOUtils.retrieveLastCode();
 
             // Ask and open browser
-            if (code == null || code.isEmpty()){
+            if (IOUtils.isFirstTime()){
                 int result = OptionPanes.askForPermission();
                 if (result != 0) System.exit(2);
                 apiUtils.openGrantPermissionPage();
@@ -43,8 +41,7 @@ public class Test {
             // Read code (it's in the first line)
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String line = br.readLine();
-            code = line.split(" ")[1].replace("/?code=","");
-            IOUtils.writeCode(code);
+            String code = line.split(" ")[1].replace("/?code=","");
 
             // Update
             apiUtils.refreshToken(code);
@@ -53,6 +50,19 @@ public class Test {
 
             // Load saved library (old version)
             Library library = OldIOUtils.getArtistsFromLogs();
+
+            // Custom UI
+            UIManager.put("nimbusOrange", Color.decode("#00c853"));
+            try {
+                for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus".equals(info.getName())) {
+                        UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             // Request something
             StatsFrame statsFrame = new StatsFrame(apiUtils, library);

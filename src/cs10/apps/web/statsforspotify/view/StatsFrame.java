@@ -98,7 +98,7 @@ public class StatsFrame extends JFrame {
 
         // Table
         String[] columnNames = new String[]{
-                "Status", "Album", "Rank", "Song Name", "Artists", "Popularity"
+                "Status", "Album", "Rank", "Song Name", "Artists", "Popularity", "Release Date"
         };
 
         model = new RankingModel(columnNames, 0);
@@ -218,7 +218,7 @@ public class StatsFrame extends JFrame {
     private Object[] toRow(Song song){
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
                 downloadImage(song.getImageUrl()), song.getRank(),
-                song.getName(), song.getArtists(), song.getPopularity()};
+                song.getName(), song.getArtists(), song.getPopularity(), song.getReleaseDate()};
     }
 
     private ImageIcon downloadImage(String url){

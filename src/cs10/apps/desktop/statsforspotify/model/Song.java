@@ -9,7 +9,7 @@ public class Song implements Comparable<Song> {
     private long timestamp;
 
     // For web
-    private String imageUrl, id;
+    private String imageUrl, id, releaseDate;
     private int popularity;
 
     public Song(){ }
@@ -96,6 +96,14 @@ public class Song implements Comparable<Song> {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(String releaseDate) {
+        this.releaseDate = releaseDate;
     }
 
     public int getPopularity() {

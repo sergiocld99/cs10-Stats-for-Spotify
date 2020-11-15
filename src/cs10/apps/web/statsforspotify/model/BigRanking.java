@@ -49,6 +49,7 @@ public class BigRanking extends Ranking {
         song.setName(track.getName());
         song.setArtists(CommonUtils.combineArtists(track.getArtists()));
         song.setImageUrl(track.getAlbum().getImages()[0].getUrl());
+        song.setReleaseDate(track.getAlbum().getReleaseDate());
         song.setPopularity(track.getPopularity());
         song.setStatus(Status.NOTHING);
         super.add(song);

@@ -13,6 +13,7 @@ import cs10.apps.web.statsforspotify.utils.IOUtils;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -77,6 +78,11 @@ public class StatsFrame extends JFrame {
         progressBar.setBorder(new EmptyBorder(8,16,0,50));
         progressBar.setStringPainted(true);
         progressBar.setForeground(Color.GREEN);
+        progressBar.setUI(new BasicProgressBarUI() {
+            protected Color getSelectionBackground() { return Color.black; }
+            protected Color getSelectionForeground() { return Color.black; }
+        });
+
         buttonsPanel.add(progressBar);
 
         // Ranking Buttons

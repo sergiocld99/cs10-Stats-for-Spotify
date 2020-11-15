@@ -42,6 +42,7 @@ public class PlaybackService {
     }
 
     public void run() {
+        if (isRunning()) return;
         running = true;
         thread = new Thread(this::getCurrentData);
         thread.start();

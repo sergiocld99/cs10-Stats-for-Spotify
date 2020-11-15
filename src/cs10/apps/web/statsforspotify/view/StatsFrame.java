@@ -45,7 +45,7 @@ public class StatsFrame extends JFrame {
         username = apiUtils.getUser().getDisplayName();
         setTitle(username + " - Your Spotify Stats");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(900, 600);
+        setSize(1000, 600);
 
         // Menu Bar
         JMenuBar menuBar = new JMenuBar();
@@ -179,7 +179,6 @@ public class StatsFrame extends JFrame {
 
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
         table.getColumnModel().getColumn(1).setPreferredWidth(50);
-        table.getColumnModel().getColumn(2).setPreferredWidth(0);
         table.getColumnModel().getColumn(3).setPreferredWidth(250);
         table.getColumnModel().getColumn(4).setPreferredWidth(250);
 

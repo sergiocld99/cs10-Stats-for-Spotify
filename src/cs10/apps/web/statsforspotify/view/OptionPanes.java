@@ -45,4 +45,10 @@ public class OptionPanes {
                 "Unable to save file",
                 Constants.APP_NAME, JOptionPane.WARNING_MESSAGE);
     }
+
+    public static void showPlaybackStopped(){
+        JOptionPane.showMessageDialog(null,
+                "Playback Service has just stopped",
+                Constants.APP_NAME, JOptionPane.WARNING_MESSAGE);
+    }
 }

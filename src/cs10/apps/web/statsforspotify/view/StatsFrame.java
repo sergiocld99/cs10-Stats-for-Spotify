@@ -1,9 +1,11 @@
 package cs10.apps.web.statsforspotify.view;
 
 import cs10.apps.desktop.statsforspotify.model.*;
+import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.desktop.statsforspotify.view.ArtistFrame;
 import cs10.apps.desktop.statsforspotify.view.RankingModel;
 import cs10.apps.web.statsforspotify.model.TopTerms;
+import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 
@@ -26,6 +28,7 @@ public class StatsFrame extends JFrame {
     private Ranking ranking;
     private JTable table;
     private String username;
+    private PlaybackService playbackService;
 
     public StatsFrame(ApiUtils apiUtils, Library library) throws HeadlessException {
         this.apiUtils = apiUtils;
@@ -64,13 +67,12 @@ public class StatsFrame extends JFrame {
         JButton buttonShortTerm = new JButton(TopTerms.SHORT.getDescription());
         JButton buttonMediumTerm = new JButton(TopTerms.MEDIUM.getDescription());
         JButton buttonLongTerm = new JButton(TopTerms.LONG.getDescription());
-        buttonShortTerm.addActionListener(e -> show(TopTerms.SHORT));
-        buttonMediumTerm.addActionListener(e -> show(TopTerms.MEDIUM));
-        buttonLongTerm.addActionListener(e -> show(TopTerms.LONG));
+        JButton buttonNowPlaying = new JButton("Show what I'm listening to");
         buttonsPanel.setBorder(new EmptyBorder(8, 16, 0, 16));
         buttonsPanel.add(buttonShortTerm);
         buttonsPanel.add(buttonMediumTerm);
         buttonsPanel.add(buttonLongTerm);
+        buttonsPanel.add(buttonNowPlaying);
 
         // Table
         String[] columnNames = new String[]{
@@ -80,6 +82,28 @@ public class StatsFrame extends JFrame {
         model = new RankingModel(columnNames, 0);
         table = new JTable(model);
         table.setRowHeight(50);
+        customizeTexts();
+
+        // Add Components
+        getContentPane().add(BorderLayout.NORTH, menuBar);
+        getContentPane().add(BorderLayout.CENTER, buttonsPanel);
+        getContentPane().add(BorderLayout.SOUTH, new JScrollPane(table));
+
+        // Show all
+        playbackService = new PlaybackService(apiUtils, table, this);
+
+        setVisible(true);
+        show(TopTerms.SHORT);
+
+        // Set Listeners
+        buttonShortTerm.addActionListener(e -> show(TopTerms.SHORT));
+        buttonMediumTerm.addActionListener(e -> show(TopTerms.MEDIUM));
+        buttonLongTerm.addActionListener(e -> show(TopTerms.LONG));
+        buttonNowPlaying.addActionListener(e -> {
+            playbackService.setRanking(ranking);
+            playbackService.run();
+        });
+
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -89,13 +113,6 @@ public class StatsFrame extends JFrame {
                 if (artist != null) openArtistWindow(artist);
             }
         });
-        customizeTexts();
-
-        // Add Components
-        getContentPane().add(BorderLayout.NORTH, menuBar);
-        getContentPane().add(BorderLayout.CENTER, buttonsPanel);
-        getContentPane().add(BorderLayout.SOUTH, new JScrollPane(table));
-        setVisible(true);
     }
 
     private void customizeTexts(){
@@ -114,6 +131,11 @@ public class StatsFrame extends JFrame {
     }
 
     private void show(TopTerms term) {
+        if (ranking != null && ranking.getTitle().equals(term.getDescription())){
+            System.out.println("Skipping a new research");
+            return;
+        }
+
         setTitle("Please wait...");
         this.ranking = apiUtils.getRanking(term);
         this.ranking.setTitle(term.getDescription());
@@ -136,7 +158,7 @@ public class StatsFrame extends JFrame {
     }
 
     private Object[] toRow(Song song){
-        return new Object[]{IOUtils.getImageIcon(song.getStatus()),
+        return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
                 downloadImage(song.getImageUrl()), song.getRank(),
                 song.getName(), song.getArtists(), song.getPopularity()};
     }

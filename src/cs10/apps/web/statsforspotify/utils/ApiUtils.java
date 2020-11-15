@@ -5,6 +5,7 @@ import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
+import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Paging;
 import com.wrapper.spotify.model_objects.specification.Track;
@@ -56,7 +57,7 @@ public class ApiUtils {
 
     public void openGrantPermissionPage() throws IOException {
         URI uri = spotifyApi.authorizationCodeUri()
-                .scope("user-top-read")
+                .scope("user-top-read user-read-currently-playing")
                 .show_dialog(true)
                 .build().execute();
 
@@ -67,7 +68,7 @@ public class ApiUtils {
 
     public void openReconfirmPermissionPage() throws IOException {
         URI uri = spotifyApi.authorizationCodeUri()
-                .scope("user-top-read")
+                .scope("user-top-read  user-read-currently-playing")
                 .build().execute();
 
         if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
@@ -123,5 +124,14 @@ public class ApiUtils {
         StringBuilder sb = new StringBuilder(arr[0].getName());
         for (int i=1; i<arr.length; i++) sb.append(", ").append(arr[i].getName());
         return sb.toString();
+    }
+
+    public CurrentlyPlaying getCurrentSong() {
+        try {
+            return spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
     }
 }

@@ -55,6 +55,18 @@ public class Test {
             // Request something
             StatsFrame statsFrame = new StatsFrame(apiUtils, library);
             statsFrame.init();
+
+            // Auto closeable (1 hour)
+            Runnable autoCloseable = () -> {
+                try {
+                    Thread.sleep(3600 * 1000);
+                    System.exit(0);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            };
+
+            new Thread(autoCloseable).start();
         } else {
             OptionPanes.showCredentialsError();
             System.exit(1);

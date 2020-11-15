@@ -2,11 +2,9 @@ package cs10.apps.web.statsforspotify.utils;
 
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 
-import javax.swing.*;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -122,9 +120,5 @@ public class IOUtils {
         }
 
         return ranking;
-    }
-
-    public static ImageIcon getImageIcon(Status status){
-        return new ImageIcon(status.getPath());
     }
 }

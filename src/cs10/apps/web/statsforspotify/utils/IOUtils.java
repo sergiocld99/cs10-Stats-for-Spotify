@@ -1,5 +1,6 @@
 package cs10.apps.web.statsforspotify.utils;
 
+import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.model.BigRanking;
@@ -162,7 +163,7 @@ public class IOUtils {
         }
     }
 
-    public static void addFailedRecommendation(Song song){
+    public static void addFailedRecommendation(Song song, Track track){
         File file = new File("failed_recommendations.txt");
         if (!file.exists()){
             try {
@@ -174,7 +175,7 @@ public class IOUtils {
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(file, true))){
             pw.print(dateFormat.format(new Date(System.currentTimeMillis())));
-            pw.println(" -- " + song.getRank() + " -- " + song.getName() + " -- " + song.getArtists());
+            pw.print(" -- " + song.getRank() + " -- " + song.getName() + " vs " + track.getName());
         } catch (FileNotFoundException e){
             System.err.println(file.getPath() + " doesn't exist!");
         } catch (IOException e){

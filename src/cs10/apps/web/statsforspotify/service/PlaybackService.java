@@ -5,6 +5,7 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
@@ -61,7 +62,7 @@ public class PlaybackService {
         try {
             Track track = (Track) currentlyPlaying.getItem();
             jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
-            selectCurrentRow(track.getId(), track.getName().charAt(0)-'A'+1);
+            selectCurrentRow(track);
 
             time = currentlyPlaying.getProgress_ms() / 1000;
             int maximum = track.getDurationMs() / 1000;
@@ -95,7 +96,9 @@ public class PlaybackService {
         }
     }
 
-    private void selectCurrentRow(String id, int firstCharNumber){
+    private void selectCurrentRow(Track track){
+        String id = track.getId();
+        int firstCharNumber = track.getName().charAt(0)-'A'+1;
         Song song = ranking.getSong(id);
         if (song != null){
             lastSelectedSong = song;
@@ -117,8 +120,10 @@ public class PlaybackService {
                     if (rankSelected <= ranking.size()){
                         System.out.println("I've selected the track #" + rankSelected);
                         lastSelectedSong = ranking.get(rankSelected-1);
-                        apiUtils.addToQueue(lastSelectedSong);
                         magicNumber = 0;
+                        if (!apiUtils.addToQueue(lastSelectedSong)){
+                            IOUtils.addFailedRecommendation(lastSelectedSong, track);
+                        }
                     }
                 }
             }

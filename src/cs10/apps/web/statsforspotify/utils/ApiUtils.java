@@ -92,6 +92,16 @@ public class ApiUtils {
         return spotifyApi.getCurrentUsersProfile().build().execute();
     }
 
+    public Paging<Track> getPaging(TopTerms term){
+        try {
+            return spotifyApi.getUsersTopTracks().time_range(term.getKey())
+                    .limit(50).build().execute();
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public Ranking getRanking(TopTerms term){
         Ranking ranking = new Ranking();
 
@@ -104,7 +114,7 @@ public class ApiUtils {
             for (int i=0; i<paging.getTotal(); i++){
                 Song song = new Song();
                 song.setName(tracks[i].getName());
-                song.setArtists(combineArtists(tracks[i].getArtists()));
+                song.setArtists(CommonUtils.combineArtists(tracks[i].getArtists()));
                 song.setRank(i+1);
                 song.setTimestamp(System.currentTimeMillis());
                 song.setStatus(Status.NEW);
@@ -118,12 +128,6 @@ public class ApiUtils {
         }
 
         return ranking;
-    }
-
-    private String combineArtists(ArtistSimplified[] arr){
-        StringBuilder sb = new StringBuilder(arr[0].getName());
-        for (int i=1; i<arr.length; i++) sb.append(", ").append(arr[i].getName());
-        return sb.toString();
     }
 
     public CurrentlyPlaying getCurrentSong() {

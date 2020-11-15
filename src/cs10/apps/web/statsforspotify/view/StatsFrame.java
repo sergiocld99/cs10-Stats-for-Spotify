@@ -4,6 +4,7 @@ import cs10.apps.desktop.statsforspotify.model.*;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.desktop.statsforspotify.view.ArtistFrame;
 import cs10.apps.desktop.statsforspotify.view.RankingModel;
+import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
@@ -29,6 +30,9 @@ public class StatsFrame extends JFrame {
     private JTable table;
     private String username;
     private PlaybackService playbackService;
+
+    // version 3
+    private BigRanking bigRanking;
 
     public StatsFrame(ApiUtils apiUtils, Library library) throws HeadlessException {
         this.apiUtils = apiUtils;
@@ -93,15 +97,23 @@ public class StatsFrame extends JFrame {
         playbackService = new PlaybackService(apiUtils, table, this);
 
         setVisible(true);
-        show(TopTerms.SHORT);
+        //show(TopTerms.SHORT);
 
-        // Set Listeners
+        // Version 3
+        buttonShortTerm.setVisible(false);
+        buttonMediumTerm.setVisible(false);
+        buttonLongTerm.setVisible(false);
+        init3();
+
+        // Set Listeners (buttons will be deleted on Version 3)
         buttonShortTerm.addActionListener(e -> show(TopTerms.SHORT));
         buttonMediumTerm.addActionListener(e -> show(TopTerms.MEDIUM));
         buttonLongTerm.addActionListener(e -> show(TopTerms.LONG));
         buttonNowPlaying.addActionListener(e -> {
-            playbackService.setRanking(ranking);
-            playbackService.run();
+            //playbackService.setRanking(ranking);
+            if (playbackService.isRunning()){
+                playbackService.restart();
+            } else playbackService.run();
         });
 
         table.addMouseListener(new MouseAdapter() {
@@ -113,6 +125,22 @@ public class StatsFrame extends JFrame {
                 if (artist != null) openArtistWindow(artist);
             }
         });
+    }
+
+    private void init3(){
+        bigRanking = new BigRanking();
+        bigRanking.add(apiUtils.getPaging(TopTerms.SHORT));
+        bigRanking.add(apiUtils.getPaging(TopTerms.MEDIUM));
+        bigRanking.add(apiUtils.getPaging(TopTerms.LONG));
+
+        // show on table
+        for (Song s : bigRanking){
+            model.addRow(toRow(s));
+        }
+
+        // update service
+        playbackService.setRanking(bigRanking);
+        playbackService.run();
     }
 
     private void customizeTexts(){

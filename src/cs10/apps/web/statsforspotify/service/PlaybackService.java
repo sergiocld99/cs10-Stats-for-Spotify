@@ -9,13 +9,15 @@ import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Random;
 
 public class PlaybackService {
     private final ApiUtils apiUtils;
     private final JTable jTable;
     private final JFrame jFrame;
     private Ranking ranking;
-    private boolean running;
+    private boolean running, allowWaiting;
+    private Thread thread;
 
     public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame) {
         this.apiUtils = apiUtils;
@@ -23,18 +25,23 @@ public class PlaybackService {
         this.jFrame = jFrame;
     }
 
+    public void restart(){
+        thread.interrupt();
+        running = false;
+        this.run();
+    }
+
     public void run() {
-        if (!isRunning()){
-            running = true;
-            new Thread(this::getCurrentData).start();
-        }
+        running = true;
+        thread = new Thread(this::getCurrentData);
+        thread.start();
     }
 
     public void setRanking(Ranking ranking) {
         this.ranking = ranking;
     }
 
-    private void getCurrentData(){
+    private void getCurrentData() {
         CurrentlyPlaying currentlyPlaying = apiUtils.getCurrentSong();
         if (!currentlyPlaying.getIs_playing()) {
             jFrame.setTitle("No song is playing now");
@@ -47,11 +54,31 @@ public class PlaybackService {
             jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
             selectCurrentRow(track.getId());
             Thread.sleep(track.getDurationMs() - currentlyPlaying.getProgress_ms());
+            allowWaiting = true;
             getCurrentData();
+        } catch (InterruptedException e){
+            System.err.println("Playback Service interrupted");
         } catch (Exception e) {
-            jFrame.setTitle("(C) 2020 - Calderón Sergio - Personal Chart History");
-            OptionPanes.showPlaybackStopped();
-            running = false;
+            e.printStackTrace();
+            if (allowWaiting){
+                allowWaiting = false;
+                retryIn15();
+            } else {
+                jFrame.setTitle("(C) 2020 - Calderón Sergio - Personal Chart History");
+                OptionPanes.showPlaybackStopped();
+                running = false;
+            }
+        }
+    }
+
+    private void retryIn15(){
+        try {
+            int secondsToSleep = new Random().nextInt(15) + 15;
+            jFrame.setTitle("Retrying in " + secondsToSleep + " seconds...");
+            Thread.sleep(secondsToSleep * 1000);
+            getCurrentData();
+        } catch (InterruptedException e){
+            e.printStackTrace();
         }
     }
 

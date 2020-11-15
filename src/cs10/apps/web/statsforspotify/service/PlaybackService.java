@@ -9,7 +9,11 @@ import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PlaybackService {
     private final ApiUtils apiUtils;
@@ -17,12 +21,18 @@ public class PlaybackService {
     private final JFrame jFrame;
     private Ranking ranking;
     private boolean running, allowWaiting;
-    private Thread thread;
+    private final DecimalFormat decimalFormat = new DecimalFormat("#00");
 
-    public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame) {
+    // Version 3
+    private Thread thread;
+    private JProgressBar progressBar;
+    private int time;
+
+    public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame, JProgressBar progressBar) {
         this.apiUtils = apiUtils;
         this.jTable = jTable;
         this.jFrame = jFrame;
+        this.progressBar = progressBar;
     }
 
     public void restart(){
@@ -53,11 +63,23 @@ public class PlaybackService {
             Track track = (Track) currentlyPlaying.getItem();
             jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
             selectCurrentRow(track.getId());
-            Thread.sleep(track.getDurationMs() - currentlyPlaying.getProgress_ms());
-            allowWaiting = true;
-            getCurrentData();
-        } catch (InterruptedException e){
-            System.err.println("Playback Service interrupted");
+
+            time = currentlyPlaying.getProgress_ms() / 1000;
+            int maximum = track.getDurationMs() / 1000;
+            progressBar.setMaximum(maximum);
+
+            ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            scheduledExecutorService.scheduleAtFixedRate(() -> {
+                progressBar.setValue(time);
+                int seconds = time % 60;
+                int minutes = time / 60;
+                progressBar.setString(minutes + ":" + decimalFormat.format(seconds));
+                if (time >= maximum){
+                    scheduledExecutorService.shutdown();
+                    allowWaiting = true;
+                    getCurrentData();
+                } else time++;
+            }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
             if (allowWaiting){

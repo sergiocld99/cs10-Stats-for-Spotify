@@ -32,6 +32,7 @@ public class StatsFrame extends JFrame {
     private PlaybackService playbackService;
 
     // version 3
+    private JProgressBar progressBar;
     private BigRanking bigRanking;
 
     public StatsFrame(ApiUtils apiUtils, Library library) throws HeadlessException {
@@ -66,16 +67,27 @@ public class StatsFrame extends JFrame {
         menuBar.add(fileMenu);
         menuBar.add(helpMenu);
 
-        // Ranking Buttons
+        // Progress Bar
         JPanel buttonsPanel = new JPanel();
+        progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
+        progressBar.setMinimum(0);
+        progressBar.setMaximum(100);
+        progressBar.setValue(0);
+        progressBar.setPreferredSize(new Dimension(650,30));
+        progressBar.setBorder(new EmptyBorder(8,16,0,50));
+        progressBar.setStringPainted(true);
+        progressBar.setForeground(Color.GREEN);
+        buttonsPanel.add(progressBar);
+
+        // Ranking Buttons
         JButton buttonShortTerm = new JButton(TopTerms.SHORT.getDescription());
         JButton buttonMediumTerm = new JButton(TopTerms.MEDIUM.getDescription());
         JButton buttonLongTerm = new JButton(TopTerms.LONG.getDescription());
         JButton buttonNowPlaying = new JButton("Show what I'm listening to");
         buttonsPanel.setBorder(new EmptyBorder(8, 16, 0, 16));
-        buttonsPanel.add(buttonShortTerm);
-        buttonsPanel.add(buttonMediumTerm);
-        buttonsPanel.add(buttonLongTerm);
+        //buttonsPanel.add(buttonShortTerm);
+        //buttonsPanel.add(buttonMediumTerm);
+        //buttonsPanel.add(buttonLongTerm);
         buttonsPanel.add(buttonNowPlaying);
 
         // Table
@@ -94,15 +106,12 @@ public class StatsFrame extends JFrame {
         getContentPane().add(BorderLayout.SOUTH, new JScrollPane(table));
 
         // Show all
-        playbackService = new PlaybackService(apiUtils, table, this);
-
+        playbackService = new PlaybackService(apiUtils, table, this, progressBar);
         setVisible(true);
         //show(TopTerms.SHORT);
 
         // Version 3
-        buttonShortTerm.setVisible(false);
-        buttonMediumTerm.setVisible(false);
-        buttonLongTerm.setVisible(false);
+        setResizable(false);
         init3();
 
         // Set Listeners (buttons will be deleted on Version 3)
@@ -129,18 +138,33 @@ public class StatsFrame extends JFrame {
 
     private void init3(){
         bigRanking = new BigRanking();
+        bigRanking.setTitle("big ranking");
+
+        progressBar.setString("Connecting to Spotify...");
         bigRanking.add(apiUtils.getPaging(TopTerms.SHORT));
+        progressBar.setValue(40);
         bigRanking.add(apiUtils.getPaging(TopTerms.MEDIUM));
+        progressBar.setValue(80);
         bigRanking.add(apiUtils.getPaging(TopTerms.LONG));
+        progressBar.setValue(100);
+
+        setTitle("Ranking #" + bigRanking.getCode());
+        int i = 0;
 
         // show on table
+        progressBar.setString("Loading ranking...");
         for (Song s : bigRanking){
+            progressBar.setValue((++i) * 100 / bigRanking.size());
             model.addRow(toRow(s));
         }
 
         // update service
+        progressBar.setString("");
         playbackService.setRanking(bigRanking);
         playbackService.run();
+
+        // save file
+        IOUtils.saveRanking(bigRanking, true);
     }
 
     private void customizeTexts(){

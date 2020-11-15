@@ -42,7 +42,7 @@ public class Histograma extends JPanel{
         add(panelEtiqueta, BorderLayout.PAGE_END);
     }
 
-    public void agregarColumna(String etiqueta, int valor, Color color) {
+    public void agregarColumna(String etiqueta, float valor, Color color) {
         Barra barra = new Barra(etiqueta, valor, color);
         barras.add(barra);
     }
@@ -51,13 +51,14 @@ public class Histograma extends JPanel{
         panelBarra.removeAll();
         panelEtiqueta.removeAll();
 
-        int max = 0;
+        float max = 0;
         for(Barra barra: barras)
             max = Math.max(max, barra.getValor());
 
         if(max > 0)
             for(Barra barra: barras) {
-                JLabel etiqueta = new JLabel(Integer.toString(barra.getValor()));
+                //JLabel etiqueta = new JLabel(Integer.toString(barra.getValor()));
+                JLabel etiqueta = new JLabel(String.valueOf(barra.getValor()));
 
                 etiqueta.setHorizontalTextPosition(JLabel.CENTER);
                 etiqueta.setHorizontalAlignment(JLabel.CENTER);
@@ -65,8 +66,8 @@ public class Histograma extends JPanel{
                 etiqueta.setVerticalTextPosition(JLabel.TOP);
                 etiqueta.setVerticalAlignment(JLabel.BOTTOM);
 
-                int alturaBarra = (barra.getValor() * alturaHistograma) / max;
-                Icon icon = new ColorIcon(barra.getColor(), anchoBarra, alturaBarra);
+                float alturaBarra = (barra.getValor() * alturaHistograma) / max;
+                Icon icon = new ColorIcon(barra.getColor(), anchoBarra, Math.round(alturaBarra));
                 etiqueta.setIcon(icon);
 
                 panelBarra.add(etiqueta);
@@ -77,7 +78,7 @@ public class Histograma extends JPanel{
             }
         else
             for(Barra barra: barras) {
-                JLabel etiqueta = new JLabel(Integer.toString(barra.getValor()));
+                JLabel etiqueta = new JLabel(String.valueOf(barra.getValor()));
 
                 etiqueta.setHorizontalTextPosition(JLabel.CENTER);
                 etiqueta.setHorizontalAlignment(JLabel.CENTER);
@@ -104,10 +105,10 @@ public class Histograma extends JPanel{
     private class Barra {
 
         private String etiqueta;
-        private int valor;
+        private float valor;
         private Color color;
 
-        public Barra(String etiqueta, int valor, Color color) {
+        public Barra(String etiqueta, float valor, Color color) {
             this.etiqueta = etiqueta;
             this.valor = valor;
             this.color = color;
@@ -121,11 +122,11 @@ public class Histograma extends JPanel{
             this.etiqueta = etiqueta;
         }
 
-        public int getValor() {
+        public float getValor() {
             return valor;
         }
 
-        public void setValor(int valor) {
+        public void setValor(float valor) {
             this.valor = valor;
         }
 

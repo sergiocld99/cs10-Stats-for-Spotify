@@ -1,6 +1,5 @@
 package cs10.apps.web.statsforspotify.view;
 
-import cs10.apps.desktop.statsforspotify.model.Artist;
 import cs10.apps.desktop.statsforspotify.view.Histograma;
 
 import javax.swing.*;
@@ -49,11 +48,11 @@ public class ArtistFrame extends JFrame {
         gbc.weightx = 1.0;
         pContenedorHistograma.add(lblHistograma, gbc);
 
-        histograma.agregarColumna("#1-10", Math.round(scores[0]), Color.RED);
-        histograma.agregarColumna("#11-20", Math.round(scores[1]), Color.ORANGE);
-        histograma.agregarColumna("#21-30", Math.round(scores[2]), Color.GREEN);
-        histograma.agregarColumna("#31-40", Math.round(scores[3]), Color.CYAN);
-        histograma.agregarColumna("#41-50", Math.round(scores[4]), Color.MAGENTA);
+        histograma.agregarColumna("#1-10", scores[0], Color.RED);
+        histograma.agregarColumna("#11-20", scores[1], Color.ORANGE);
+        histograma.agregarColumna("#21-30", scores[2], Color.GREEN);
+        histograma.agregarColumna("#31-40", scores[3], Color.CYAN);
+        histograma.agregarColumna("#41-50", scores[4], Color.MAGENTA);
         histograma.formalizarHistograma();
 
         gbc = new GridBagConstraints();

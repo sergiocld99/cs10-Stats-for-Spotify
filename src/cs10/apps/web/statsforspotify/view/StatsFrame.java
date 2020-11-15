@@ -172,7 +172,7 @@ public class StatsFrame extends JFrame {
         // save file
         long prevR = IOUtils.readLastRankingCode()[1];
         if (prevR == 0 || prevR != bigRanking.getCode()){
-            IOUtils.saveLastRankingCode(bigRanking.getCompareCode(), bigRanking.getCode());
+            IOUtils.saveLastRankingCode(prevR, bigRanking.getCode());
             IOUtils.makeLibraryFiles(bigRanking);
             IOUtils.saveRanking(bigRanking, true);
         } else {

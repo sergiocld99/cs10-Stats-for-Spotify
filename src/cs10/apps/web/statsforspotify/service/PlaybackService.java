@@ -36,8 +36,6 @@ public class PlaybackService {
     }
 
     public void restart(){
-        thread.interrupt();
-        running = false;
         this.run();
     }
 
@@ -71,6 +69,7 @@ public class PlaybackService {
 
             ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
             scheduledExecutorService.scheduleAtFixedRate(() -> {
+                running = true;
                 progressBar.setValue(time);
                 int seconds = time % 60;
                 int minutes = time / 60;

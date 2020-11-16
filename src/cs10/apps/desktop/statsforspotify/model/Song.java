@@ -12,6 +12,9 @@ public class Song implements Comparable<Song> {
     private String imageUrl, id, releaseDate;
     private int popularity;
 
+    // Version 4
+    private boolean mark;
+
     public Song(){ }
 
     public Song(String name) {
@@ -112,6 +115,14 @@ public class Song implements Comparable<Song> {
 
     public void setPopularity(int popularity) {
         this.popularity = popularity;
+    }
+
+    public boolean isMark() {
+        return mark;
+    }
+
+    public void setMark(boolean mark) {
+        this.mark = mark;
     }
 
     // PERSONAL METHODS

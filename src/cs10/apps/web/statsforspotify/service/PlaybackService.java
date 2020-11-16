@@ -53,7 +53,7 @@ public class PlaybackService {
 
     private void getCurrentData() {
         CurrentlyPlaying currentlyPlaying = apiUtils.getCurrentSong();
-        if (!currentlyPlaying.getIs_playing()) {
+        if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
             jFrame.setTitle("No song is playing now");
             running = false;
             return;
@@ -101,6 +101,7 @@ public class PlaybackService {
         int firstCharNumber = track.getName().charAt(0)-'A'+1;
         Song song = ranking.getSong(id);
         if (song != null){
+            progressBar.setForeground(Color.GREEN);
             lastSelectedSong = song;
             magicNumber = 0;
 
@@ -119,10 +120,11 @@ public class PlaybackService {
                             magicNumber * 0.01 * lastSelectedSong.getPopularity());
                     if (rankSelected <= ranking.size()){
                         System.out.println("I've selected the track #" + rankSelected);
+                        progressBar.setForeground(Color.orange);
                         lastSelectedSong = ranking.get(rankSelected-1);
                         magicNumber = 0;
                         if (!apiUtils.addToQueue(lastSelectedSong)){
-                            IOUtils.addFailedRecommendation(lastSelectedSong, track);
+                            //IOUtils.addFailedRecommendation(lastSelectedSong, track);
                         }
                     }
                 }

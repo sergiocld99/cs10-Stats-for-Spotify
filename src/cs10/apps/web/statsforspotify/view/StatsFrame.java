@@ -97,7 +97,7 @@ public class StatsFrame extends JFrame {
 
         // Table
         String[] columnNames = new String[]{
-                "Status", "Album", "Rank", "Song Name", "Artists", "Popularity", "Release Date"
+                "Status", "Album", "Rank", "Song Name", "Artists", "Popularity", "Status"
         };
 
         model = new RankingModel(columnNames, 0);
@@ -157,9 +157,30 @@ public class StatsFrame extends JFrame {
 
         int i = 0;
 
+        // save file
+        long prevR = IOUtils.readLastRankingCode()[1];
+        if (prevR == 0 || prevR != bigRanking.getCode()){
+            for (String id : bigRanking.getLefts()) apiUtils.printTrackInfo(id);
+            IOUtils.saveLastRankingCode(prevR, bigRanking.getCode());
+            IOUtils.makeLibraryFiles(bigRanking);
+            IOUtils.saveRanking(bigRanking, true);
+        } else {
+            System.out.println("Nothing to save");
+        }
+
         // show on table
         progressBar.setString("Loading ranking...");
         for (Song s : bigRanking){
+            if (s.getStatus() == Status.NEW){
+                int times = IOUtils.getTimesOnRanking(s.getArtists(), s.getId());
+                if (times == 1) s.setInfoStatus("NEW");
+                else s.setInfoStatus("RE-ENTRY");
+            } else {
+                if (s.getChange() == 0) s.setInfoStatus("");
+                else if (s.getChange() > 0) s.setInfoStatus("+"+s.getChange());
+                else s.setInfoStatus(String.valueOf(s.getChange()));
+            }
+
             progressBar.setValue((++i) * 100 / bigRanking.size());
             model.addRow(toRow(s));
         }
@@ -168,16 +189,6 @@ public class StatsFrame extends JFrame {
         progressBar.setString("");
         playbackService.setRanking(bigRanking);
         playbackService.run();
-
-        // save file
-        long prevR = IOUtils.readLastRankingCode()[1];
-        if (prevR == 0 || prevR != bigRanking.getCode()){
-            IOUtils.saveLastRankingCode(prevR, bigRanking.getCode());
-            IOUtils.makeLibraryFiles(bigRanking);
-            IOUtils.saveRanking(bigRanking, true);
-        } else {
-            System.out.println("Nothing to save");
-        }
 
     }
 
@@ -225,7 +236,7 @@ public class StatsFrame extends JFrame {
     private Object[] toRow(Song song){
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
                 downloadImage(song.getImageUrl()), song.getRank(),
-                song.getName(), song.getArtists(), song.getPopularity(), song.getReleaseDate()};
+                song.getName(), song.getArtists(), song.getPopularity(), song.getInfoStatus()};
     }
 
     private ImageIcon downloadImage(String url){

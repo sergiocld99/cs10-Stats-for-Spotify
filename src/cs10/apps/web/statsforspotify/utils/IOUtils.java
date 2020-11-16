@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class IOUtils {
-    private static final String DATA_FILE = "appdata";
+    private static final String DATA_FILE = "appdata.ini";
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public static boolean isFirstTime(){
@@ -163,6 +163,26 @@ public class IOUtils {
         }
     }
 
+    public static int getTimesOnRanking(String artists, String id){
+        String artist = artists.split(", ")[0].replace("/\\","");
+        File file = new File("library//"+artist+"//"+id);
+        int cant = 0;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))){
+            // skip header
+            br.readLine();
+
+            // read info
+            while (br.readLine() != null) cant++;
+        } catch (FileNotFoundException e) {
+            System.err.println(file.getPath() + " doesn't exist!");
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+        return cant;
+    }
+
     public static void addFailedRecommendation(Song song, Track track){
         File file = new File("failed_recommendations.txt");
         if (!file.exists()){
@@ -175,7 +195,7 @@ public class IOUtils {
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(file, true))){
             pw.print(dateFormat.format(new Date(System.currentTimeMillis())));
-            pw.print(" -- " + song.getRank() + " -- " + song.getName() + " vs " + track.getName());
+            pw.println(" -- " + song.getRank() + " -- " + song.getName() + " vs " + track.getName());
         } catch (FileNotFoundException e){
             System.err.println(file.getPath() + " doesn't exist!");
         } catch (IOException e){

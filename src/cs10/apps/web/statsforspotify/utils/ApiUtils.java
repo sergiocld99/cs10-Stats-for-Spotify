@@ -6,7 +6,6 @@ import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Paging;
 import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.model_objects.specification.User;
@@ -17,6 +16,7 @@ import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 import org.apache.hc.core5.http.ParseException;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
@@ -144,9 +144,23 @@ public class ApiUtils {
         try {
             spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+song.getId()).build().execute();
             return true;
-        } catch (Exception e){
+        } catch (SpotifyWebApiException e){
             System.err.println("You don't have Premium :(");
-            return false;
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public void printTrackInfo(String id){
+        try {
+            Track track = spotifyApi.getTrack(id).build().execute();
+            JOptionPane.showMessageDialog(null,
+                    track.getName() + " by " + track.getArtists()[0].getName(),
+                    "Song that left the chart", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 }

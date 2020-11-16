@@ -7,6 +7,9 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BigRanking extends Ranking {
     private static final int TOP_INDEX = 1;
     private BigRanking rankingToCompare;
@@ -63,6 +66,7 @@ public class BigRanking extends Ranking {
         Song prevS = rankingToCompare.getSong(track.getId());
         if (prevS == null) song.setStatus(Status.NEW);
         else {
+            prevS.setMark(true);
             song.setChange(prevS.getRank() - song.getRank());
             if (song.getChange() == 0) song.setStatus(Status.NOTHING);
             else if (song.getChange() < 0) song.setStatus(Status.DOWN);
@@ -86,7 +90,13 @@ public class BigRanking extends Ranking {
         return code;
     }
 
-    public long getCompareCode(){
-        return rankingToCompare.getCode();
+    public List<String> getLefts(){
+        List<String> ids = new ArrayList<>();
+        for (Song s : rankingToCompare){
+            if (!s.isMark()){
+                ids.add(s.getId());
+            }
+        }
+        return ids;
     }
 }

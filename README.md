@@ -39,3 +39,5 @@ Here, each artist has their folder. An artist folder contains "Song Files".
 * Column 1: rank (positive number)
 * Column 2: popularity (positive number, 0-100)
 * Column 3: ranking code (positive number, 0-15000)
+
+![alt text](https://i.imgur.com/zHQRZPX.png)

@@ -1,5 +1,8 @@
 package cs10.apps.desktop.statsforspotify.model;
 
+import com.wrapper.spotify.model_objects.specification.Track;
+import cs10.apps.web.statsforspotify.utils.CommonUtils;
+
 import java.text.DecimalFormat;
 
 public class Song implements Comparable<Song> {
@@ -9,7 +12,7 @@ public class Song implements Comparable<Song> {
     private long timestamp;
 
     // For web
-    private String imageUrl, id, releaseDate;
+    private String imageUrl, id;
     private int popularity;
 
     // Version 4
@@ -19,6 +22,14 @@ public class Song implements Comparable<Song> {
 
     public Song(String name) {
         this.setName(name);
+    }
+
+    public Song(Track track){
+        this.id = track.getId();
+        this.name = track.getName();
+        this.artists = CommonUtils.combineArtists(track.getArtists());
+        this.imageUrl = track.getAlbum().getImages()[0].getUrl();
+        this.popularity = track.getPopularity();
     }
 
     public int getPreviousRank() {
@@ -99,14 +110,6 @@ public class Song implements Comparable<Song> {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getReleaseDate() {
-        return releaseDate;
-    }
-
-    public void setReleaseDate(String releaseDate) {
-        this.releaseDate = releaseDate;
     }
 
     public int getPopularity() {

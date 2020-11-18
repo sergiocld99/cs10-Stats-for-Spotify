@@ -46,11 +46,11 @@ public class CustomThumbnail extends JLabel {
 
         if (popularity > average){
             graphics2D.setColor(Color.green);
-        } else graphics2D.setColor(Color.red);
+        } else graphics2D.setColor(Color.orange);
 
         //graphics2D.setFont(new Font("Arial", Font.BOLD, 40));
         drawCenteredString(graphics2D, String.valueOf(popularity),
-                new Rectangle(80,80), new Font("Arial", Font.BOLD, 28));
+                new Rectangle(40,0,40,40), new Font("Arial", Font.BOLD, 24));
         //graphics2D.drawString(String.valueOf(popularity), 20, 30);
     }
 

@@ -68,14 +68,19 @@ public class StatsFrame extends JFrame {
         menuBar.add(fileMenu);
         menuBar.add(helpMenu);
 
-        // Progress Bar
         JPanel buttonsPanel = new JPanel();
+
+        // Custom Thumbnail
+        CustomThumbnail thumbnail = new CustomThumbnail(80);
+        buttonsPanel.add(thumbnail);
+
+        // Progress Bar
         progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
         progressBar.setMinimum(0);
         progressBar.setMaximum(100);
         progressBar.setValue(0);
         progressBar.setPreferredSize(new Dimension(650,30));
-        progressBar.setBorder(new EmptyBorder(8,16,0,50));
+        progressBar.setBorder(new EmptyBorder(0,30,0,50));
         progressBar.setStringPainted(true);
         progressBar.setForeground(Color.GREEN);
         progressBar.setUI(new BasicProgressBarUI() {
@@ -90,7 +95,7 @@ public class StatsFrame extends JFrame {
         JButton buttonMediumTerm = new JButton(TopTerms.MEDIUM.getDescription());
         JButton buttonLongTerm = new JButton(TopTerms.LONG.getDescription());
         JButton buttonNowPlaying = new JButton("Show what I'm listening to");
-        buttonsPanel.setBorder(new EmptyBorder(8, 16, 0, 16));
+        buttonsPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
         //buttonsPanel.add(buttonShortTerm);
         //buttonsPanel.add(buttonMediumTerm);
         //buttonsPanel.add(buttonLongTerm);
@@ -98,7 +103,7 @@ public class StatsFrame extends JFrame {
 
         // Table
         String[] columnNames = new String[]{
-                "Status", "Album", "Rank", "Song Name", "Artists", "Popularity", "Status"
+                "Status", "Rank", "Song Name", "Artists", "Popularity", "Change"
         };
 
         model = new RankingModel(columnNames, 0);
@@ -112,13 +117,16 @@ public class StatsFrame extends JFrame {
         getContentPane().add(BorderLayout.SOUTH, new JScrollPane(table));
 
         // Show all
-        playbackService = new PlaybackService(apiUtils, table, this, progressBar);
+        playbackService = new PlaybackService(apiUtils, table, this, progressBar, thumbnail);
         setResizable(false);
         setVisible(true);
         //show(TopTerms.SHORT);
 
         // Version 4
         init4();
+
+        // Update Custom Thumbnail Properties
+        thumbnail.setAverage((int) (bigRanking.getCode() / 100));
 
         // Set Listeners (buttons will be deleted on Version 3)
         buttonShortTerm.addActionListener(e -> show(TopTerms.SHORT));
@@ -132,7 +140,7 @@ public class StatsFrame extends JFrame {
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 4);
+                String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
                 String[] artists = artistsNames.split(", ");
                 String mainName = artists[random.nextInt(artists.length)];
                 openArtistWindow(mainName, IOUtils.getScores(mainName));
@@ -142,6 +150,11 @@ public class StatsFrame extends JFrame {
 
             }
         });
+
+        // Start Playback Service
+        progressBar.setString("");
+        playbackService.setRanking(bigRanking);
+        playbackService.run();
     }
 
     private void init3(){
@@ -169,11 +182,6 @@ public class StatsFrame extends JFrame {
 
         // show on table
         buildTable();
-
-        // update service
-        progressBar.setString("");
-        playbackService.setRanking(bigRanking);
-        playbackService.run();
     }
 
     private void init4(){
@@ -207,11 +215,6 @@ public class StatsFrame extends JFrame {
         for (Song s : rankingToCompare.getNonMarked()){
             apiUtils.printLeftTrackInfo(s.getId());
         }
-
-        // Step 7: start playback service
-        progressBar.setString("");
-        playbackService.setRanking(bigRanking);
-        playbackService.run();
     }
 
     private void buildTable(){
@@ -239,11 +242,11 @@ public class StatsFrame extends JFrame {
         cellRenderer.setHorizontalAlignment(JLabel.CENTER);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setPreferredWidth(50);
+        //table.getColumnModel().getColumn(1).setPreferredWidth(50);
+        table.getColumnModel().getColumn(2).setPreferredWidth(250);
         table.getColumnModel().getColumn(3).setPreferredWidth(250);
-        table.getColumnModel().getColumn(4).setPreferredWidth(250);
 
-        for (int i=2; i<model.getColumnCount(); i++){
+        for (int i=1; i<model.getColumnCount(); i++){
             table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
         }
     }
@@ -277,24 +280,7 @@ public class StatsFrame extends JFrame {
 
     private Object[] toRow(Song song){
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
-                downloadImage(song.getImageUrl()), song.getRank(),
-                song.getName(), song.getArtists(), song.getPopularity(), song.getInfoStatus()};
-    }
-
-    private ImageIcon downloadImage(String url){
-        try {
-            BufferedImage bi = ImageIO.read(new URL(url));
-            Image image = bi.getScaledInstance(50, 50, Image.SCALE_SMOOTH);
-            return new ImageIcon(image);
-        } catch (MalformedURLException e){
-            System.err.println("Invalid format: " + url);
-            e.printStackTrace();
-        } catch (IOException e){
-            System.err.println("Error while trying to download from web");
-            e.printStackTrace();
-        }
-
-        return null;
+                song.getRank(), song.getName(), song.getArtists(), song.getPopularity(), song.getInfoStatus()};
     }
 
     private void loadChanges(TopTerms term){

@@ -3,6 +3,13 @@ package cs10.apps.web.statsforspotify.utils;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,5 +43,21 @@ public class CommonUtils {
         }
 
         return false;
+    }
+
+    public static ImageIcon downloadImage(String url, int size){
+        try {
+            BufferedImage bi = ImageIO.read(new URL(url));
+            Image image = bi.getScaledInstance(size, size, Image.SCALE_SMOOTH);
+            return new ImageIcon(image);
+        } catch (MalformedURLException e){
+            System.err.println("Invalid format: " + url);
+            e.printStackTrace();
+        } catch (IOException e){
+            System.err.println("Error while trying to download from web");
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

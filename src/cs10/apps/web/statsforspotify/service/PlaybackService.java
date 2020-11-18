@@ -5,7 +5,9 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
+import cs10.apps.web.statsforspotify.view.CustomThumbnail;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
@@ -30,14 +32,17 @@ public class PlaybackService {
     private int time;
 
     // Version 4
+    private CustomThumbnail thumbnail;
     private Song lastSelectedSong;
     private int magicNumber;
 
-    public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame, JProgressBar progressBar) {
+    public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame,
+                           JProgressBar progressBar, CustomThumbnail thumbnail) {
         this.apiUtils = apiUtils;
         this.jTable = jTable;
         this.jFrame = jFrame;
         this.progressBar = progressBar;
+        this.thumbnail = thumbnail;
     }
 
     public void run() {
@@ -61,7 +66,14 @@ public class PlaybackService {
 
         try {
             Track track = (Track) currentlyPlaying.getItem();
+            if (track == null){
+                jFrame.setTitle("Advertisement");
+                retryIn30();
+                return;
+            }
+
             jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
+            thumbnail.set(track.getAlbum().getImages()[0].getUrl(), track.getPopularity());
             selectCurrentRow(track);
 
             time = currentlyPlaying.getProgress_ms() / 1000;
@@ -82,13 +94,12 @@ public class PlaybackService {
             }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
-            retryIn30();
         }
     }
 
     private void retryIn30(){
         try {
-            jFrame.setTitle("Retrying in " + 30 + " seconds...");
+            //jFrame.setTitle("Retrying in " + 30 + " seconds...");
             Thread.sleep(30000);
             getCurrentData();
         } catch (InterruptedException e){

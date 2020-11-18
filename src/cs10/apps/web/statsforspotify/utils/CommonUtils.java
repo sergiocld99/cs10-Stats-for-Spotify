@@ -1,6 +1,11 @@
 package cs10.apps.web.statsforspotify.utils;
 
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
+import com.wrapper.spotify.model_objects.specification.Track;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class CommonUtils {
 
@@ -10,4 +15,23 @@ public class CommonUtils {
         return sb.toString();
     }
 
+    public static List<Track> combineWithoutRepeats(Track[] tracks1, Track[] tracks2){
+        List<Track> tracks = new ArrayList<>(Arrays.asList(tracks1));
+
+        for (Track track : tracks2){
+            if (!alreadyExists(tracks1, track))
+                tracks.add(track);
+        }
+
+        return tracks;
+    }
+
+    private static boolean alreadyExists(Track[] array, Track track){
+        for (Track value : array) {
+            if (value.getId().equals(track.getId()))
+                return true;
+        }
+
+        return false;
+    }
 }

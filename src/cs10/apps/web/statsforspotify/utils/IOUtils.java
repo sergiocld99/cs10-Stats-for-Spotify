@@ -19,6 +19,10 @@ public class IOUtils {
         return ! new File(DATA_FILE).exists();
     }
 
+    /**
+     *
+     * @return an array with compare [0] and last [1] codes
+     */
     public static long[] readLastRankingCode(){
         long[] result = new long[2];
 
@@ -38,7 +42,7 @@ public class IOUtils {
         return result;
     }
 
-    public static void saveLastRankingCode(long compareCode, long actualCode){
+    public static void saveLastRankingCode(long compareCode, long lastCode){
         File file = new File(DATA_FILE);
         if (!file.exists()){
             try {
@@ -50,7 +54,7 @@ public class IOUtils {
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(DATA_FILE))){
             pw.println("compare="+compareCode);
-            pw.println("actual="+actualCode);
+            pw.println("last="+lastCode);
         } catch (FileNotFoundException e){
             System.err.println("The file " + DATA_FILE + " doesn't exist!");
         } catch (IOException e){

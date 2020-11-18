@@ -163,4 +163,50 @@ public class ApiUtils {
             e.printStackTrace();
         }
     }
+
+    private int findMostPopular(Track[] tracks){
+        int max = 0, result = 0;
+        for (int i=0; i<tracks.length; i++){
+            Track track = tracks[i];
+            if (track.getPopularity() > max){
+                max = track.getPopularity();
+                result = i;
+            }
+        }
+
+        return result;
+    }
+
+    public Track[] getUntilMostPopular(String termKey, int min){
+        Track[] result = null;
+        min = Math.min(min, 50);
+
+        try {
+            Track[] tracks1 = spotifyApi.getUsersTopTracks().time_range(termKey)
+                    .limit(min).build().execute().getItems();
+            Track[] tracks2 = spotifyApi.getUsersTopTracks().time_range(termKey)
+                    .limit(49).offset(min).build().execute().getItems();
+
+            int mostPopularIndex2 = findMostPopular(tracks2);
+            result = new Track[tracks1.length + mostPopularIndex2 + 1];
+            System.arraycopy(tracks1, 0, result, 0, tracks1.length);
+            System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+        if (result == null) result = new Track[0];
+        return result;
+    }
+
+    public Track[] getUntilPosition(String termKey, int position){
+
+        try {
+            return spotifyApi.getUsersTopTracks().time_range(termKey)
+                    .limit(Math.min(position, 50)).build().execute().getItems();
+        } catch (Exception e){
+            e.printStackTrace();
+            return new Track[0];
+        }
+    }
 }

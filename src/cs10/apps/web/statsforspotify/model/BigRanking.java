@@ -8,12 +8,49 @@ import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class BigRanking extends Ranking {
     private static final int TOP_INDEX = 1;
     private BigRanking rankingToCompare;
     private long code;
+
+    public BigRanking(){ }
+
+    public BigRanking(Collection<Track> tracks){
+        for (Track track : tracks){
+            code += track.getPopularity();
+            Song song = new Song(track);
+            song.setRank(size() + 1);
+            super.add(song);
+        }
+    }
+
+    public void updateAllStatus(BigRanking rankingToCompare){
+        for (Song song : this){
+            Song prevS = rankingToCompare.getSong(song.getId());
+            if (prevS == null) song.setStatus(Status.NEW);
+            else {
+                prevS.setMark(true);
+                song.setChange(prevS.getRank() - song.getRank());
+                if (song.getChange() == 0) song.setStatus(Status.NOTHING);
+                else if (song.getChange() < 0) song.setStatus(Status.DOWN);
+                else song.setStatus(Status.UP);
+            }
+        }
+    }
+
+    public List<Song> getNonMarked(){
+        List<Song> result = new ArrayList<>();
+
+        for (Song song : this){
+            if (!song.isMark())
+                result.add(song);
+        }
+
+        return result;
+    }
 
     public void addRankingToCompare(BigRanking ranking){
         rankingToCompare = ranking;
@@ -58,7 +95,6 @@ public class BigRanking extends Ranking {
         song.setName(track.getName());
         song.setArtists(CommonUtils.combineArtists(track.getArtists()));
         song.setImageUrl(track.getAlbum().getImages()[0].getUrl());
-        song.setReleaseDate(track.getAlbum().getReleaseDate());
         song.setPopularity(track.getPopularity());
         song.setStatus(Status.NOTHING);
 
@@ -73,20 +109,12 @@ public class BigRanking extends Ranking {
             else song.setStatus(Status.UP);
         }
 
+        code += song.getPopularity();
         super.add(song);
     }
 
     @Override
     public long getCode() {
-        if (code == 0){
-            long sum = 0;
-
-            for (Song s : this)
-                sum += s.getPopularity();
-
-            code = sum;
-        }
-
         return code;
     }
 

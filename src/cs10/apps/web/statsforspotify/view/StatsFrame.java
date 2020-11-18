@@ -1,5 +1,6 @@
 package cs10.apps.web.statsforspotify.view;
 
+import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Library;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
@@ -10,6 +11,7 @@ import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 
 import javax.imageio.ImageIO;
@@ -190,6 +192,18 @@ public class StatsFrame extends JFrame {
         playbackService.setRanking(bigRanking);
         playbackService.run();
 
+    }
+
+    private void init4(){
+        // Step 1: get actual top tracks from Spotify
+        Track[] tracks1 = apiUtils.getUntilMostPopular(TopTerms.SHORT.getDescription(), 50);
+        Track[] tracks2 = apiUtils.getUntilPosition(TopTerms.MEDIUM.getDescription(), 100-tracks1.length);
+
+        // Step 2: build actual ranking
+        bigRanking = new BigRanking(CommonUtils.combineWithoutRepeats(tracks1, tracks2));
+
+        // Step 3: compare actual and last codes
+        
     }
 
     private void customizeTexts(){

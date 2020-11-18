@@ -48,11 +48,12 @@ public class ArtistFrame extends JFrame {
         gbc.weightx = 1.0;
         pContenedorHistograma.add(lblHistograma, gbc);
 
-        histograma.agregarColumna("#1-10", scores[0], Color.RED);
-        histograma.agregarColumna("#11-20", scores[1], Color.ORANGE);
-        histograma.agregarColumna("#21-30", scores[2], Color.GREEN);
-        histograma.agregarColumna("#31-40", scores[3], Color.CYAN);
-        histograma.agregarColumna("#41-50", scores[4], Color.MAGENTA);
+        Color[] colors = new Color[]{Color.RED, Color.ORANGE, Color.GREEN, Color.CYAN, Color.MAGENTA};
+        for (int i=0; i<scores.length; i++){
+            String tag = "#" + (i*10+1) + "-" + ((i+1)*10);
+            histograma.agregarColumna(tag, scores[i], colors[i % colors.length]);
+        }
+
         histograma.formalizarHistograma();
 
         gbc = new GridBagConstraints();

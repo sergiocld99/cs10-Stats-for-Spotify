@@ -134,7 +134,7 @@ public class IOUtils {
 
     public static float[] getScores(String artist){
         artist = artist.replace("/\\","");
-        float[] result = new float[5];
+        float[] result = new float[10];
 
         File file = new File("library//" + artist);
         File[] songsFiles = file.listFiles();
@@ -156,7 +156,6 @@ public class IOUtils {
             while ((line = br.readLine()) != null){
                 String[] params = line.split("--");
                 int rank = Integer.parseInt(params[0]);
-                if (rank > 50) continue;
                 int popularity = Integer.parseInt(params[1]);
                 scores[(rank-1) / 10] += popularity / 100f;
             }

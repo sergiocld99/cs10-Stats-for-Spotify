@@ -153,7 +153,7 @@ public class ApiUtils {
         return false;
     }
 
-    public void printTrackInfo(String id){
+    public void printLeftTrackInfo(String id){
         try {
             Track track = spotifyApi.getTrack(id).build().execute();
             JOptionPane.showMessageDialog(null,
@@ -174,18 +174,19 @@ public class ApiUtils {
             }
         }
 
+        System.out.println("The most popular track is " + tracks[result].getName());
         return result;
     }
 
     public Track[] getUntilMostPopular(String termKey, int min){
         Track[] result = null;
-        min = Math.min(min, 50);
+        min = Math.min(min, 49);
 
         try {
             Track[] tracks1 = spotifyApi.getUsersTopTracks().time_range(termKey)
                     .limit(min).build().execute().getItems();
             Track[] tracks2 = spotifyApi.getUsersTopTracks().time_range(termKey)
-                    .limit(49).offset(min).build().execute().getItems();
+                    .limit(50).offset(min).build().execute().getItems();
 
             int mostPopularIndex2 = findMostPopular(tracks2);
             result = new Track[tracks1.length + mostPopularIndex2 + 1];
@@ -199,11 +200,11 @@ public class ApiUtils {
         return result;
     }
 
-    public Track[] getUntilPosition(String termKey, int position){
+    public Track[] getTopTracks(String termKey){
 
         try {
             return spotifyApi.getUsersTopTracks().time_range(termKey)
-                    .limit(Math.min(position, 50)).build().execute().getItems();
+                    .limit(50).build().execute().getItems();
         } catch (Exception e){
             e.printStackTrace();
             return new Track[0];

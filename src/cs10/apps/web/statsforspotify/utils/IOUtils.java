@@ -6,6 +6,7 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 
+import javax.swing.*;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -62,8 +63,11 @@ public class IOUtils {
         }
     }
 
-    public static void makeLibraryFiles(Ranking ranking){
+    public static void makeLibraryFiles(Ranking ranking, JProgressBar progressBar){
+        int total = ranking.size(), i = 0;
+
         for (Song s : ranking){
+            progressBar.setValue((i++) * 100 / total);
             String[] artists = s.getArtists().split(", ");
             for (String a : artists) makeArtistFiles(a, s, ranking.getCode());
         }

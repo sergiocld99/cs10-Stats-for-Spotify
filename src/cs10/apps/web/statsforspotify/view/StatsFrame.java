@@ -1,7 +1,6 @@
 package cs10.apps.web.statsforspotify.view;
 
 import com.wrapper.spotify.model_objects.specification.Track;
-import cs10.apps.desktop.statsforspotify.model.Library;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
@@ -114,12 +113,12 @@ public class StatsFrame extends JFrame {
 
         // Show all
         playbackService = new PlaybackService(apiUtils, table, this, progressBar);
+        setResizable(false);
         setVisible(true);
         //show(TopTerms.SHORT);
 
-        // Version 3
-        setResizable(false);
-        init3();
+        // Version 4
+        init4();
 
         // Set Listeners (buttons will be deleted on Version 3)
         buttonShortTerm.addActionListener(e -> show(TopTerms.SHORT));
@@ -157,25 +156,72 @@ public class StatsFrame extends JFrame {
         bigRanking.add(apiUtils.getPaging(TopTerms.LONG));
         progressBar.setValue(100);
 
-        int i = 0;
-
         // save file
         long prevR = IOUtils.readLastRankingCode()[1];
         if (prevR == 0 || prevR != bigRanking.getCode()){
-            for (String id : bigRanking.getLefts()) apiUtils.printTrackInfo(id);
+            for (String id : bigRanking.getLefts()) apiUtils.printLeftTrackInfo(id);
             IOUtils.saveLastRankingCode(prevR, bigRanking.getCode());
-            IOUtils.makeLibraryFiles(bigRanking);
+            IOUtils.makeLibraryFiles(bigRanking, progressBar);
             IOUtils.saveRanking(bigRanking, true);
         } else {
             System.out.println("Nothing to save");
         }
 
         // show on table
+        buildTable();
+
+        // update service
+        progressBar.setString("");
+        playbackService.setRanking(bigRanking);
+        playbackService.run();
+    }
+
+    private void init4(){
+        // Step 1: get actual top tracks from Spotify
+        progressBar.setString("Connecting to Spotify...");
+        Track[] tracks1 = apiUtils.getUntilMostPopular(TopTerms.SHORT.getKey(), 50);
+        progressBar.setValue(50);
+        Track[] tracks2 = apiUtils.getTopTracks(TopTerms.MEDIUM.getKey());
+        progressBar.setValue(100);
+
+        // Step 2: build actual ranking
+        bigRanking = new BigRanking(CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100));
+
+        // Step 3: read last code
+        long[] savedCodes = IOUtils.readLastRankingCode();
+        if (bigRanking.getCode() != savedCodes[1]){
+            IOUtils.saveLastRankingCode(savedCodes[1], bigRanking.getCode());
+            IOUtils.saveRanking(bigRanking, true);
+            progressBar.setString("Creating Library Files...");
+            IOUtils.makeLibraryFiles(bigRanking, progressBar);
+        }
+
+        // Step 4: load compare ranking
+        BigRanking rankingToCompare = IOUtils.loadPreviousRanking();
+        bigRanking.updateAllStatus(rankingToCompare);
+
+        // Step 5: build and show UI
+        buildTable();
+
+        // Step 6: show songs that left the chart
+        for (Song s : rankingToCompare.getNonMarked()){
+            apiUtils.printLeftTrackInfo(s.getId());
+        }
+
+        // Step 7: start playback service
+        progressBar.setString("");
+        playbackService.setRanking(bigRanking);
+        playbackService.run();
+    }
+
+    private void buildTable(){
         progressBar.setString("Loading ranking...");
+        int i = 0;
+
         for (Song s : bigRanking){
             if (s.getStatus() == Status.NEW){
                 int times = IOUtils.getTimesOnRanking(s.getArtists(), s.getId());
-                if (times == 1) s.setInfoStatus("NEW");
+                if (times <= 1) s.setInfoStatus("NEW");
                 else s.setInfoStatus("RE-ENTRY");
             } else {
                 if (s.getChange() == 0) s.setInfoStatus("");
@@ -186,24 +232,6 @@ public class StatsFrame extends JFrame {
             progressBar.setValue((++i) * 100 / bigRanking.size());
             model.addRow(toRow(s));
         }
-
-        // update service
-        progressBar.setString("");
-        playbackService.setRanking(bigRanking);
-        playbackService.run();
-
-    }
-
-    private void init4(){
-        // Step 1: get actual top tracks from Spotify
-        Track[] tracks1 = apiUtils.getUntilMostPopular(TopTerms.SHORT.getDescription(), 50);
-        Track[] tracks2 = apiUtils.getUntilPosition(TopTerms.MEDIUM.getDescription(), 100-tracks1.length);
-
-        // Step 2: build actual ranking
-        bigRanking = new BigRanking(CommonUtils.combineWithoutRepeats(tracks1, tracks2));
-
-        // Step 3: compare actual and last codes
-        
     }
 
     private void customizeTexts(){

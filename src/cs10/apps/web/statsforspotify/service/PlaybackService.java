@@ -21,10 +21,10 @@ public class PlaybackService {
     private boolean running;
 
     // Version 3
-    private Thread thread;
     private int time;
 
     // Version 4
+    private ScheduledExecutorService scheduledExecutorService;
     private final CustomPlayer player;
     private Song lastSelectedSong;
     private int magicNumber;
@@ -37,10 +37,13 @@ public class PlaybackService {
     }
 
     public void run() {
-        if (isRunning()) return;
+        if (scheduledExecutorService != null){
+            scheduledExecutorService.shutdown();
+            jTable.repaint();
+        }
+
         running = true;
-        thread = new Thread(this::getCurrentData);
-        thread.start();
+        getCurrentData();
     }
 
     public void setRanking(Ranking ranking) {
@@ -57,22 +60,28 @@ public class PlaybackService {
 
         try {
             Track track = (Track) currentlyPlaying.getItem();
+            player.setTrack(track);
+
             if (track == null){
                 jFrame.setTitle("Advertisement");
-                retryIn30();
+                scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+                scheduledExecutorService.schedule(this::getCurrentData, 30, TimeUnit.SECONDS);
                 return;
             }
 
             jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
-            player.setTrack(track);
             selectCurrentRow(track);
+
+            // Update table scroll and custom player labels
+            jTable.repaint();
+            player.repaint();
 
             time = currentlyPlaying.getProgress_ms() / 1000;
             int maximum = track.getDurationMs() / 1000;
             //progressBar.setMaximum(maximum);
             running = true;
 
-            ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
             scheduledExecutorService.scheduleAtFixedRate(() -> {
                 player.setTime(time);
                 if (time >= maximum || !running){
@@ -81,16 +90,6 @@ public class PlaybackService {
                 } else time++;
             }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void retryIn30(){
-        try {
-            //jFrame.setTitle("Retrying in " + 30 + " seconds...");
-            Thread.sleep(30000);
-            getCurrentData();
-        } catch (InterruptedException e){
             e.printStackTrace();
         }
     }
@@ -108,7 +107,6 @@ public class PlaybackService {
             int i = song.getRank()-1;
             jTable.getSelectionModel().setSelectionInterval(i,i);
             scrollToCenter(jTable, i, 4);
-            jFrame.repaint();
         } else {
             System.err.println("Current Song is not in ranking");
             if (lastSelectedSong != null){
@@ -153,6 +151,11 @@ public class PlaybackService {
             centerY = -centerY;
         }
         rect.translate(centerX, centerY);
-        viewport.scrollRectToVisible(rect);
+
+        try {
+            viewport.scrollRectToVisible(rect);
+        } catch (ClassCastException e){
+            System.err.println(e.getMessage());
+        }
     }
 }

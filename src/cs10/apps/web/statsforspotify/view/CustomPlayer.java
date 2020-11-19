@@ -55,7 +55,19 @@ public class CustomPlayer extends JPanel {
     }
 
     public void setTrack(Track track){
-        this.thumbnail.setCover(track.getAlbum().getImages()[0].getUrl());
+        if (track == null){
+            this.progressBar.setValue(0);
+            this.progressBar.setString("");
+            this.scoreLabel.setValue(0);
+            this.popularityLabel.setValue(0);
+            this.thumbnail.setUnknown();
+            return;
+        }
+
+        if (track.getAlbum().getImages().length > 0){
+            this.thumbnail.setCover(track.getAlbum().getImages()[0].getUrl());
+        } else this.thumbnail.setUnknown();
+
         this.progressBar.setMaximum(track.getDurationMs() / 1000);
         this.progressBar.setValue(0);
 

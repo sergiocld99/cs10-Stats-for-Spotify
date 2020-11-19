@@ -68,7 +68,7 @@ public class CustomPlayer extends JPanel {
             this.thumbnail.setCover(track.getAlbum().getImages()[0].getUrl());
         } else this.thumbnail.setUnknown();
 
-        this.progressBar.setMaximum(track.getDurationMs() / 1000);
+        this.progressBar.setMaximum(track.getDurationMs() / 1000 + 1);
         this.progressBar.setValue(0);
 
         int score = 0;

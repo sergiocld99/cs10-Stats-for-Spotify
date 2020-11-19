@@ -39,7 +39,6 @@ public class PlaybackService {
     public void run() {
         if (scheduledExecutorService != null){
             scheduledExecutorService.shutdown();
-            jTable.repaint();
         }
 
         running = true;
@@ -66,15 +65,18 @@ public class PlaybackService {
                 jFrame.setTitle("Advertisement");
                 scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
                 scheduledExecutorService.schedule(this::getCurrentData, 30, TimeUnit.SECONDS);
+                System.out.println("Retrying in 30 seconds...");
                 return;
             }
 
             jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
-            selectCurrentRow(track);
 
             // Update table scroll and custom player labels
-            jTable.repaint();
-            player.repaint();
+            SwingUtilities.invokeLater(()->{
+                selectCurrentRow(track);
+                jTable.repaint();
+                player.repaint();
+            });
 
             time = currentlyPlaying.getProgress_ms() / 1000;
             int maximum = track.getDurationMs() / 1000;
@@ -108,7 +110,6 @@ public class PlaybackService {
             jTable.getSelectionModel().setSelectionInterval(i,i);
             scrollToCenter(jTable, i, 4);
         } else {
-            System.err.println("Current Song is not in ranking");
             if (lastSelectedSong != null){
                 magicNumber += firstCharNumber;
                 System.out.println("Current magic number: " + magicNumber);
@@ -116,9 +117,9 @@ public class PlaybackService {
                     int rankSelected = (int) (lastSelectedSong.getRank() +
                             magicNumber * 0.01 * lastSelectedSong.getPopularity());
                     if (rankSelected <= ranking.size()){
-                        System.out.println("I've selected the track #" + rankSelected);
                         player.changeProgressColor(Color.orange);
                         lastSelectedSong = ranking.get(rankSelected-1);
+                        System.out.println("I've selected the track " + lastSelectedSong.getName());
                         magicNumber = 0;
                         if (!apiUtils.addToQueue(lastSelectedSong)){
                             //IOUtils.addFailedRecommendation(lastSelectedSong, track);

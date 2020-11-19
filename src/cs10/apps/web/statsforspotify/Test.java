@@ -8,9 +8,13 @@ import cs10.apps.web.statsforspotify.view.StatsFrame;
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Test {
 
@@ -58,21 +62,29 @@ public class Test {
                 e.printStackTrace();
             }
 
-            // Request something
-            StatsFrame statsFrame = new StatsFrame(apiUtils);
-            statsFrame.init();
-
-            // Auto closeable (1 hour)
-            Runnable autoCloseable = () -> {
+            // User Interface
+            SwingUtilities.invokeLater(()->{
                 try {
-                    Thread.sleep(3600 * 1000);
-                    System.exit(0);
-                } catch (InterruptedException e) {
+                    StatsFrame statsFrame = new StatsFrame(apiUtils);
+                    statsFrame.init();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+            // Permission Re-update
+            Runnable autoConfirm = () -> {
+                try {
+                    apiUtils.openReconfirmPermissionPage();
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             };
 
-            new Thread(autoCloseable).start();
+            ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            scheduledExecutorService.scheduleAtFixedRate(autoConfirm, 55, 55, TimeUnit.MINUTES);
+
+            //new Thread(autoCloseable).start();
         } else {
             OptionPanes.showCredentialsError();
             System.exit(1);

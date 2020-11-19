@@ -5,15 +5,10 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
-import cs10.apps.web.statsforspotify.utils.CommonUtils;
-import cs10.apps.web.statsforspotify.utils.IOUtils;
-import cs10.apps.web.statsforspotify.view.CustomThumbnail;
-import cs10.apps.web.statsforspotify.view.OptionPanes;
+import cs10.apps.web.statsforspotify.view.CustomPlayer;
 
 import javax.swing.*;
 import java.awt.*;
-import java.text.DecimalFormat;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,25 +19,21 @@ public class PlaybackService {
     private final JFrame jFrame;
     private Ranking ranking;
     private boolean running;
-    private final DecimalFormat decimalFormat = new DecimalFormat("#00");
 
     // Version 3
     private Thread thread;
-    private JProgressBar progressBar;
     private int time;
 
     // Version 4
-    private CustomThumbnail thumbnail;
+    private final CustomPlayer player;
     private Song lastSelectedSong;
     private int magicNumber;
 
-    public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame,
-                           JProgressBar progressBar, CustomThumbnail thumbnail) {
+    public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame, CustomPlayer player) {
         this.apiUtils = apiUtils;
         this.jTable = jTable;
         this.jFrame = jFrame;
-        this.progressBar = progressBar;
-        this.thumbnail = thumbnail;
+        this.player = player;
     }
 
     public void run() {
@@ -73,20 +64,17 @@ public class PlaybackService {
             }
 
             jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
-            thumbnail.set(track.getAlbum().getImages()[0].getUrl(), track.getPopularity());
+            player.setTrack(track);
             selectCurrentRow(track);
 
             time = currentlyPlaying.getProgress_ms() / 1000;
             int maximum = track.getDurationMs() / 1000;
-            progressBar.setMaximum(maximum);
+            //progressBar.setMaximum(maximum);
             running = true;
 
             ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
             scheduledExecutorService.scheduleAtFixedRate(() -> {
-                progressBar.setValue(time);
-                int seconds = time % 60;
-                int minutes = time / 60;
-                progressBar.setString(minutes + ":" + decimalFormat.format(seconds));
+                player.setTime(time);
                 if (time >= maximum || !running){
                     scheduledExecutorService.shutdown();
                     getCurrentData();
@@ -112,7 +100,7 @@ public class PlaybackService {
         int firstCharNumber = track.getName().charAt(0)-'A'+1;
         Song song = ranking.getSong(id);
         if (song != null){
-            progressBar.setForeground(Color.GREEN);
+            player.changeProgressColor(Color.green);
             lastSelectedSong = song;
             magicNumber = 0;
 
@@ -131,7 +119,7 @@ public class PlaybackService {
                             magicNumber * 0.01 * lastSelectedSong.getPopularity());
                     if (rankSelected <= ranking.size()){
                         System.out.println("I've selected the track #" + rankSelected);
-                        progressBar.setForeground(Color.orange);
+                        player.changeProgressColor(Color.orange);
                         lastSelectedSong = ranking.get(rankSelected-1);
                         magicNumber = 0;
                         if (!apiUtils.addToQueue(lastSelectedSong)){

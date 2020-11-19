@@ -13,18 +13,12 @@ import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Random;
 
 public class StatsFrame extends JFrame {
@@ -36,9 +30,11 @@ public class StatsFrame extends JFrame {
     private PlaybackService playbackService;
 
     // version 3
-    private JProgressBar progressBar;
     private BigRanking bigRanking;
     private Random random;
+
+    // version 5
+    private CustomPlayer player;
 
     public StatsFrame(ApiUtils apiUtils) throws HeadlessException {
         this.apiUtils = apiUtils;
@@ -69,8 +65,10 @@ public class StatsFrame extends JFrame {
         menuBar.add(helpMenu);
 
         JPanel buttonsPanel = new JPanel();
+        player = new CustomPlayer(70);
+        buttonsPanel.add(player);
 
-        // Custom Thumbnail
+       /* // Custom Thumbnail
         CustomThumbnail thumbnail = new CustomThumbnail(80);
         buttonsPanel.add(thumbnail);
 
@@ -88,7 +86,7 @@ public class StatsFrame extends JFrame {
             protected Color getSelectionForeground() { return Color.black; }
         });
 
-        buttonsPanel.add(progressBar);
+        buttonsPanel.add(progressBar);*/
 
         // Ranking Buttons
         JButton buttonShortTerm = new JButton(TopTerms.SHORT.getDescription());
@@ -117,7 +115,7 @@ public class StatsFrame extends JFrame {
         getContentPane().add(BorderLayout.SOUTH, new JScrollPane(table));
 
         // Show all
-        playbackService = new PlaybackService(apiUtils, table, this, progressBar, thumbnail);
+        playbackService = new PlaybackService(apiUtils, table, this, player);
         setResizable(false);
         setVisible(true);
         //show(TopTerms.SHORT);
@@ -126,7 +124,7 @@ public class StatsFrame extends JFrame {
         init4();
 
         // Update Custom Thumbnail Properties
-        thumbnail.setAverage((int) (bigRanking.getCode() / 100));
+        player.setAverage((int) (bigRanking.getCode() / 100));
 
         // Set Listeners (buttons will be deleted on Version 3)
         buttonShortTerm.addActionListener(e -> show(TopTerms.SHORT));
@@ -152,7 +150,7 @@ public class StatsFrame extends JFrame {
         });
 
         // Start Playback Service
-        progressBar.setString("");
+        player.setString("");
         playbackService.setRanking(bigRanking);
         playbackService.run();
     }
@@ -161,20 +159,20 @@ public class StatsFrame extends JFrame {
         bigRanking = new BigRanking();
         bigRanking.addRankingToCompare(IOUtils.loadPreviousRanking());
 
-        progressBar.setString("Connecting to Spotify...");
+        player.setString("Connecting to Spotify...");
         bigRanking.add(apiUtils.getPaging(TopTerms.SHORT));
-        progressBar.setValue(40);
+        player.setProgress(40);
         bigRanking.add(apiUtils.getPaging(TopTerms.MEDIUM));
-        progressBar.setValue(80);
+        player.setProgress(80);
         bigRanking.add(apiUtils.getPaging(TopTerms.LONG));
-        progressBar.setValue(100);
+        player.setProgress(100);
 
         // save file
         long prevR = IOUtils.readLastRankingCode()[1];
         if (prevR == 0 || prevR != bigRanking.getCode()){
             for (String id : bigRanking.getLefts()) apiUtils.printLeftTrackInfo(id);
             IOUtils.saveLastRankingCode(prevR, bigRanking.getCode());
-            IOUtils.makeLibraryFiles(bigRanking, progressBar);
+            IOUtils.makeLibraryFiles(bigRanking, player.getProgressBar());
             IOUtils.saveRanking(bigRanking, true);
         } else {
             System.out.println("Nothing to save");
@@ -186,11 +184,11 @@ public class StatsFrame extends JFrame {
 
     private void init4(){
         // Step 1: get actual top tracks from Spotify
-        progressBar.setString("Connecting to Spotify...");
+        player.setString("Connecting to Spotify...");
         Track[] tracks1 = apiUtils.getUntilMostPopular(TopTerms.SHORT.getKey(), 50);
-        progressBar.setValue(50);
+        player.setProgress(50);
         Track[] tracks2 = apiUtils.getTopTracks(TopTerms.MEDIUM.getKey());
-        progressBar.setValue(100);
+        player.setProgress(100);
 
         // Step 2: build actual ranking
         bigRanking = new BigRanking(CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100));
@@ -200,8 +198,8 @@ public class StatsFrame extends JFrame {
         if (bigRanking.getCode() != savedCodes[1]){
             IOUtils.saveLastRankingCode(savedCodes[1], bigRanking.getCode());
             IOUtils.saveRanking(bigRanking, true);
-            progressBar.setString("Creating Library Files...");
-            IOUtils.makeLibraryFiles(bigRanking, progressBar);
+            player.setString("Updating Library Files...");
+            IOUtils.makeLibraryFiles(bigRanking, player.getProgressBar());
         }
 
         // Step 4: load compare ranking
@@ -218,7 +216,7 @@ public class StatsFrame extends JFrame {
     }
 
     private void buildTable(){
-        progressBar.setString("Loading ranking...");
+        player.setString("Loading ranking...");
         int i = 0;
 
         for (Song s : bigRanking){
@@ -232,7 +230,7 @@ public class StatsFrame extends JFrame {
                 else s.setInfoStatus(String.valueOf(s.getChange()));
             }
 
-            progressBar.setValue((++i) * 100 / bigRanking.size());
+            player.setProgress((++i) * 100 / bigRanking.size());
             model.addRow(toRow(s));
         }
     }

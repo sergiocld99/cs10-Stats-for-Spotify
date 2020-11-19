@@ -190,6 +190,12 @@ public class IOUtils {
         return cant;
     }
 
+    public static int getRankingsAmount(){
+        File[] files = new File("ranking").listFiles();
+        if (files == null || files.length == 0) return 1;
+        else return files.length;
+    }
+
     public static void addFailedRecommendation(Song song, Track track){
         File file = new File("failed_recommendations.txt");
         if (!file.exists()){

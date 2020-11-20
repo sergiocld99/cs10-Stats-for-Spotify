@@ -69,7 +69,8 @@ public class PlaybackService {
                 return;
             }
 
-            jFrame.setTitle("Now Playing: " + track.getName() + " by " + track.getArtists()[0].getName());
+            jFrame.setTitle("#" + ranking.getCode() + " - Now Playing: " + track.getName() + " by " +
+                    track.getArtists()[0].getName());
 
             // Update table scroll and custom player labels
             SwingUtilities.invokeLater(()->{
@@ -108,7 +109,7 @@ public class PlaybackService {
             System.out.println("Current Song Rank: " + song.getRank());
             int i = song.getRank()-1;
             jTable.getSelectionModel().setSelectionInterval(i,i);
-            scrollToCenter(jTable, i, 4);
+            scrollToCenter(jTable, i, i % 5);
         } else {
             if (lastSelectedSong != null){
                 magicNumber += firstCharNumber;
@@ -122,7 +123,7 @@ public class PlaybackService {
                         System.out.println("I've selected the track " + lastSelectedSong.getName());
                         magicNumber = 0;
                         if (!apiUtils.addToQueue(lastSelectedSong)){
-                            //IOUtils.addFailedRecommendation(lastSelectedSong, track);
+                            System.err.println("addToQueue failed");
                         }
                     }
                 }

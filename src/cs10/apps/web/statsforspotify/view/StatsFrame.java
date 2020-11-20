@@ -300,4 +300,9 @@ public class StatsFrame extends JFrame {
         artistFrame.init();
         artistFrame.setVisible(true);
     }
+    
+    public void close(){
+        this.setVisible(false);
+        this.dispose();
+    }
 }

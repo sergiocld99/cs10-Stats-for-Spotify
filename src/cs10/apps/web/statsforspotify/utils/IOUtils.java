@@ -1,10 +1,9 @@
 package cs10.apps.web.statsforspotify.utils;
 
-import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
-import cs10.apps.web.statsforspotify.model.TopTerms;
 
 import javax.swing.*;
 import java.io.*;
@@ -196,24 +195,29 @@ public class IOUtils {
         else return files.length;
     }
 
-    public static void addFailedRecommendation(Song song, Track track){
-        File file = new File("failed_recommendations.txt");
-        if (!file.exists()){
-            try {
-                System.out.println(file.getPath() + " created: " + file.createNewFile());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    public static float getArtistScore(String artist){
+        float[] scores = IOUtils.getScores(artist);
+        float score = 0;
+
+        for (int i=1; i<=scores.length; i++){
+            score += scores[10-i] * i;
         }
 
-        try (PrintWriter pw = new PrintWriter(new FileWriter(file, true))){
-            pw.print(dateFormat.format(new Date(System.currentTimeMillis())));
-            pw.println(" -- " + song.getRank() + " -- " + song.getName() + " vs " + track.getName());
-        } catch (FileNotFoundException e){
-            System.err.println(file.getPath() + " doesn't exist!");
-        } catch (IOException e){
-            e.printStackTrace();
+        return score * 3 / IOUtils.getRankingsAmount();
+    }
+
+    public static Artist[] getAllArtistsScore(){
+        File[] folders = new File("library").listFiles();
+        if (folders == null) return null;
+
+        Artist[] result = new Artist[folders.length];
+        for (int i=0; i<result.length; i++){
+            result[i] = new Artist();
+            result[i].setName(folders[i].getName());
+            result[i].setScore(getArtistScore(folders[i].getName()));
         }
+
+        return result;
     }
 
     // -------------------------------- VERSION 2 --------------------------------------------
@@ -234,45 +238,4 @@ public class IOUtils {
         }
     }
 
-    public static Ranking getLastSavedRanking(TopTerms term){
-        File directory = new File("ranking//" + term.getDescription().toLowerCase());
-        File[] rankings = directory.listFiles();
-
-        if (rankings != null && rankings.length > 1) {
-            File lastRanking = rankings[rankings.length-2];
-            return getRanking(lastRanking);
-        }
-
-        return null;
-    }
-
-    public static Ranking getRanking(File file){
-        Ranking ranking = new Ranking();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(file))){
-            String line;
-
-            while ((line = br.readLine()) != null){
-                String[] params = line.split("--");
-                Song song = new Song();
-                song.setRank(Integer.parseInt(params[0]));
-                song.setId(params[1]);
-                song.setName(params[2]);
-                song.setArtists(params[3]);
-                song.setPopularity(Integer.parseInt(params[4]));
-                ranking.add(song);
-            }
-
-        } catch (FileNotFoundException e){
-            System.err.println(file.getAbsolutePath() + " not found");
-        } catch (IOException e){
-            e.printStackTrace();
-        } catch (NumberFormatException e){
-            System.out.println("Rank or popularity is not a number in " + file.getName());
-        } catch (ArrayIndexOutOfBoundsException e){
-            System.out.println("Not enough parameters in " + file.getName());
-        }
-
-        return ranking;
-    }
 }

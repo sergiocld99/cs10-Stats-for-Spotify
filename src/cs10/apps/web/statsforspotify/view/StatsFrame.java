@@ -6,6 +6,7 @@ import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.desktop.statsforspotify.view.RankingModel;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
+import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
@@ -19,7 +20,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Random;
+import java.util.Arrays;
 
 public class StatsFrame extends JFrame {
     private final ApiUtils apiUtils;
@@ -29,14 +30,12 @@ public class StatsFrame extends JFrame {
 
     // version 3
     private BigRanking bigRanking;
-    private final Random random;
 
     // version 5
     private CustomPlayer player;
 
     public StatsFrame(ApiUtils apiUtils) throws HeadlessException {
         this.apiUtils = apiUtils;
-        this.random = new Random();
     }
 
     public void init() {
@@ -52,15 +51,20 @@ public class StatsFrame extends JFrame {
         JMenuItem jmiOpen = new JMenuItem("Open...");
         JMenuItem jmiSave = new JMenuItem("Save");
         JMenuItem jmiSaveAs = new JMenuItem("Save As...");
+        JMenu viewMenu = new JMenu("View");
+        JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
         jmiOpen.addActionListener(e -> System.out.println("Open pressed"));
         jmiSave.addActionListener(e -> System.out.println("Save pressed"));
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
+        jmiLocalTop10.addActionListener(e -> openLocalTop10());
         fileMenu.add(jmiOpen);
         fileMenu.add(jmiSave);
         fileMenu.add(jmiSaveAs);
+        viewMenu.add(jmiLocalTop10);
         JMenu helpMenu = new JMenu("Help");
         helpMenu.addActionListener(e -> System.out.println("Help pressed"));
         menuBar.add(fileMenu);
+        menuBar.add(viewMenu);
         menuBar.add(helpMenu);
 
         JPanel playerPanel = new JPanel();
@@ -108,14 +112,7 @@ public class StatsFrame extends JFrame {
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
-                String[] artists = artistsNames.split(", ");
-                String mainName = artists[random.nextInt(artists.length)];
-                openArtistWindow(mainName, IOUtils.getScores(mainName));
-                //String mainName = artistsNames.split(", ")[0];
-                //Artist artist = library.findByName(mainName);
-                //if (artist != null) openArtistWindow(artist);
-
+                openArtistWindow();
             }
         });
 
@@ -137,12 +134,14 @@ public class StatsFrame extends JFrame {
         bigRanking = new BigRanking(CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100));
 
         // Step 3: read last code
+        boolean showSummary = false;
         long[] savedCodes = IOUtils.readLastRankingCode();
         if (bigRanking.getCode() != savedCodes[1]){
             IOUtils.saveLastRankingCode(savedCodes[1], bigRanking.getCode());
             IOUtils.saveRanking(bigRanking, true);
             player.setString("Updating Library Files...");
             IOUtils.makeLibraryFiles(bigRanking, player.getProgressBar());
+            showSummary = true;
         }
 
         // Step 4: load compare ranking
@@ -153,7 +152,7 @@ public class StatsFrame extends JFrame {
         buildTable();
 
         // Step 6: show songs that left the chart
-        for (Song s : rankingToCompare.getNonMarked()){
+        if (showSummary) for (Song s : rankingToCompare.getNonMarked()){
             apiUtils.printLeftTrackInfo(s.getId());
         }
     }
@@ -194,12 +193,32 @@ public class StatsFrame extends JFrame {
 
     private Object[] toRow(Song song){
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
-                song.getRank(), song.getName(), song.getArtists(), song.getPopularity(), song.getInfoStatus()};
+                song.getRank(), song.getName(), song.getArtists(),
+                song.getPopularity(), song.getInfoStatus()};
     }
 
-    private void openArtistWindow(String artist, float[] scores){
-        ArtistFrame artistFrame = new ArtistFrame(artist, scores);
-        artistFrame.init();
-        artistFrame.setVisible(true);
+    private void openLocalTop10(){
+        new Thread(() -> {
+            Artist[] artists = IOUtils.getAllArtistsScore();
+            if (artists == null) return;
+
+            Arrays.sort(artists);
+            Artist[] top10 = new Artist[10];
+            System.arraycopy(artists, 0, top10, 0, 10);
+            LocalTop10Frame localTop10Frame = new LocalTop10Frame(top10);
+            localTop10Frame.init();
+            localTop10Frame.setVisible(true);
+        }).start();
+    }
+
+    private void openArtistWindow(){
+        new Thread(() -> {
+            String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
+            String[] artists = artistsNames.split(", ");
+            String mainName = artists[0];
+            ArtistFrame artistFrame = new ArtistFrame(mainName, IOUtils.getScores(mainName));
+            artistFrame.init();
+            artistFrame.setVisible(true);
+        }).start();
     }
 }

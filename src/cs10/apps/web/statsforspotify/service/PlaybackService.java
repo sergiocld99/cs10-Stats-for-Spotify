@@ -53,7 +53,7 @@ public class PlaybackService {
     private void getCurrentData() {
         CurrentlyPlaying currentlyPlaying = apiUtils.getCurrentSong();
         if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
-            jFrame.setTitle("No song is playing now");
+            jFrame.setTitle("Ranking #" + ranking.getCode());
             running = false;
             return;
         }
@@ -70,7 +70,7 @@ public class PlaybackService {
                 return;
             }
 
-            jFrame.setTitle("#" + ranking.getCode() + " - Now Playing: " + track.getName() + " by " +
+            jFrame.setTitle("Now Playing: " + track.getName() + " by " +
                     track.getArtists()[0].getName());
 
             // Update table scroll and custom player labels
@@ -131,10 +131,6 @@ public class PlaybackService {
                 }
             }
         }
-    }
-
-    public boolean isRunning() {
-        return running;
     }
 
     private void scrollToCenter(JTable table, int rowIndex, int vColIndex) {

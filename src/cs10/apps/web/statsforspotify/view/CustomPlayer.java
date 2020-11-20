@@ -71,24 +71,14 @@ public class CustomPlayer extends JPanel {
         this.progressBar.setMaximum(track.getDurationMs() / 1000 + 1);
         this.progressBar.setValue(0);
 
-        int score = 0;
+        float score = 0, multiplier = 1;
         for (ArtistSimplified a : track.getArtists()){
-            score += getArtistScore(a.getName());
+            score += IOUtils.getArtistScore(a.getName()) * multiplier;
+            multiplier /= 2;
         }
 
-        this.scoreLabel.setValue(score);
+        this.scoreLabel.setValue((int) score);
         this.popularityLabel.setValue(track.getPopularity());
-    }
-
-    private int getArtistScore(String artist){
-        float[] scores = IOUtils.getScores(artist);
-        float score = 0;
-
-        for (int i=1; i<=scores.length; i++){
-            score += scores[10-i] * i;
-        }
-
-        return (int) (score * 3 / IOUtils.getRankingsAmount());
     }
 
     public void setProgress(int value){

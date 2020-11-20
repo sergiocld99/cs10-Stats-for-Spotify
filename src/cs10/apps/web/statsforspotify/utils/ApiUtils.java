@@ -6,14 +6,9 @@ import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import com.wrapper.spotify.model_objects.specification.Paging;
 import com.wrapper.spotify.model_objects.specification.Track;
-import com.wrapper.spotify.model_objects.specification.User;
-import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.web.statsforspotify.app.Private;
-import cs10.apps.web.statsforspotify.model.TopTerms;
 import org.apache.hc.core5.http.ParseException;
 
 import javax.swing.*;
@@ -87,48 +82,6 @@ public class ApiUtils {
         } catch (Exception e){
             e.printStackTrace();
         }
-    }
-
-    public User getUser() throws Exception {
-        return spotifyApi.getCurrentUsersProfile().build().execute();
-    }
-
-    public Paging<Track> getPaging(TopTerms term){
-        try {
-            return spotifyApi.getUsersTopTracks().time_range(term.getKey())
-                    .limit(50).build().execute();
-        } catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public Ranking getRanking(TopTerms term){
-        Ranking ranking = new Ranking();
-
-        try {
-            Paging<Track> paging = spotifyApi.getUsersTopTracks()
-                    .time_range(term.getKey()).limit(50).build().execute();
-
-            Track[] tracks = paging.getItems();
-
-            for (int i=0; i<paging.getTotal(); i++){
-                Song song = new Song();
-                song.setName(tracks[i].getName());
-                song.setArtists(CommonUtils.combineArtists(tracks[i].getArtists()));
-                song.setRank(i+1);
-                song.setTimestamp(System.currentTimeMillis());
-                song.setStatus(Status.NEW);
-                song.setImageUrl(tracks[i].getAlbum().getImages()[0].getUrl());
-                song.setId(tracks[i].getId());
-                song.setPopularity(tracks[i].getPopularity());
-                ranking.add(song);
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-
-        return ranking;
     }
 
     public CurrentlyPlaying getCurrentSong() {

@@ -6,6 +6,7 @@ import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.view.CustomPlayer;
+import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.awt.*;
@@ -93,6 +94,7 @@ public class PlaybackService {
                 } else time++;
             }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
+            OptionPanes.showPlaybackStopped();
             e.printStackTrace();
         }
     }

@@ -152,9 +152,8 @@ public class StatsFrame extends JFrame {
         buildTable();
 
         // Step 6: show songs that left the chart
-        if (showSummary) for (Song s : rankingToCompare.getNonMarked()){
-            apiUtils.printLeftTrackInfo(s.getId());
-        }
+        //if (showSummary)
+            CommonUtils.summary(bigRanking, rankingToCompare, apiUtils);
     }
 
     private void buildTable(){

@@ -2,6 +2,9 @@ package cs10.apps.web.statsforspotify.utils;
 
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
+import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -80,5 +83,50 @@ public class CommonUtils {
         g.drawString(text, x, y);
     }
 
+    /**
+     * Informs biggest gain and loss, and list the songs that left the chart
+     */
+    public static void summary(BigRanking bigRanking, BigRanking compare, ApiUtils apiUtils){
+        int bigLoss = 0, bigGain = 0;
+        Song songBigLoss = null, songBigGain = null;
+        StringBuilder sb = new StringBuilder();
 
+        for (Song s : bigRanking){
+            if (s.getChange() == 0) continue;
+            if (s.getChange() < 0){
+                if (s.getChange() < bigLoss){
+                    bigLoss = s.getChange();
+                    songBigLoss = s;
+                }
+            } else {
+                if (s.getChange() > bigGain){
+                    bigGain = s.getChange();
+                    songBigGain = s;
+                }
+            }
+        }
+
+        if (songBigGain != null){
+            sb.append("Biggest Gain: ").append(songBigGain)
+                    .append(" (+").append(bigGain).append(")").append('\n');
+        }
+
+        if (songBigLoss != null){
+            sb.append("Biggest Loss: ").append(songBigLoss)
+                    .append(" (").append(bigLoss).append(")").append("\n\n");
+        }
+
+        List<Song> nonMarkedSongs = compare.getNonMarked();
+        if (!nonMarkedSongs.isEmpty()){
+            sb.append("Songs that left the chart: ").append('\n');
+            for (Song s : nonMarkedSongs){
+                Track t = apiUtils.getTrackById(s.getId());
+                sb.append(t.getName()).append(" by ")
+                        .append(t.getArtists()[0].getName()).append('\n');
+            }
+        }
+
+        String message = sb.toString();
+        if (!message.isEmpty()) OptionPanes.message(message);
+    }
 }

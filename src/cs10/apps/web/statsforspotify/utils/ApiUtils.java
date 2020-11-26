@@ -11,7 +11,6 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
 import org.apache.hc.core5.http.ParseException;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
@@ -106,14 +105,12 @@ public class ApiUtils {
         return false;
     }
 
-    public void printLeftTrackInfo(String id){
+    public Track getTrackById(String id){
         try {
-            Track track = spotifyApi.getTrack(id).build().execute();
-            JOptionPane.showMessageDialog(null,
-                    track.getName() + " by " + track.getArtists()[0].getName(),
-                    "Song that left the chart", JOptionPane.INFORMATION_MESSAGE);
+            return spotifyApi.getTrack(id).build().execute();
         } catch (Exception e){
             e.printStackTrace();
+            return null;
         }
     }
 

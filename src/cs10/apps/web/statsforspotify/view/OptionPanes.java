@@ -63,4 +63,9 @@ public class OptionPanes {
                 "Exception caught in " + origin + ": " + e.getMessage(),
                 PersonalChartApp.APP_NAME, JOptionPane.ERROR_MESSAGE);
     }
+
+    public static void message(String str){
+        JOptionPane.showMessageDialog(null, str,
+                PersonalChartApp.APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+    }
 }

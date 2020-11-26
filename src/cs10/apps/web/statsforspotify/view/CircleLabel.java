@@ -7,7 +7,13 @@ import java.awt.*;
 
 public class CircleLabel extends JLabel {
     private final String title;
-    private int value, average = 60;
+    private int value, average = 60, originalValue;
+
+    private static final Color RED_COLOR = Color.red;
+    private static final Color ORANGE_COLOR = new Color(250,100,0);
+    private static final Color GREEN_COLOR = new Color(0,200,100);
+    private static final Color DARK_GREEN_COLOR = new Color(0,100,0);
+    private static final Color LIGHT_BLUE_COLOR = new Color(0,100,200);
 
     public CircleLabel(String title){
         this.title = title;
@@ -16,11 +22,18 @@ public class CircleLabel extends JLabel {
 
     public void setValue(int value) {
         this.value = value;
-        //repaint();
+        if (value == 0){
+            System.out.println("Empty value for " + title);
+            setVisible(false);
+        } else setVisible(true);
     }
 
     public void setAverage(int average) {
         this.average = average;
+    }
+
+    public void setOriginalValue(int originalValue) {
+        this.originalValue = originalValue;
     }
 
     @Override
@@ -30,12 +43,13 @@ public class CircleLabel extends JLabel {
         Graphics2D graphics2D = (Graphics2D) g.create();
 
         // Circle color
-        if (value < (average / 2)){
-            graphics2D.setColor(Color.red);
-        } else if (value < average){
-            graphics2D.setColor(new Color(250,100,0));
+        if (originalValue > 0){
+            if (value == originalValue) graphics2D.setColor(LIGHT_BLUE_COLOR);
+            else if (value < originalValue) graphics2D.setColor(RED_COLOR);
+            else graphics2D.setColor(GREEN_COLOR);
         } else {
-            graphics2D.setColor(new Color(0,100,0));
+            if (value < average) graphics2D.setColor(ORANGE_COLOR);
+            else graphics2D.setColor(DARK_GREEN_COLOR);
         }
 
         // Draw circle

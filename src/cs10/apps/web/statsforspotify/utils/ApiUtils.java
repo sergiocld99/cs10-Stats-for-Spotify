@@ -6,6 +6,7 @@ import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import com.wrapper.spotify.model_objects.specification.Recommendations;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
@@ -73,8 +74,8 @@ public class ApiUtils {
 
     public void refreshToken(String code) {
         try {
-            System.out.println("Attempting to connect with " + code);
-            AuthorizationCodeCredentials credentials = spotifyApi.authorizationCode(code).build().execute();
+            AuthorizationCodeCredentials credentials = spotifyApi.
+                    authorizationCode(code).build().execute();
             System.out.println("These credentials expires in " + credentials.getExpiresIn());
             spotifyApi.setAccessToken(credentials.getAccessToken());
             spotifyApi.setRefreshToken(credentials.getRefreshToken());
@@ -158,6 +159,15 @@ public class ApiUtils {
         } catch (Exception e){
             e.printStackTrace();
             return new Track[0];
+        }
+    }
+
+    public Recommendations getRecommendations(String id){
+        try {
+            return spotifyApi.getRecommendations().seed_tracks(id).build().execute();
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
         }
     }
 }

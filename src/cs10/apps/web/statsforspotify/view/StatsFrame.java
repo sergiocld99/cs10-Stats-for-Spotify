@@ -42,6 +42,7 @@ public class StatsFrame extends JFrame {
         setTitle(PersonalChartApp.APP_AUTHOR + " - " +
                 PersonalChartApp.APP_NAME + " v" + PersonalChartApp.APP_VERSION);
 
+        setIconImage(new ImageIcon("appicon.png").getImage());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(1000, 600);
 
@@ -136,7 +137,7 @@ public class StatsFrame extends JFrame {
         // Step 3: read last code
         boolean showSummary = false;
         long[] savedCodes = IOUtils.readLastRankingCode();
-        if (bigRanking.getCode() != savedCodes[1]){
+        if (bigRanking.getCode() > 0 && bigRanking.getCode() != savedCodes[1]){
             IOUtils.saveLastRankingCode(savedCodes[1], bigRanking.getCode());
             IOUtils.saveRanking(bigRanking, true);
             player.setString("Updating Library Files...");
@@ -152,7 +153,7 @@ public class StatsFrame extends JFrame {
         buildTable();
 
         // Step 6: show songs that left the chart
-        //if (showSummary)
+        if (showSummary)
             CommonUtils.summary(bigRanking, rankingToCompare, apiUtils);
     }
 

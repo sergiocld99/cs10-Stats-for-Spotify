@@ -1,8 +1,11 @@
 package cs10.apps.web.statsforspotify.utils;
 
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
+import com.wrapper.spotify.model_objects.specification.Recommendations;
 import com.wrapper.spotify.model_objects.specification.Track;
+import com.wrapper.spotify.model_objects.specification.TrackSimplified;
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
@@ -16,6 +19,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class CommonUtils {
 
@@ -124,6 +128,39 @@ public class CommonUtils {
                 sb.append(t.getName()).append(" by ")
                         .append(t.getArtists()[0].getName()).append('\n');
             }
+        }
+
+        sb.append('\n').append("Recommendations: ").append("\n\n");
+
+        Random random = new Random();
+        int index = random.nextInt(25);
+        int added = 0;
+
+        for (int i=0; i<5; i++){
+            if (index >= bigRanking.size()) break;
+            Song s = bigRanking.get(index);
+            if (s.getStatus() != Status.UP){
+                sb.append(s.getName()).append(" by ")
+                        .append(s.getArtists()).append('\n');
+                added++;
+            }
+            if (s.getPopularity() > 10){
+                index += s.getPopularity() / 10;
+            }
+        }
+
+        Song s = songBigLoss;
+        System.out.println("Searching recommendations for " + s.getName());
+        Recommendations r = apiUtils.getRecommendations(s.getId());
+
+        int lastRandom = -1;
+        for (int i=0; i<added; i++){
+            int newRandom = random.nextInt(r.getTracks().length);
+            if (newRandom == lastRandom) continue;
+            lastRandom = newRandom;
+            TrackSimplified t = r.getTracks()[newRandom];
+            sb.append(t.getName()).append(" by ")
+                    .append(t.getArtists()[0].getName()).append('\n');
         }
 
         String message = sb.toString();

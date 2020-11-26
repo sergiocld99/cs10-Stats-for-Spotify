@@ -20,7 +20,6 @@ public class CustomPlayer extends JPanel {
         this.thumbnail = new CustomThumbnail(thumbSize);
         this.popularityLabel = new CircleLabel("Popularity");
         this.scoreLabel = new CircleLabel("Artist Score");
-        //this.customScore.setBorder(new EmptyBorder(0,20,0,20));
         this.progressBar = new JProgressBar(0, 100);
         this.customizeProgressBar();
         this.add(thumbnail);
@@ -51,7 +50,6 @@ public class CustomPlayer extends JPanel {
     public void setAverage(int average){
         this.popularityLabel.setAverage(average);
         this.scoreLabel.setAverage(average);
-        //this.thumbnail.setAverage(average);
     }
 
     public void setTrack(Track track){
@@ -72,12 +70,17 @@ public class CustomPlayer extends JPanel {
         this.progressBar.setValue(0);
 
         float score = 0, multiplier = 1;
+
+        // find previous popularity
+        int previousPop = IOUtils.getFirstPopularity(track);
+
         for (ArtistSimplified a : track.getArtists()){
             score += IOUtils.getArtistScore(a.getName()) * multiplier;
             multiplier /= 2;
         }
 
         this.scoreLabel.setValue((int) score);
+        this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
     }
 

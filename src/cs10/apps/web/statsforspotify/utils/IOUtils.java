@@ -1,9 +1,11 @@
 package cs10.apps.web.statsforspotify.utils;
 
+import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.io.*;
@@ -220,6 +222,28 @@ public class IOUtils {
         return result;
     }
 
+    public static int getFirstPopularity(Track track){
+        String artist = track.getArtists()[0].getName();
+        String trackID = track.getId();
+        File file = new File("library//"+artist+"//"+trackID);
+        if (!file.exists()) return 0;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))){
+            // skip header
+            br.readLine();
+
+            // read first line
+            String line = br.readLine();
+            return Integer.parseInt(line.split("--")[1]);
+        } catch (IOException e){
+            OptionPanes.showError("IOUtils - Get First Popularity", e);
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e){
+            System.err.println(file.getPath() + ": invalid format");
+        }
+
+        return 0;
+    }
+
     // -------------------------------- VERSION 2 --------------------------------------------
     public static void saveRanking(Ranking ranking, boolean replace){
         File directory = new File("ranking//");
@@ -234,7 +258,7 @@ public class IOUtils {
             writer.println(dateFormat.format(new Date(System.currentTimeMillis())));
             for (Song s : ranking) writer.println(s.getRank() + "--" + s.getId());
         } catch (IOException e){
-            e.printStackTrace();
+            OptionPanes.showError("IOUtils - Save Ranking", e);
         }
     }
 

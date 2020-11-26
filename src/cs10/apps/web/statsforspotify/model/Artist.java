@@ -1,7 +1,5 @@
 package cs10.apps.web.statsforspotify.model;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Artist implements Comparable<Artist> {
     private String name;
     private float score;
@@ -23,7 +21,7 @@ public class Artist implements Comparable<Artist> {
     }
 
     @Override
-    public int compareTo(@NotNull Artist o) {
+    public int compareTo(Artist o) {
         // Reverse order
         return Float.compare(o.getScore(), getScore());
     }

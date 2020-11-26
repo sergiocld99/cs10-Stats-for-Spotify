@@ -52,14 +52,19 @@ public class CustomPlayer extends JPanel {
         this.scoreLabel.setAverage(average);
     }
 
-    public void setTrack(Track track){
+    /**
+     * Updates thumbnail and circle labels
+     * @param track current track from playback
+     * @return current artist score
+     */
+    public int setTrack(Track track){
         if (track == null){
             this.progressBar.setValue(0);
             this.progressBar.setString("");
             this.scoreLabel.setValue(0);
             this.popularityLabel.setValue(0);
             this.thumbnail.setUnknown();
-            return;
+            return 0;
         }
 
         if (track.getAlbum().getImages().length > 0){
@@ -82,6 +87,7 @@ public class CustomPlayer extends JPanel {
         this.scoreLabel.setValue((int) score);
         this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
+        return (int) score;
     }
 
     public void setProgress(int value){

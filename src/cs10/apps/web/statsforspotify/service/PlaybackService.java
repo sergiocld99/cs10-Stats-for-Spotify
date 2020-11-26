@@ -60,7 +60,7 @@ public class PlaybackService {
 
         try {
             Track track = (Track) currentlyPlaying.getItem();
-            player.setTrack(track);
+            int artistScore = player.setTrack(track);
 
             if (track == null){
                 jFrame.setTitle("Advertisement");
@@ -68,10 +68,10 @@ public class PlaybackService {
                 scheduledExecutorService.schedule(this::getCurrentData, 30, TimeUnit.SECONDS);
                 System.out.println("Retrying in 30 seconds...");
                 return;
+            } else {
+                jFrame.setTitle("P: " + track.getPopularity() + " / A:" + artistScore +
+                        " -- Now Playing: " + track.getName());
             }
-
-            jFrame.setTitle("Now Playing: " + track.getName() + " by " +
-                    track.getArtists()[0].getName());
 
             // Update table scroll and custom player labels
             SwingUtilities.invokeLater(()->{
@@ -107,8 +107,6 @@ public class PlaybackService {
             player.changeProgressColor(Color.green);
             lastSelectedSong = song;
             magicNumber = 0;
-
-            System.out.println("Current Song Rank: " + song.getRank());
             int i = song.getRank()-1;
             jTable.getSelectionModel().setSelectionInterval(i,i);
             scrollToCenter(jTable, i, i % 5);
@@ -122,10 +120,10 @@ public class PlaybackService {
                     if (rankSelected <= ranking.size()){
                         player.changeProgressColor(Color.orange);
                         lastSelectedSong = ranking.get(rankSelected-1);
-                        System.out.println("I've selected the track " + lastSelectedSong.getName());
                         magicNumber = 0;
                         if (!apiUtils.addToQueue(lastSelectedSong)){
-                            System.err.println("addToQueue failed");
+                            OptionPanes.message("Failed to queue \"" +
+                                    lastSelectedSong.getName() + "\"");
                         }
                     }
                 }

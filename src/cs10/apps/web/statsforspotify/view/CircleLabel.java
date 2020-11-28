@@ -6,18 +6,20 @@ import javax.swing.*;
 import java.awt.*;
 
 public class CircleLabel extends JLabel {
-    private final String title;
+    private String title;
     private int value, average = 60, originalValue;
-
-    private static final Color RED_COLOR = Color.red;
-    private static final Color ORANGE_COLOR = new Color(250,100,0);
-    private static final Color GREEN_COLOR = new Color(0,200,100);
-    private static final Color DARK_GREEN_COLOR = new Color(0,100,0);
-    private static final Color LIGHT_BLUE_COLOR = new Color(0,100,200);
 
     public CircleLabel(String title){
         this.title = title;
         setPreferredSize(new Dimension(85, 100));
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public int getValue() {
+        return value;
     }
 
     public void setValue(int value) {
@@ -44,12 +46,12 @@ public class CircleLabel extends JLabel {
 
         // Circle color
         if (originalValue > 0){
-            if (value == originalValue) graphics2D.setColor(LIGHT_BLUE_COLOR);
-            else if (value < originalValue) graphics2D.setColor(RED_COLOR);
-            else graphics2D.setColor(GREEN_COLOR);
+            if (value == originalValue) graphics2D.setColor(CircleColors.LIGHT_BLUE_COLOR.get());
+            else if (value < originalValue) graphics2D.setColor(Color.red);
+            else graphics2D.setColor(CircleColors.GREEN_COLOR.get());
         } else {
-            if (value < average) graphics2D.setColor(ORANGE_COLOR);
-            else graphics2D.setColor(DARK_GREEN_COLOR);
+            if (value < average) graphics2D.setColor(CircleColors.ORANGE_COLOR.get());
+            else graphics2D.setColor(CircleColors.DARK_GREEN_COLOR.get());
         }
 
         // Draw circle

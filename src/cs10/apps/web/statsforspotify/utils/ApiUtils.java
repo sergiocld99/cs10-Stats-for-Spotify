@@ -1,20 +1,25 @@
 package cs10.apps.web.statsforspotify.utils;
 
+import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import com.wrapper.spotify.model_objects.specification.Recommendations;
-import com.wrapper.spotify.model_objects.specification.Track;
+import com.wrapper.spotify.model_objects.specification.*;
+import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
+import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.view.OptionPanes;
 import org.apache.hc.core5.http.ParseException;
 
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class ApiUtils {
     private final SpotifyApi spotifyApi;
@@ -80,7 +85,7 @@ public class ApiUtils {
             spotifyApi.setAccessToken(credentials.getAccessToken());
             spotifyApi.setRefreshToken(credentials.getRefreshToken());
         } catch (Exception e){
-            e.printStackTrace();
+            OptionPanes.showError("ApiUtils - Refresh Token", e);
         }
     }
 
@@ -93,17 +98,64 @@ public class ApiUtils {
         }
     }
 
-    public boolean addToQueue(Song song){
+    public ArrayList<String> autoQueue(Ranking ranking, Track current){
+        Song song1 = ranking.getRandomElement();
+        Song song2 = ranking.getRandomElement();
+
+        Track[] tracks1;
+        TrackSimplified t2;
+
         try {
-            spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+song.getId()).build().execute();
-            return true;
+            Recommendations r = getRecommendations(song1.getId(), song2.getId(), current.getId());
+            t2 = r.getTracks()[new Random().nextInt(r.getTracks().length)];
+            tracks1 = spotifyApi.getArtistsTopTracks(t2.getArtists()[0].getId(), CountryCode.AR)
+                    .build().execute();
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+
+        if (tracks1[0].getPopularity() < 70) {
+            System.err.println("Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
+            System.err.println("Cause: popularity is " + tracks1[0].getPopularity());
+            return null;
+        }
+
+        Track t1 = tracks1[new Random().nextInt(tracks1.length)];
+        Song t3 = IOUtils.pickRandomSongFromLibrary();
+
+        ArrayList<String> uris = new ArrayList<>();
+        StringBuilder errorSb = new StringBuilder("Failed to queue: \n\n");
+
+        if (IOUtils.existsArtist(t1.getArtists()[0].getName())){
+            uris.add(t1.getUri());
+            errorSb.append(CommonUtils.toString(t1)).append('\n');
+            if (!t2.getName().equals(t1.getName())) {
+                errorSb.append(CommonUtils.toString(t2));
+                uris.add(t2.getUri());
+            }
+        } else {
+            uris.add(t2.getUri());
+            errorSb.append(CommonUtils.toString(t2)).append('\n');
+            if (t3 != null){
+                errorSb.append(t3.toStringWithArtist());
+                uris.add("spotify:track:"+t3.getId());
+            }
+        }
+
+        try {
+            for (String uri : uris){
+                spotifyApi.addItemToUsersPlaybackQueue(uri).build().execute();
+                Thread.sleep(1000);
+            }
         } catch (SpotifyWebApiException e){
-            System.err.println("You don't have Premium :(");
+            System.err.println(e.getMessage());
+            OptionPanes.message(errorSb.toString());
         } catch (Exception e){
             e.printStackTrace();
         }
 
-        return false;
+        return uris;
     }
 
     public Track getTrackById(String id){
@@ -125,7 +177,6 @@ public class ApiUtils {
             }
         }
 
-        System.out.println("The most popular track is " + tracks[result].getName());
         return result;
     }
 
@@ -144,7 +195,7 @@ public class ApiUtils {
             System.arraycopy(tracks1, 0, result, 0, tracks1.length);
             System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
         } catch (Exception e){
-            e.printStackTrace();
+            OptionPanes.showError("Api Utils - Until Most Popular", e);
         }
 
         if (result == null) result = new Track[0];
@@ -162,12 +213,26 @@ public class ApiUtils {
         }
     }
 
-    public Recommendations getRecommendations(String id){
+    public Recommendations getRecommendations(String... ids){
         try {
-            return spotifyApi.getRecommendations().seed_tracks(id).build().execute();
+            StringBuilder sb = new StringBuilder(ids[0]);
+            for (int i=1; i<ids.length; i++) sb.append(",").append(ids[i]);
+
+            return spotifyApi.getRecommendations()
+                    .seed_tracks(sb.toString()).build().execute();
         } catch (Exception e){
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public void skipCurrentTrack(){
+        try {
+            spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
+        } catch (SpotifyWebApiException e){
+            System.err.println(e.getMessage());
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 }

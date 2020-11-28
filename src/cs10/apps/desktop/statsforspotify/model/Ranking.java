@@ -1,10 +1,12 @@
 package cs10.apps.desktop.statsforspotify.model;
 
+import cs10.apps.web.statsforspotify.model.CustomList;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class Ranking extends ArrayList<Song> {
+public class Ranking extends CustomList<Song> {
     private String title;
 
     public String getTitle() {

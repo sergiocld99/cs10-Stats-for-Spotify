@@ -5,43 +5,45 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.view.CustomPlayer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class PlaybackService {
-    private final ApiUtils apiUtils;
-    private final JTable jTable;
-    private final JFrame jFrame;
-    private Ranking ranking;
-    private boolean running;
+public class PlaybackService implements Runnable {
+    private static final int QUEUE_RATE = 20;
 
-    // Version 3
-    private int time;
-
-    // Version 4
-    private ScheduledExecutorService scheduledExecutorService;
     private final CustomPlayer player;
-    private Song lastSelectedSong;
-    private int magicNumber;
+    private final ApiUtils apiUtils;
+    private final JTable table;
+    private final JFrame frame;
+    private Ranking ranking;
+    private ScheduledExecutorService progressScheduler;
+    private ArrayList<String> autoQueueUris;
 
-    public PlaybackService(ApiUtils apiUtils, JTable jTable, JFrame jFrame, CustomPlayer player) {
+    private boolean running;
+    private int time, requestsCount;
+
+    public PlaybackService(ApiUtils apiUtils, JTable table, JFrame frame, CustomPlayer player) {
         this.apiUtils = apiUtils;
-        this.jTable = jTable;
-        this.jFrame = jFrame;
+        this.table = table;
+        this.frame = frame;
         this.player = player;
     }
 
-    public void run() {
-        if (scheduledExecutorService != null){
-            scheduledExecutorService.shutdown();
-        }
+    public void allowAutoUpdate(){
+        ScheduledExecutorService scheduler2 = Executors.newSingleThreadScheduledExecutor();
+        scheduler2.scheduleAtFixedRate(this, 30, 29, TimeUnit.SECONDS);
+    }
 
+    @Override
+    public void run() {
         running = true;
         getCurrentData();
     }
@@ -51,84 +53,108 @@ public class PlaybackService {
     }
 
     private void getCurrentData() {
+        requestsCount++;
+
+        System.out.println("Current Song - Request #" + requestsCount);
         CurrentlyPlaying currentlyPlaying = apiUtils.getCurrentSong();
+
         if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
-            jFrame.setTitle("Ranking #" + ranking.getCode());
+            frame.setTitle("Ranking #" + ranking.getCode());
             running = false;
             return;
         }
 
         try {
             Track track = (Track) currentlyPlaying.getItem();
-            int artistScore = player.setTrack(track);
 
             if (track == null){
-                jFrame.setTitle("Advertisement");
-                scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-                scheduledExecutorService.schedule(this::getCurrentData, 30, TimeUnit.SECONDS);
-                System.out.println("Retrying in 30 seconds...");
+                if (progressScheduler != null)
+                    progressScheduler.shutdown();
+                //jFrame.setTitle("Advertisement");
+                frame.setVisible(false);
+                player.clear();
                 return;
             } else {
-                jFrame.setTitle("P: " + track.getPopularity() + " / A:" + artistScore +
-                        " -- Now Playing: " + track.getName());
+                if (!frame.isVisible())
+                    frame.setVisible(true);
             }
 
-            // Update table scroll and custom player labels
+            if (requestsCount % QUEUE_RATE == QUEUE_RATE / 2){
+                attemptQueue(track);
+            }
+
+            // Check current
+            if (player.getCurrentSongId().equals(track.getId())){
+                if (player.getArtistScore() > 0 && requestsCount % 2 == 0){
+                    frame.setTitle("P: " + track.getPopularity() + " / A: " + player.getArtistScore());
+                } else frame.setTitle(track.getName());
+
+                return;
+
+            } else {
+                if (progressScheduler != null) progressScheduler.shutdown();
+                frame.setTitle("Now Playing: " + CommonUtils.toString(track));
+            }
+
+            System.out.println("Updating Custom Player...");
+            boolean isBecomingUnpopular = player.setTrack(track);
+            boolean isRecommended = checkRecommended(track);
+
+            if (!isRecommended){
+                if (isBecomingUnpopular){
+                    frame.setIconImage(new ImageIcon("appicon2.png").getImage());
+                    if (requestsCount % QUEUE_RATE > QUEUE_RATE / 2) apiUtils.skipCurrentTrack();
+                } else frame.setIconImage(new ImageIcon("appicon.png").getImage());
+            }
+
+            // Update table scroll
             SwingUtilities.invokeLater(()->{
                 selectCurrentRow(track);
-                jTable.repaint();
+                table.repaint();
                 player.repaint();
             });
 
             time = currentlyPlaying.getProgress_ms() / 1000;
             int maximum = track.getDurationMs() / 1000;
-            //progressBar.setMaximum(maximum);
             running = true;
 
-            scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-            scheduledExecutorService.scheduleAtFixedRate(() -> {
+            progressScheduler = Executors.newSingleThreadScheduledExecutor();
+            progressScheduler.scheduleAtFixedRate(() -> {
                 player.setTime(time);
                 if (time >= maximum || !running){
-                    scheduledExecutorService.shutdown();
+                    progressScheduler.shutdown();
                     getCurrentData();
                 } else time++;
             }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            OptionPanes.showPlaybackStopped();
-            e.printStackTrace();
+            OptionPanes.showError("Playback Service - Current Data", e);
         }
     }
 
-    private void selectCurrentRow(Track track){
-        String id = track.getId();
-        int firstCharNumber = track.getName().charAt(0)-'A'+1;
-        Song song = ranking.getSong(id);
-        if (song != null){
-            player.changeProgressColor(Color.green);
-            lastSelectedSong = song;
-            magicNumber = 0;
-            int i = song.getRank()-1;
-            jTable.getSelectionModel().setSelectionInterval(i,i);
-            scrollToCenter(jTable, i, i % 5);
-        } else {
-            if (lastSelectedSong != null){
-                magicNumber += firstCharNumber;
-                System.out.println("Current magic number: " + magicNumber);
-                if (magicNumber > 30){
-                    int rankSelected = (int) (lastSelectedSong.getRank() +
-                            magicNumber * 0.01 * lastSelectedSong.getPopularity());
-                    if (rankSelected <= ranking.size()){
-                        player.changeProgressColor(Color.orange);
-                        lastSelectedSong = ranking.get(rankSelected-1);
-                        magicNumber = 0;
-                        if (!apiUtils.addToQueue(lastSelectedSong)){
-                            OptionPanes.message("Failed to queue \"" +
-                                    lastSelectedSong.getName() + "\"");
-                        }
-                    }
-                }
+    private boolean checkRecommended(Track track){
+        if (autoQueueUris != null) for (String id : autoQueueUris){
+            if (id.equals("spotify:track:"+track.getId())){
+                frame.setIconImage(new ImageIcon("appicon3.png").getImage());
+                frame.setTitle("Playing a Recommended Song: " + CommonUtils.toString(track));
+                return true;
             }
         }
+
+        return false;
+    }
+
+    private void selectCurrentRow(Track track){
+        Song song = ranking.getSong(track.getId());
+        if (song != null){
+            int i = song.getRank()-1;
+            table.getSelectionModel().setSelectionInterval(i,i);
+            scrollToCenter(table, i, i % 5);
+        } else table.clearSelection();
+    }
+
+    private void attemptQueue(Track currentTrack){
+        if (ranking.size() > 0)
+            autoQueueUris = apiUtils.autoQueue(ranking, currentTrack);
     }
 
     private void scrollToCenter(JTable table, int rowIndex, int vColIndex) {

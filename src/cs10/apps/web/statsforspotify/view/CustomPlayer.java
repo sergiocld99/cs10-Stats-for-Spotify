@@ -2,6 +2,8 @@ package cs10.apps.web.statsforspotify.view;
 
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
+import cs10.apps.web.statsforspotify.app.DevelopException;
+import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 
 import javax.swing.*;
@@ -9,17 +11,20 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class CustomPlayer extends JPanel {
     private final DecimalFormat decimalFormat = new DecimalFormat("#00");
     private final CustomThumbnail thumbnail;
-    private final CircleLabel popularityLabel, scoreLabel;
+    private final CircleLabel popularityLabel;
+    private final ScoreLabel scoreLabel;
     private final JProgressBar progressBar;
+    private String currentSongId = "";
 
     public CustomPlayer(int thumbSize) {
         this.thumbnail = new CustomThumbnail(thumbSize);
         this.popularityLabel = new CircleLabel("Popularity");
-        this.scoreLabel = new CircleLabel("Artist Score");
+        this.scoreLabel = new ScoreLabel();
         this.progressBar = new JProgressBar(0, 100);
         this.customizeProgressBar();
         this.add(thumbnail);
@@ -52,20 +57,23 @@ public class CustomPlayer extends JPanel {
         this.scoreLabel.setAverage(average);
     }
 
+    public void clear(){
+        this.currentSongId = "";
+        this.progressBar.setValue(0);
+        this.progressBar.setString("");
+        this.scoreLabel.setValue(0);
+        this.popularityLabel.setValue(0);
+        this.thumbnail.setUnknown();
+    }
+
     /**
      * Updates thumbnail and circle labels
      * @param track current track from playback
-     * @return current artist score
+     * @return if the current song is becoming unpopular
      */
-    public int setTrack(Track track){
-        if (track == null){
-            this.progressBar.setValue(0);
-            this.progressBar.setString("");
-            this.scoreLabel.setValue(0);
-            this.popularityLabel.setValue(0);
-            this.thumbnail.setUnknown();
-            return 0;
-        }
+    public boolean setTrack(Track track){
+        if (track == null) throw new DevelopException(this);
+        currentSongId = track.getId();
 
         if (track.getAlbum().getImages().length > 0){
             this.thumbnail.setCover(track.getAlbum().getImages()[0].getUrl());
@@ -84,10 +92,20 @@ public class CustomPlayer extends JPanel {
             multiplier /= 2;
         }
 
+        this.scoreLabel.setCollab(track.getArtists().length > 1);
         this.scoreLabel.setValue((int) score);
         this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
-        return (int) score;
+
+        if (previousPop > 0 && track.getPopularity() < previousPop){
+            changeProgressColor(Color.orange);
+            return true;
+        } else {
+            if (previousPop == track.getPopularity())
+                changeProgressColor(Color.cyan);
+            else changeProgressColor(Color.green);
+            return false;
+        }
     }
 
     public void setProgress(int value){
@@ -99,6 +117,14 @@ public class CustomPlayer extends JPanel {
         int seconds = value % 60;
         int minutes = value / 60;
         progressBar.setString(minutes + ":" + decimalFormat.format(seconds));
+    }
+
+    public String getCurrentSongId() {
+        return currentSongId;
+    }
+
+    public int getArtistScore(){
+        return scoreLabel.getValue();
     }
 
     public void changeProgressColor(Color color){

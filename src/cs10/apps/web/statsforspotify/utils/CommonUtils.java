@@ -1,11 +1,9 @@
 package cs10.apps.web.statsforspotify.utils;
 
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
-import com.wrapper.spotify.model_objects.specification.Recommendations;
 import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.model_objects.specification.TrackSimplified;
 import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
@@ -19,7 +17,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 public class CommonUtils {
 
@@ -130,7 +127,7 @@ public class CommonUtils {
             }
         }
 
-        sb.append('\n').append("Recommendations: ").append("\n\n");
+        /*sb.append('\n').append("Recommendations: ").append("\n\n");
 
         Random random = new Random();
         int index = random.nextInt(25);
@@ -161,9 +158,17 @@ public class CommonUtils {
             TrackSimplified t = r.getTracks()[newRandom];
             sb.append(t.getName()).append(" by ")
                     .append(t.getArtists()[0].getName()).append('\n');
-        }
+        }*/
 
         String message = sb.toString();
         if (!message.isEmpty()) OptionPanes.message(message);
+    }
+
+    public static String toString(Track track){
+        return track.getName() + " by " + track.getArtists()[0].getName();
+    }
+
+    public static String toString(TrackSimplified trackSimplified){
+        return trackSimplified.getName() + " by " + trackSimplified.getArtists()[0].getName();
     }
 }

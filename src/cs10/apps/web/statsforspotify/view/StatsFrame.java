@@ -94,6 +94,7 @@ public class StatsFrame extends JFrame {
 
         // Show all
         playbackService = new PlaybackService(apiUtils, table, this, player);
+        playbackService.allowAutoUpdate();
         setResizable(false);
         setVisible(true);
         //show(TopTerms.SHORT);
@@ -127,6 +128,8 @@ public class StatsFrame extends JFrame {
         // Step 1: get actual top tracks from Spotify
         player.setString("Connecting to Spotify...");
         Track[] tracks1 = apiUtils.getUntilMostPopular(TopTerms.SHORT.getKey(), 50);
+        if (tracks1 == null) System.exit(0);
+
         player.setProgress(50);
         Track[] tracks2 = apiUtils.getTopTracks(TopTerms.MEDIUM.getKey());
         player.setProgress(100);
@@ -182,7 +185,6 @@ public class StatsFrame extends JFrame {
         cellRenderer.setHorizontalAlignment(JLabel.CENTER);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        //table.getColumnModel().getColumn(1).setPreferredWidth(50);
         table.getColumnModel().getColumn(2).setPreferredWidth(250);
         table.getColumnModel().getColumn(3).setPreferredWidth(250);
 

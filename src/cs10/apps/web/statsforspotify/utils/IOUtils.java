@@ -9,9 +9,12 @@ import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
 
 public class IOUtils {
     private static final String DATA_FILE = "appdata.ini";
@@ -236,12 +239,41 @@ public class IOUtils {
             String line = br.readLine();
             return Integer.parseInt(line.split("--")[1]);
         } catch (IOException e){
-            OptionPanes.showError("IOUtils - Get First Popularity", e);
+            OptionPanes.showError("IOUtils - First Popularity", e);
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException e){
             System.err.println(file.getPath() + ": invalid format");
         }
 
         return 0;
+    }
+
+    public static boolean existsArtist(String name){
+        File file = new File("library//"+name);
+        System.out.println("Checking existence of " + file.getPath());
+        return file.exists();
+    }
+
+    public static Song pickRandomSongFromLibrary(){
+        File[] artistFolders = new File("library//").listFiles();
+        if (artistFolders == null) return null;
+
+        Random random = new Random();
+        File pickedArtist = artistFolders[random.nextInt(artistFolders.length)];
+        File[] songFiles = pickedArtist.listFiles();
+        if (songFiles == null) return null;
+
+        File pickedSong = songFiles[random.nextInt(songFiles.length)];
+        Song song = new Song();
+        song.setId(pickedSong.getName());
+        song.setArtists(pickedArtist.getName());
+
+        try (BufferedReader br = new BufferedReader(new FileReader(pickedSong))){
+            song.setName(br.readLine());
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+        return song;
     }
 
     // -------------------------------- VERSION 2 --------------------------------------------

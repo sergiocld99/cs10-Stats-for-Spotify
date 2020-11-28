@@ -152,6 +152,10 @@ public class Song implements Comparable<Song> {
         else setStatus(Status.UP);
     }
 
+    public String toStringWithArtist(){
+        return getName() + " by " + getArtists();
+    }
+
     public String toStringWithoutArtists(){
         return "#" + new DecimalFormat("#00").format(getRank()) + " - " + getName() +
                 " (" + (getChange() > 0 ? "+" + getChange() : getChange()) + ")";

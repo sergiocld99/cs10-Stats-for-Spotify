@@ -147,7 +147,7 @@ public class PlaybackService implements Runnable {
                 } else time++;
             }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Maintenance.writeErrorFile(e);
+            Maintenance.writeErrorFile(e, true);
         }
     }
 

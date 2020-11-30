@@ -6,6 +6,8 @@ import java.io.*;
 import java.util.Date;
 
 public class Maintenance {
+    private static final String LOGS_FILE = "logs.txt";
+
     public static void fixSongFiles(){
         File[] folders = new File("library").listFiles();
         if (folders != null) for (File artistFolder : folders){
@@ -52,19 +54,30 @@ public class Maintenance {
         if (fixed) System.out.println(file.getPath() + " has been fixed");
     }
 
-    public static void writeErrorFile(Exception e){
-        File file = new File("logs.txt");
-        try (PrintWriter pw = new PrintWriter(file)){
-            pw.println(new Date(System.currentTimeMillis()).toString());
-            e.printStackTrace(pw);
-            System.err.println("Error written in " + file.getPath());
+    public static void writeErrorFile(Exception e, boolean detailed){
+        try (FileWriter fw = new FileWriter(LOGS_FILE, true)){
+            fw.write(new Date(System.currentTimeMillis()).toString());
+            fw.write('\n');
+            if (detailed) e.printStackTrace(new PrintWriter(fw));
+            else fw.write(e.getMessage());
+            fw.write("\n\n");
+            System.err.println("Error " + e.getMessage() + " written in " + LOGS_FILE);
+        } catch (IOException ioe){
+            ioe.printStackTrace();
+        }
+    }
+
+    public static void log(String str){
+        try (FileWriter fw = new FileWriter(LOGS_FILE, true)){
+            fw.write(str);
+            System.out.println("Log: " + str);
         } catch (IOException ioe){
             ioe.printStackTrace();
         }
     }
 
     public static void clearPreviousReport(){
-        File file = new File("logs.txt");
+        File file = new File(LOGS_FILE);
         if (file.exists() && file.delete()){
             System.out.println("Previous Report cleared");
         }

@@ -13,6 +13,7 @@ import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
+import cs10.apps.web.statsforspotify.utils.Maintenance;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -144,11 +145,23 @@ public class StatsFrame extends JFrame {
         // Step 2: build actual ranking
         bigRanking = new BigRanking(CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100));
 
+        // Step 2.5: retrieve username
+        String userId;
+
+        try {
+            userId = apiUtils.getUser().getId();
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+            OptionPanes.showError("Stats Frame - Init", e);
+            System.exit(1);
+            return;
+        }
+
         // Step 3: read last code
         boolean showSummary = false;
-        long[] savedCodes = IOUtils.readLastRankingCode();
+        long[] savedCodes = IOUtils.readLastRankingCode(userId);
         if (bigRanking.getCode() > 0 && bigRanking.getCode() != savedCodes[1]){
-            IOUtils.saveLastRankingCode(savedCodes[1], bigRanking.getCode());
+            IOUtils.saveLastRankingCode(savedCodes[1], bigRanking.getCode(), userId);
             IOUtils.saveRanking(bigRanking, true);
             player.setString("Updating Library Files...");
             IOUtils.makeLibraryFiles(bigRanking, player.getProgressBar());
@@ -156,7 +169,7 @@ public class StatsFrame extends JFrame {
         }
 
         // Step 4: load compare ranking
-        BigRanking rankingToCompare = IOUtils.loadPreviousRanking();
+        BigRanking rankingToCompare = IOUtils.loadPreviousRanking(userId);
         bigRanking.updateAllStatus(rankingToCompare);
 
         // Step 5: build and show UI

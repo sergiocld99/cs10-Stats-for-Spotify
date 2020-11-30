@@ -9,61 +9,60 @@ import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
 
 public class IOUtils {
-    private static final String DATA_FILE = "appdata.ini";
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final String LIBRARY_FOLDER = "library";
+    private static final String RANKING_FOLDER = "ranking";
 
     public static boolean isFirstTime(){
-        return ! new File(DATA_FILE).exists();
+        return ! new File(RANKING_FOLDER).exists();
     }
 
     /**
      *
      * @return an array with compare [0] and last [1] codes
      */
-    public static long[] readLastRankingCode(){
+    public static long[] readLastRankingCode(String userId){
         long[] result = new long[2];
 
-        try (BufferedReader br = new BufferedReader(new FileReader(DATA_FILE))){
+        try (BufferedReader br = new BufferedReader(new FileReader(userId))){
             result[0] = Long.parseLong(br.readLine().split("=")[1]);
             result[1] = Long.parseLong(br.readLine().split("=")[1]);
         } catch (FileNotFoundException e){
-            System.err.println("The file " + DATA_FILE + " doesn't exist!");
+            System.err.println("The file " + userId + " doesn't exist!");
         } catch (NumberFormatException e){
             System.err.println("The ranking code is not a number");
         } catch (ArrayIndexOutOfBoundsException e){
-            System.err.println("The file " + DATA_FILE + " has an invalid format");
+            System.err.println("The file " + userId + " has an invalid format");
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, true);
         }
 
         return result;
     }
 
-    public static void saveLastRankingCode(long compareCode, long lastCode){
-        File file = new File(DATA_FILE);
+    public static void saveLastRankingCode(long compareCode, long lastCode, String userId){
+        File file = new File(userId);
         if (!file.exists()){
             try {
-                System.out.println(DATA_FILE + " created: " + file.createNewFile());
+                System.out.println(userId + " created: " + file.createNewFile());
             } catch (IOException e){
-                e.printStackTrace();
+                Maintenance.writeErrorFile(e, false);
             }
         }
 
-        try (PrintWriter pw = new PrintWriter(new FileWriter(DATA_FILE))){
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))){
             pw.println("compare="+compareCode);
             pw.println("last="+lastCode);
         } catch (FileNotFoundException e){
-            System.err.println("The file " + DATA_FILE + " doesn't exist!");
+            System.err.println("The file " + userId + " doesn't exist!");
         } catch (IOException e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, false);
         }
     }
 
@@ -81,7 +80,7 @@ public class IOUtils {
         artist = artist.replace("/\\","");
         boolean header = false;
 
-        File directory = new File("library//"+artist);
+        File directory = new File(LIBRARY_FOLDER+"//"+artist);
         if (!directory.exists()){
             System.out.println(directory.getPath() + " created: " + directory.mkdirs());
         }
@@ -91,7 +90,7 @@ public class IOUtils {
             try {
                 header = songFile.createNewFile();
             } catch (IOException e){
-                e.printStackTrace();
+                Maintenance.writeErrorFile(e, false);
             }
         }
 
@@ -101,16 +100,17 @@ public class IOUtils {
         } catch (FileNotFoundException e){
             System.err.println(songFile.getPath() + " doesn't exist!");
         } catch (IOException e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, false);
         }
     }
 
-    public static BigRanking loadPreviousRanking(){
+    public static BigRanking loadPreviousRanking(String userId){
         BigRanking ranking = new BigRanking();
-        long code = readLastRankingCode()[0];
+        long code = readLastRankingCode(userId)[0];
         if (code == 0) return ranking;
 
-        try (BufferedReader br = new BufferedReader(new FileReader("ranking//" + code))){
+        String filename = RANKING_FOLDER+"//"+ code;
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))){
             // skip header
             br.readLine();
 
@@ -126,7 +126,7 @@ public class IOUtils {
         } catch (FileNotFoundException e){
             System.err.println("The previous ranking " + code + " doesn't exist!");
         } catch (IOException e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, false);
         } catch (NumberFormatException e){
             System.err.println("The rank column has an invalid format");
         } catch (ArrayIndexOutOfBoundsException e){
@@ -140,7 +140,7 @@ public class IOUtils {
         artist = artist.replace("/\\","");
         float[] result = new float[10];
 
-        File file = new File("library//" + artist);
+        File file = new File(LIBRARY_FOLDER+"//"+artist);
         File[] songsFiles = file.listFiles();
         if (songsFiles != null) {
             for (File f : songsFiles)
@@ -170,13 +170,13 @@ public class IOUtils {
         } catch (ArrayIndexOutOfBoundsException e){
             System.err.println("Rows in " + file.getPath() + " don't have enough params");
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, true);
         }
     }
 
     public static int getTimesOnRanking(String artists, String id){
         String artist = artists.split(", ")[0].replace("/\\","");
-        File file = new File("library//"+artist+"//"+id);
+        File file = new File(LIBRARY_FOLDER+"//"+artist+"//"+id);
         int cant = 0;
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))){
@@ -188,14 +188,14 @@ public class IOUtils {
         } catch (FileNotFoundException e) {
             System.err.println(file.getPath() + " doesn't exist!");
         } catch (IOException e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, false);
         }
 
         return cant;
     }
 
     public static int getRankingsAmount(){
-        File[] files = new File("ranking").listFiles();
+        File[] files = new File(RANKING_FOLDER).listFiles();
         if (files == null || files.length == 0) return 1;
         else return files.length;
     }
@@ -212,7 +212,7 @@ public class IOUtils {
     }
 
     public static Artist[] getAllArtistsScore(){
-        File[] folders = new File("library").listFiles();
+        File[] folders = new File(LIBRARY_FOLDER).listFiles();
         if (folders == null) return null;
 
         Artist[] result = new Artist[folders.length];
@@ -228,7 +228,7 @@ public class IOUtils {
     public static int getFirstPopularity(Track track){
         String artist = track.getArtists()[0].getName();
         String trackID = track.getId();
-        File file = new File("library//"+artist+"//"+trackID);
+        File file = new File(LIBRARY_FOLDER+"//"+artist+"//"+trackID);
         if (!file.exists()) return 0;
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))){
@@ -239,7 +239,7 @@ public class IOUtils {
             String line = br.readLine();
             return Integer.parseInt(line.split("--")[1]);
         } catch (IOException e){
-            OptionPanes.showError("IOUtils - First Popularity", e);
+            Maintenance.writeErrorFile(e, false);
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException e){
             System.err.println(file.getPath() + ": invalid format");
         }
@@ -248,13 +248,13 @@ public class IOUtils {
     }
 
     public static boolean existsArtist(String name){
-        File file = new File("library//"+name);
+        File file = new File(LIBRARY_FOLDER+"//"+name);
         System.out.println("Checking existence of " + file.getPath());
         return file.exists();
     }
 
     public static Song pickRandomSongFromLibrary(){
-        File[] artistFolders = new File("library//").listFiles();
+        File[] artistFolders = new File(LIBRARY_FOLDER+"//").listFiles();
         if (artistFolders == null) return null;
 
         Random random = new Random();
@@ -270,7 +270,7 @@ public class IOUtils {
         try (BufferedReader br = new BufferedReader(new FileReader(pickedSong))){
             song.setName(br.readLine());
         } catch (IOException e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, false);
         }
 
         return song;
@@ -278,19 +278,19 @@ public class IOUtils {
 
     // -------------------------------- VERSION 2 --------------------------------------------
     public static void saveRanking(Ranking ranking, boolean replace){
-        File directory = new File("ranking//");
+        File directory = new File(RANKING_FOLDER);
 
         if (!directory.exists() && directory.mkdirs())
             System.out.println(directory.getAbsolutePath() + " has been just created");
 
-        File file = new File(directory.getPath() + "//" + ranking.getCode());
+        File file = new File(RANKING_FOLDER + "//" + ranking.getCode());
 
         if (!replace & file.exists()) return;
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))){
             writer.println(dateFormat.format(new Date(System.currentTimeMillis())));
             for (Song s : ranking) writer.println(s.getRank() + "--" + s.getId());
         } catch (IOException e){
-            OptionPanes.showError("IOUtils - Save Ranking", e);
+            Maintenance.writeErrorFile(e, false);
         }
     }
 

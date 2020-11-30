@@ -7,13 +7,14 @@ import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import com.wrapper.spotify.model_objects.specification.*;
+import com.wrapper.spotify.model_objects.specification.Recommendations;
+import com.wrapper.spotify.model_objects.specification.Track;
+import com.wrapper.spotify.model_objects.specification.TrackSimplified;
+import com.wrapper.spotify.model_objects.specification.User;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
-import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
-import org.apache.hc.core5.http.ParseException;
 
 import java.awt.*;
 import java.io.IOException;
@@ -27,7 +28,7 @@ public class ApiUtils {
 
     // This URI should equal to the saved URI on the App Dashboard
     private static final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost:8080");
-    private static final String SCOPE = "user-top-read  user-read-currently-playing user-modify-playback-state";
+    private static final String SCOPE = "user-top-read user-read-currently-playing user-modify-playback-state";
 
 
     public ApiUtils(){
@@ -45,11 +46,13 @@ public class ApiUtils {
             ClientCredentials credentials = spotifyApi.clientCredentials().build().execute();
             spotifyApi.setAccessToken(credentials.getAccessToken());
             return true;
-        } catch (SpotifyWebApiException | ParseException | IOException e){
-            System.err.println("Unable to get credentials");
-            e.printStackTrace();
-            return false;
+        } catch (SpotifyWebApiException e){
+            Maintenance.writeErrorFile(e, false);
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
         }
+
+        return false;
     }
 
     public boolean isReady() {
@@ -59,20 +62,10 @@ public class ApiUtils {
     public void openGrantPermissionPage() throws IOException {
         URI uri = spotifyApi.authorizationCodeUri()
                 .scope(SCOPE)
-                .show_dialog(true)
                 .build().execute();
 
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            Desktop.getDesktop().browse(uri);
-        }
-    }
-
-    public void openReconfirmPermissionPage() throws IOException {
-        URI uri = spotifyApi.authorizationCodeUri()
-                .scope(SCOPE)
-                .build().execute();
-
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+        if (Desktop.isDesktopSupported()
+                && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             Desktop.getDesktop().browse(uri);
         }
     }
@@ -86,6 +79,7 @@ public class ApiUtils {
             spotifyApi.setRefreshToken(credentials.getRefreshToken());
         } catch (Exception e){
             OptionPanes.showError("ApiUtils - Refresh Token", e);
+            Maintenance.writeErrorFile(e, true);
         }
     }
 
@@ -93,7 +87,7 @@ public class ApiUtils {
         try {
             return spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, true);
             return null;
         }
     }
@@ -111,13 +105,13 @@ public class ApiUtils {
             tracks1 = spotifyApi.getArtistsTopTracks(t2.getArtists()[0].getId(), CountryCode.AR)
                     .build().execute();
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, true);
             return null;
         }
 
         if (tracks1[0].getPopularity() < 70) {
-            System.err.println("Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
-            System.err.println("Cause: popularity is " + tracks1[0].getPopularity());
+            Maintenance.log("Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
+            Maintenance.log("Cause: popularity is " + tracks1[0].getPopularity());
             return null;
         }
 
@@ -149,10 +143,10 @@ public class ApiUtils {
                 Thread.sleep(1000);
             }
         } catch (SpotifyWebApiException e){
-            System.err.println(e.getMessage());
-            System.err.println(errorSb.toString());
+            Maintenance.writeErrorFile(e, false);
+            Maintenance.log(errorSb.toString());
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, true);
         }
 
         return uris;
@@ -162,7 +156,7 @@ public class ApiUtils {
         try {
             return spotifyApi.getTrack(id).build().execute();
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e, true);
             return null;
         }
     }
@@ -195,7 +189,7 @@ public class ApiUtils {
             System.arraycopy(tracks1, 0, result, 0, tracks1.length);
             System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
         } catch (Exception e){
-            Maintenance.writeErrorFile(e);
+            Maintenance.writeErrorFile(e, true);
         }
 
         if (result == null) result = new Track[0];
@@ -208,7 +202,7 @@ public class ApiUtils {
             return spotifyApi.getUsersTopTracks().time_range(termKey)
                     .limit(50).build().execute().getItems();
         } catch (Exception e){
-            Maintenance.writeErrorFile(e);
+            Maintenance.writeErrorFile(e, true);
             return new Track[0];
         }
     }
@@ -221,7 +215,7 @@ public class ApiUtils {
             return spotifyApi.getRecommendations()
                     .seed_tracks(sb.toString()).build().execute();
         } catch (Exception e){
-            Maintenance.writeErrorFile(e);
+            Maintenance.writeErrorFile(e, true);
             return null;
         }
     }
@@ -231,9 +225,9 @@ public class ApiUtils {
             spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
             return true;
         } catch (SpotifyWebApiException e){
-            System.err.println(e.getMessage());
+            Maintenance.writeErrorFile(e, false);
         } catch (Exception e){
-            Maintenance.writeErrorFile(e);
+            Maintenance.writeErrorFile(e, true);
         }
 
         return false;
@@ -245,11 +239,15 @@ public class ApiUtils {
             spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
             return true;
         } catch (SpotifyWebApiException e){
-            System.err.println(e.getMessage());
+            Maintenance.writeErrorFile(e, false);
         } catch (Exception e){
-            Maintenance.writeErrorFile(e);
+            Maintenance.writeErrorFile(e, true);
         }
 
          return false;
+    }
+
+    public User getUser() throws Exception {
+        return spotifyApi.getCurrentUsersProfile().build().execute();
     }
 }

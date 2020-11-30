@@ -3,6 +3,7 @@ package cs10.apps.web.statsforspotify.utils;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import java.io.*;
+import java.util.Date;
 
 public class Maintenance {
     public static void fixSongFiles(){
@@ -49,5 +50,23 @@ public class Maintenance {
         }
 
         if (fixed) System.out.println(file.getPath() + " has been fixed");
+    }
+
+    public static void writeErrorFile(Exception e){
+        File file = new File("logs.txt");
+        try (PrintWriter pw = new PrintWriter(file)){
+            pw.println(new Date(System.currentTimeMillis()).toString());
+            e.printStackTrace(pw);
+            System.err.println("Error written in " + file.getPath());
+        } catch (IOException ioe){
+            ioe.printStackTrace();
+        }
+    }
+
+    public static void clearPreviousReport(){
+        File file = new File("logs.txt");
+        if (file.exists() && file.delete()){
+            System.out.println("Previous Report cleared");
+        }
     }
 }

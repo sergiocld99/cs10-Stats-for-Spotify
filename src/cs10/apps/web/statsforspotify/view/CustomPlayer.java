@@ -19,7 +19,7 @@ public class CustomPlayer extends JPanel {
     private final CircleLabel popularityLabel;
     private final ScoreLabel scoreLabel;
     private final JProgressBar progressBar;
-    private String currentSongId = "";
+    private String currentSongId;
 
     public CustomPlayer(int thumbSize) {
         this.thumbnail = new CustomThumbnail(thumbSize);
@@ -120,7 +120,7 @@ public class CustomPlayer extends JPanel {
     }
 
     public String getCurrentSongId() {
-        return currentSongId;
+        return currentSongId == null ? "" : currentSongId;
     }
 
     public int getArtistScore(){

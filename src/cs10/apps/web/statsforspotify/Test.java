@@ -9,5 +9,7 @@ public class Test {
     public static void main(String[] args) {
         if (APPLY_FIXES) Maintenance.fixSongFiles();
         else new PersonalChartApp().init();
+
+        Maintenance.clearPreviousReport();
     }
 }

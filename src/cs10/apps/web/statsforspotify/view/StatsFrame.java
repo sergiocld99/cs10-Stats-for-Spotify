@@ -112,9 +112,16 @@ public class StatsFrame extends JFrame {
         });
 
         table.addMouseListener(new MouseAdapter() {
+
             @Override
-            public void mousePressed(MouseEvent e) {
-                openArtistWindow();
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() != 2) return;
+
+                if (apiUtils.playThis(bigRanking.get(table.getSelectedRow()).getId())){
+                    playbackService.setCanSkip(false);
+                    playbackService.run();
+                    OptionPanes.message("Current Playback updated");
+                } else openArtistWindow();
             }
         });
 

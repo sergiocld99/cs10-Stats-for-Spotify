@@ -6,8 +6,8 @@ import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
+import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.CustomPlayer;
-import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,8 +17,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class PlaybackService implements Runnable {
-    private static final int QUEUE_RATE = 20;
-
     private final CustomPlayer player;
     private final ApiUtils apiUtils;
     private final JTable table;
@@ -27,14 +25,16 @@ public class PlaybackService implements Runnable {
     private ScheduledExecutorService progressScheduler;
     private ArrayList<String> autoQueueUris;
 
-    private boolean running;
+    private boolean running, canSkip;
     private int time, requestsCount;
 
     public PlaybackService(ApiUtils apiUtils, JTable table, JFrame frame, CustomPlayer player) {
+        progressScheduler = Executors.newSingleThreadScheduledExecutor();
         this.apiUtils = apiUtils;
         this.table = table;
         this.frame = frame;
         this.player = player;
+        this.canSkip = true;
     }
 
     public void allowAutoUpdate(){
@@ -44,8 +44,9 @@ public class PlaybackService implements Runnable {
 
     @Override
     public void run() {
+        ScheduledExecutorService scheduler0 = Executors.newSingleThreadScheduledExecutor();
+        scheduler0.schedule(this::getCurrentData, 500, TimeUnit.MILLISECONDS);
         running = true;
-        getCurrentData();
     }
 
     public void setRanking(Ranking ranking) {
@@ -79,21 +80,27 @@ public class PlaybackService implements Runnable {
                     frame.setVisible(true);
             }
 
-            if (requestsCount % QUEUE_RATE == QUEUE_RATE / 2){
+            /*if (requestsCount % QUEUE_RATE == QUEUE_RATE / 2){
                 attemptQueue(track);
-            }
+            }*/
 
             // Check current
             if (player.getCurrentSongId().equals(track.getId())){
-                if (player.getArtistScore() > 0 && requestsCount % 2 == 0){
-                    frame.setTitle("P: " + track.getPopularity() + " / A: " + player.getArtistScore());
-                } else frame.setTitle(track.getName());
-
-                return;
-
+                time = currentlyPlaying.getProgress_ms() / 1000;
+                switch (requestsCount % 3){
+                    case 0:
+                        frame.setTitle("P: " + track.getPopularity() +
+                                " / A: " + player.getArtistScore());
+                        return;
+                    case 1:
+                        frame.setTitle(track.getName());
+                        return;
+                    case 2:
+                        frame.setTitle(CommonUtils.combineArtists(track.getArtists()));
+                        return;
+                }
             } else {
                 if (progressScheduler != null) progressScheduler.shutdown();
-                frame.setTitle("Now Playing: " + CommonUtils.toString(track));
             }
 
             System.out.println("Updating Custom Player...");
@@ -101,11 +108,24 @@ public class PlaybackService implements Runnable {
             boolean isRecommended = checkRecommended(track);
 
             if (!isRecommended){
-                if (isBecomingUnpopular){
+                if (canSkip && isBecomingUnpopular){
+                    attemptQueue(track);
+                    if (requestsCount % 2 == 0) {
+                        System.out.println("Attempting to skip current track...");
+                        if (apiUtils.skipCurrentTrack()){
+                            ScheduledExecutorService skipDelayedExecutor
+                                    = Executors.newSingleThreadScheduledExecutor();
+                            skipDelayedExecutor.schedule(this::getCurrentData,
+                                    1, TimeUnit.SECONDS);
+                            return;
+                        }
+                    }
                     frame.setIconImage(new ImageIcon("appicon2.png").getImage());
-                    if (requestsCount % QUEUE_RATE > QUEUE_RATE / 2) apiUtils.skipCurrentTrack();
                 } else frame.setIconImage(new ImageIcon("appicon.png").getImage());
-            }
+            } else canSkip = true;
+
+            // Only if the track wasn't skipped
+            frame.setTitle("Now Playing: " + CommonUtils.toString(track));
 
             // Update table scroll
             SwingUtilities.invokeLater(()->{
@@ -127,7 +147,7 @@ public class PlaybackService implements Runnable {
                 } else time++;
             }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            OptionPanes.showError("Playback Service - Current Data", e);
+            Maintenance.writeErrorFile(e);
         }
     }
 
@@ -153,14 +173,12 @@ public class PlaybackService implements Runnable {
     }
 
     private void attemptQueue(Track currentTrack){
-        if (ranking.size() > 0)
-            autoQueueUris = apiUtils.autoQueue(ranking, currentTrack);
+        if (ranking.size() > 0) new Thread(() ->
+                autoQueueUris = apiUtils.autoQueue(ranking, currentTrack)).start();
     }
 
     private void scrollToCenter(JTable table, int rowIndex, int vColIndex) {
-        if (!(table.getParent() instanceof JViewport)) {
-            return;
-        }
+        if (!(table.getParent() instanceof JViewport)) return;
         JViewport viewport = (JViewport) table.getParent();
         Rectangle rect = table.getCellRect(rowIndex, vColIndex, true);
         Rectangle viewRect = viewport.getViewRect();
@@ -168,18 +186,13 @@ public class PlaybackService implements Runnable {
 
         int centerX = (viewRect.width - rect.width) / 2;
         int centerY = (viewRect.height - rect.height) / 2;
-        if (rect.x < centerX) {
-            centerX = -centerX;
-        }
-        if (rect.y < centerY) {
-            centerY = -centerY;
-        }
+        if (rect.x < centerX) centerX = -centerX;
+        if (rect.y < centerY) centerY = -centerY;
         rect.translate(centerX, centerY);
+        viewport.scrollRectToVisible(rect);
+    }
 
-        try {
-            viewport.scrollRectToVisible(rect);
-        } catch (ClassCastException e){
-            System.err.println(e.getMessage());
-        }
+    public void setCanSkip(boolean canSkip) {
+        this.canSkip = canSkip;
     }
 }

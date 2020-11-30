@@ -150,7 +150,7 @@ public class ApiUtils {
             }
         } catch (SpotifyWebApiException e){
             System.err.println(e.getMessage());
-            OptionPanes.message(errorSb.toString());
+            System.err.println(errorSb.toString());
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -195,7 +195,7 @@ public class ApiUtils {
             System.arraycopy(tracks1, 0, result, 0, tracks1.length);
             System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
         } catch (Exception e){
-            OptionPanes.showError("Api Utils - Until Most Popular", e);
+            Maintenance.writeErrorFile(e);
         }
 
         if (result == null) result = new Track[0];
@@ -208,7 +208,7 @@ public class ApiUtils {
             return spotifyApi.getUsersTopTracks().time_range(termKey)
                     .limit(50).build().execute().getItems();
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e);
             return new Track[0];
         }
     }
@@ -221,18 +221,35 @@ public class ApiUtils {
             return spotifyApi.getRecommendations()
                     .seed_tracks(sb.toString()).build().execute();
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e);
             return null;
         }
     }
 
-    public void skipCurrentTrack(){
+    public boolean skipCurrentTrack(){
         try {
             spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
+            return true;
         } catch (SpotifyWebApiException e){
             System.err.println(e.getMessage());
         } catch (Exception e){
-            e.printStackTrace();
+            Maintenance.writeErrorFile(e);
         }
+
+        return false;
+    }
+
+    public boolean playThis(String trackId){
+        try {
+            spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+trackId).build().execute();
+            spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
+            return true;
+        } catch (SpotifyWebApiException e){
+            System.err.println(e.getMessage());
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e);
+        }
+
+         return false;
     }
 }

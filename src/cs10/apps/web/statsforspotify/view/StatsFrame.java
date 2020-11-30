@@ -8,6 +8,7 @@ import cs10.apps.desktop.statsforspotify.view.RankingModel;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
 import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.SimpleRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
@@ -55,7 +56,7 @@ public class StatsFrame extends JFrame {
         JMenuItem jmiSaveAs = new JMenuItem("Save As...");
         JMenu viewMenu = new JMenu("View");
         JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
-        jmiOpen.addActionListener(e -> System.out.println("Open pressed"));
+        jmiOpen.addActionListener(e -> openRankingsWindow());
         jmiSave.addActionListener(e -> System.out.println("Save pressed"));
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
         jmiLocalTop10.addActionListener(e -> openLocalTop10());
@@ -159,17 +160,17 @@ public class StatsFrame extends JFrame {
 
         // Step 3: read last code
         boolean showSummary = false;
-        long[] savedCodes = IOUtils.readLastRankingCode(userId);
+        long[] savedCodes = IOUtils.getSavedRankingCodes(userId);
         if (bigRanking.getCode() > 0 && bigRanking.getCode() != savedCodes[1]){
-            IOUtils.saveLastRankingCode(savedCodes[1], bigRanking.getCode(), userId);
+            IOUtils.updateRankingCodes(savedCodes[1], bigRanking.getCode(), userId);
             IOUtils.saveRanking(bigRanking, true);
             player.setString("Updating Library Files...");
-            IOUtils.makeLibraryFiles(bigRanking, player.getProgressBar());
+            IOUtils.updateLibrary(bigRanking, player.getProgressBar());
             showSummary = true;
         }
 
         // Step 4: load compare ranking
-        BigRanking rankingToCompare = IOUtils.loadPreviousRanking(userId);
+        BigRanking rankingToCompare = IOUtils.getLastRanking(userId);
         bigRanking.updateAllStatus(rankingToCompare);
 
         // Step 5: build and show UI
@@ -219,6 +220,19 @@ public class StatsFrame extends JFrame {
                 song.getPopularity(), song.getInfoStatus()};
     }
 
+    private void openRankingsWindow(){
+        new Thread(() -> {
+            System.out.println("Open pressed");
+            SimpleRanking[] fromDisk = IOUtils.getAvailableRankings();
+            if (fromDisk.length == 0) OptionPanes.message("There are no rankings yet");
+            else {
+                Arrays.sort(fromDisk);
+                SelectFrame selectFrame = new SelectFrame(fromDisk, bigRanking);
+                selectFrame.init();
+            }
+        }).start();
+    }
+
     private void openLocalTop10(){
         new Thread(() -> {
             Artist[] artists = IOUtils.getAllArtistsScore();
@@ -229,7 +243,6 @@ public class StatsFrame extends JFrame {
             System.arraycopy(artists, 0, top10, 0, 10);
             LocalTop10Frame localTop10Frame = new LocalTop10Frame(top10);
             localTop10Frame.init();
-            localTop10Frame.setVisible(true);
         }).start();
     }
 
@@ -238,9 +251,12 @@ public class StatsFrame extends JFrame {
             String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
             String[] artists = artistsNames.split(", ");
             String mainName = artists[0];
-            ArtistFrame artistFrame = new ArtistFrame(mainName, IOUtils.getScores(mainName));
-            artistFrame.init();
-            artistFrame.setVisible(true);
+            float[] scores = IOUtils.getDetailedArtistScores(mainName);
+            if (scores[scores.length-1] == 0) OptionPanes.message("Not enough data yet");
+            else {
+                ArtistFrame artistFrame = new ArtistFrame(mainName, scores);
+                artistFrame.init();
+            }
         }).start();
     }
 }

@@ -9,9 +9,10 @@ public abstract class DetailsFrame extends JFrame {
     private final JLabel lblHistograma;
     protected Histograma histograma;
 
-    public DetailsFrame(String title, String labelText, int width, int height) throws HeadlessException {
+    public DetailsFrame(String title, String labelText, int width, int height) {
         this.lblHistograma = new JLabel(labelText);
         this.histograma = new Histograma();
+        setIconImage(new ImageIcon("appicon.png").getImage());
         setMinimumSize(new Dimension(width, height));
         setTitle(title);
     }
@@ -67,7 +68,9 @@ public abstract class DetailsFrame extends JFrame {
         gbc.weighty = 1.0;
         gbc.insets = new Insets(0, 30, 0, 30);
         pContenedorPrincipal.add(pContenedorHistograma, gbc);
+
         setResizable(false);
+        setVisible(true);
         pack();
     }
 

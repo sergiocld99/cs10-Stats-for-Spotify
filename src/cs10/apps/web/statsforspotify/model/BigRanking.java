@@ -14,6 +14,8 @@ import java.util.List;
 public class BigRanking extends Ranking {
     private static final int TOP_INDEX = 1;
     private BigRanking rankingToCompare;
+    private String date;
+
     private long code;
 
     public BigRanking(){ }
@@ -34,6 +36,24 @@ public class BigRanking extends Ranking {
             else {
                 prevS.setMark(true);
                 song.setChange(prevS.getRank() - song.getRank());
+                if (song.getChange() == 0) song.setStatus(Status.NOTHING);
+                else if (song.getChange() < 0) song.setStatus(Status.DOWN);
+                else song.setStatus(Status.UP);
+            }
+        }
+    }
+
+    /**
+     * Inverted operation of "updateAllStatus(rankingToCompare)"
+     * @param actualRanking the current user's ranking
+     */
+    public void retrieveAllStatus(BigRanking actualRanking){
+        for (Song song : this){
+            Song prevS = actualRanking.getSong(song.getId());
+            if (prevS == null) song.setStatus(Status.LEFT);
+            else {
+                // inverted
+                song.setChange(song.getRank() - prevS.getRank());
                 if (song.getChange() == 0) song.setStatus(Status.NOTHING);
                 else if (song.getChange() < 0) song.setStatus(Status.DOWN);
                 else song.setStatus(Status.UP);
@@ -126,5 +146,17 @@ public class BigRanking extends Ranking {
             }
         }
         return ids;
+    }
+
+    public void setCode(long code) {
+        this.code = code;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getDate() {
+        return date;
     }
 }

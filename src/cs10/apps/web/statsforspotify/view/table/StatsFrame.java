@@ -1,4 +1,4 @@
-package cs10.apps.web.statsforspotify.view;
+package cs10.apps.web.statsforspotify.view.table;
 
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
@@ -15,6 +15,10 @@ import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
+import cs10.apps.web.statsforspotify.view.CustomPlayer;
+import cs10.apps.web.statsforspotify.view.OptionPanes;
+import cs10.apps.web.statsforspotify.view.histogram.ArtistFrame;
+import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -56,16 +60,19 @@ public class StatsFrame extends JFrame {
         JMenuItem jmiSaveAs = new JMenuItem("Save As...");
         JMenu viewMenu = new JMenu("View");
         JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
+        JMenuItem jmiLocalTop100 = new JMenuItem("Local Top 100 Artists");
         JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
         jmiOpen.addActionListener(e -> openRankingsWindow());
         jmiSave.addActionListener(e -> System.out.println("Save pressed"));
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
         jmiLocalTop10.addActionListener(e -> openLocalTop10());
+        jmiLocalTop100.addActionListener(e -> openLocalTop100());
         jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
         fileMenu.add(jmiOpen);
         fileMenu.add(jmiSave);
         fileMenu.add(jmiSaveAs);
         viewMenu.add(jmiLocalTop10);
+        viewMenu.add(jmiLocalTop100);
         viewMenu.add(jmiCurrentCollab);
         JMenu helpMenu = new JMenu("Help");
         helpMenu.addActionListener(e -> System.out.println("Help pressed"));
@@ -247,6 +254,19 @@ public class StatsFrame extends JFrame {
             System.arraycopy(artists, 0, top10, 0, length);
             LocalTop10Frame localTop10Frame = new LocalTop10Frame(top10);
             localTop10Frame.init();
+        }).start();
+    }
+
+    private void openLocalTop100(){
+        new Thread(() -> {
+            Artist[] artists = IOUtils.getAllArtistsScore();
+            if (artists == null) return;
+
+            int length = Math.min(artists.length, 100);
+            Arrays.sort(artists);
+            Artist[] top100 = new Artist[length];
+            System.arraycopy(artists, 0, top100, 0, length);
+            new LocalTop100Frame(top100).init();
         }).start();
     }
 

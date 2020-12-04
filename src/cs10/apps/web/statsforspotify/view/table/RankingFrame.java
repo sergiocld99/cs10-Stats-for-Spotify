@@ -1,4 +1,4 @@
-package cs10.apps.web.statsforspotify.view;
+package cs10.apps.web.statsforspotify.view.table;
 
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
@@ -24,11 +24,11 @@ public class RankingFrame extends JFrame {
     public void init() {
         setTitle("Ranking #"+bigRanking.getCode());
         setIconImage(new ImageIcon("appicon.png").getImage());
-        setSize(1000, 600);
+        setSize(1200, 600);
 
         // Table
         String[] columnNames = new String[]{
-                "Status", "Current Change", "Rank", "Song Name", "Artist", "Popularity"
+                "Status", "Current Change", "Rank", "Song Name", "Artist", "Popularity", "Preference"
         };
 
         model = new CustomTableModel(columnNames, 0);
@@ -47,6 +47,7 @@ public class RankingFrame extends JFrame {
     }
 
     private void buildTable(){
+
         for (Song s : bigRanking){
             if (s.getStatus() == Status.LEFT){
                 s.setInfoStatus("LEFT");

@@ -23,6 +23,10 @@ public class IOUtils {
         return ! new File(RANKING_FOLDER).exists();
     }
 
+    public static long getLastTime(){
+        return new File(RANKING_FOLDER).lastModified();
+    }
+
     // ------------------------------ RANKING CODES ----------------------------------
 
     /**

@@ -1,4 +1,4 @@
-package cs10.apps.web.statsforspotify.view;
+package cs10.apps.web.statsforspotify.view.table;
 
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
@@ -10,7 +10,6 @@ import cs10.apps.web.statsforspotify.utils.IOUtils;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 public class CollabScoresFrame extends AppFrame {
@@ -45,17 +44,19 @@ public class CollabScoresFrame extends AppFrame {
 
     public void init(){
         setTitle("Collab Score from Current Ranking");
-        setSize(1000, 600);
+        setSize(1100, 600);
 
         System.out.println("Preparing table...");
-        String[] columnsNames = new String[]{"Song Name", "Artists", "Score"};
+        String[] columnsNames = new String[]{"Rank", "Song Name", "Artists", "Score", "Preference"};
         CustomTableModel model = new CustomTableModel(columnsNames, 0);
         JTable table = new JTable(model);
         table.setRowHeight(50);
         super.customizeTexts(table, model);
+        this.modifyColumnsWidth(table);
 
-        for (Collab c : list)
-            model.addRow(toRow(c));
+        float maxPreference = list.get(0).getTotalScore() + list.get(list.size() / 2).getTotalScore();
+        for (int i=0; i<list.size(); i++)
+            model.addRow(toRow(list.get(i), maxPreference,i+1));
 
         System.out.println("All done");
         getContentPane().add(BorderLayout.CENTER, new JScrollPane(table));
@@ -63,7 +64,17 @@ public class CollabScoresFrame extends AppFrame {
         setVisible(true);
     }
 
-    private Object[] toRow(Collab collab){
-        return new Object[]{collab.getName(), collab.getArtists(), collab.getTotalScore()};
+    private void modifyColumnsWidth(JTable table){
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(400);
+        table.getColumnModel().getColumn(2).setPreferredWidth(420);
+        table.getColumnModel().getColumn(3).setPreferredWidth(70);
+        table.getColumnModel().getColumn(4).setPreferredWidth(70);
+    }
+
+    private Object[] toRow(Collab collab, float maxPreference, int number){
+        return new Object[]{"#"+number, collab.getName(), collab.getArtists(),
+                collab.getTotalScore(),
+                String.format("%.2f", collab.getTotalScore() * 100 / maxPreference) + "%"};
     }
 }

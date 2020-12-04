@@ -1,4 +1,4 @@
-package cs10.apps.web.statsforspotify.view;
+package cs10.apps.web.statsforspotify.view.histogram;
 
 import cs10.apps.desktop.statsforspotify.view.Histograma;
 

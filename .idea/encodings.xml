@@ -2,6 +2,7 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/src/cs10/apps/web/statsforspotify/app/PersonalChartApp.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/src/cs10/apps/web/statsforspotify/view/RankingFrame.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/src/cs10/apps/web/statsforspotify/view/table/RankingFrame.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/src/cs10/apps/web/statsforspotify/view/table/RankingFrame.java" charset="windows-1252" />
   </component>
 </project>

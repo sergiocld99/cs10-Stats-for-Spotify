@@ -28,7 +28,7 @@ public class RankingFrame extends JFrame {
 
         // Table
         String[] columnNames = new String[]{
-                "Status", "Rank", "Song Name", "Artist", "Popularity", "Current Change"
+                "Status", "Current Change", "Rank", "Song Name", "Artist", "Popularity"
         };
 
         model = new CustomTableModel(columnNames, 0);
@@ -65,8 +65,8 @@ public class RankingFrame extends JFrame {
         cellRenderer.setHorizontalAlignment(JLabel.CENTER);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(2).setPreferredWidth(250);
-        table.getColumnModel().getColumn(3).setPreferredWidth(150);
+        table.getColumnModel().getColumn(3).setPreferredWidth(250);
+        table.getColumnModel().getColumn(4).setPreferredWidth(150);
 
         for (int i=1; i<model.getColumnCount(); i++){
             table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
@@ -75,7 +75,7 @@ public class RankingFrame extends JFrame {
 
     private Object[] toRow(Song song){
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
-                song.getRank(), song.getName(), song.getArtists(),
-                song.getPopularity(), song.getInfoStatus()};
+                song.getRank(), song.getInfoStatus(), song.getName(), song.getArtists(),
+                song.getPopularity()};
     }
 }

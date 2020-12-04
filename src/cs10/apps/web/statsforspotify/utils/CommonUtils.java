@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CommonUtils {
+    public static final String[] SHORT_MONTHS = {"Jan", "Feb", "Mar", "Apr", "May",
+    "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
     public static String combineArtists(ArtistSimplified[] arr){
         StringBuilder sb = new StringBuilder(arr[0].getName());

@@ -25,6 +25,7 @@ public class PlaybackService implements Runnable {
     private ScheduledExecutorService progressScheduler;
     private ArrayList<String> autoQueueUris;
 
+    private static final int AUTO_UPDATE_RATE = 24;
     private boolean running, canSkip;
     private int time, requestsCount;
 
@@ -39,7 +40,7 @@ public class PlaybackService implements Runnable {
 
     public void allowAutoUpdate(){
         ScheduledExecutorService scheduler2 = Executors.newSingleThreadScheduledExecutor();
-        scheduler2.scheduleAtFixedRate(this, 30, 29, TimeUnit.SECONDS);
+        scheduler2.scheduleAtFixedRate(this, 30, AUTO_UPDATE_RATE, TimeUnit.SECONDS);
     }
 
     @Override
@@ -89,14 +90,14 @@ public class PlaybackService implements Runnable {
                 time = currentlyPlaying.getProgress_ms() / 1000;
                 switch (requestsCount % 3){
                     case 0:
-                        frame.setTitle("P: " + track.getPopularity() +
-                                " / A: " + player.getArtistScore());
+                        frame.setTitle(track.getName() + " (P: " + track.getPopularity() + ")");
                         return;
                     case 1:
-                        frame.setTitle(track.getName());
+                        String year = track.getAlbum().getReleaseDate().split("-")[0];
+                        frame.setTitle(track.getAlbum().getArtists()[0].getName() + " - " + year);
                         return;
                     case 2:
-                        frame.setTitle(CommonUtils.combineArtists(track.getArtists()));
+                        frame.setTitle(track.getAlbum().getName());
                         return;
                 }
             } else {

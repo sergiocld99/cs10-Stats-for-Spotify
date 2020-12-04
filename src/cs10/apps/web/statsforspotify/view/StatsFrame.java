@@ -4,7 +4,7 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
-import cs10.apps.desktop.statsforspotify.view.RankingModel;
+import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
 import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
@@ -26,7 +26,7 @@ import java.util.Arrays;
 
 public class StatsFrame extends JFrame {
     private final ApiUtils apiUtils;
-    private RankingModel model;
+    private CustomTableModel model;
     private JTable table;
     private PlaybackService playbackService;
 
@@ -84,7 +84,7 @@ public class StatsFrame extends JFrame {
                 "Status", "Rank", "Song Name", "Artists", "Popularity", "Change"
         };
 
-        model = new RankingModel(columnNames, 0);
+        model = new CustomTableModel(columnNames, 0);
         table = new JTable(model);
         table.setRowHeight(50);
         customizeTexts();

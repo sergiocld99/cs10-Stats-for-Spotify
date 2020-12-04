@@ -3,8 +3,7 @@ package cs10.apps.web.statsforspotify.view;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
-import cs10.apps.desktop.statsforspotify.view.RankingModel;
-import cs10.apps.web.statsforspotify.app.PersonalChartApp;
+import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 
@@ -14,7 +13,7 @@ import java.awt.*;
 
 public class RankingFrame extends JFrame {
     private final BigRanking bigRanking, actualRanking;
-    private RankingModel model;
+    private CustomTableModel model;
     private JTable table;
 
     public RankingFrame(String rankingCode, BigRanking actualRanking) throws HeadlessException {
@@ -32,7 +31,7 @@ public class RankingFrame extends JFrame {
                 "Status", "Rank", "Song Name", "Artist", "Popularity", "Current Change"
         };
 
-        model = new RankingModel(columnNames, 0);
+        model = new CustomTableModel(columnNames, 0);
         table = new JTable(model);
         table.setEnabled(false);
         table.setRowHeight(50);

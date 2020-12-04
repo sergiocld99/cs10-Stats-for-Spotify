@@ -3,7 +3,6 @@ package cs10.apps.web.statsforspotify.view;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.web.statsforspotify.app.DevelopException;
-import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 
 import javax.swing.*;
@@ -11,7 +10,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 
 public class CustomPlayer extends JPanel {
     private final DecimalFormat decimalFormat = new DecimalFormat("#00");

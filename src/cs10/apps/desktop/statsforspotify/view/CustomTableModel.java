@@ -2,9 +2,9 @@ package cs10.apps.desktop.statsforspotify.view;
 
 import javax.swing.table.DefaultTableModel;
 
-public class RankingModel extends DefaultTableModel {
+public class CustomTableModel extends DefaultTableModel {
 
-    public RankingModel(Object[] columnNames, int rowCount) {
+    public CustomTableModel(Object[] columnNames, int rowCount) {
         super(columnNames, rowCount);
     }
 

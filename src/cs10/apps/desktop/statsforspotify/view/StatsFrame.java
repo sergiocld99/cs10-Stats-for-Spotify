@@ -15,7 +15,7 @@ import java.awt.event.MouseEvent;
 public class StatsFrame extends JFrame {
     private final Ranking ranking;
     private final Library library;
-    private RankingModel model;
+    private CustomTableModel model;
     private JTable table;
 
     public StatsFrame(Ranking ranking, Library library){
@@ -32,7 +32,7 @@ public class StatsFrame extends JFrame {
             "Icon", "Rank", "Song Name", "Artists", "Status Info"
         };
 
-        model = new RankingModel(columnNames, 0);
+        model = new CustomTableModel(columnNames, 0);
         table = new JTable(model);
         table.setRowHeight(50);
         table.setAutoCreateRowSorter(true);

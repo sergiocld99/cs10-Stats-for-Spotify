@@ -56,14 +56,17 @@ public class StatsFrame extends JFrame {
         JMenuItem jmiSaveAs = new JMenuItem("Save As...");
         JMenu viewMenu = new JMenu("View");
         JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
+        JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
         jmiOpen.addActionListener(e -> openRankingsWindow());
         jmiSave.addActionListener(e -> System.out.println("Save pressed"));
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
         jmiLocalTop10.addActionListener(e -> openLocalTop10());
+        jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
         fileMenu.add(jmiOpen);
         fileMenu.add(jmiSave);
         fileMenu.add(jmiSaveAs);
         viewMenu.add(jmiLocalTop10);
+        viewMenu.add(jmiCurrentCollab);
         JMenu helpMenu = new JMenu("Help");
         helpMenu.addActionListener(e -> System.out.println("Help pressed"));
         menuBar.add(fileMenu);
@@ -238,12 +241,17 @@ public class StatsFrame extends JFrame {
             Artist[] artists = IOUtils.getAllArtistsScore();
             if (artists == null) return;
 
+            int length = Math.min(artists.length, 10);
             Arrays.sort(artists);
-            Artist[] top10 = new Artist[10];
-            System.arraycopy(artists, 0, top10, 0, 10);
+            Artist[] top10 = new Artist[length];
+            System.arraycopy(artists, 0, top10, 0, length);
             LocalTop10Frame localTop10Frame = new LocalTop10Frame(top10);
             localTop10Frame.init();
         }).start();
+    }
+
+    private void openCurrentCollabScores(){
+        new Thread(() -> new CollabScoresFrame(bigRanking).init()).start();
     }
 
     private void openArtistWindow(){

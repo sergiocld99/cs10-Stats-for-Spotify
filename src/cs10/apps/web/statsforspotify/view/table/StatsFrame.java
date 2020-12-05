@@ -5,6 +5,8 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
+import cs10.apps.web.statsforspotify.app.AppFrame;
+import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
 import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
@@ -23,24 +25,26 @@ import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
+import java.util.Vector;
 
-public class StatsFrame extends JFrame {
+public class StatsFrame extends AppFrame {
+    private final AppOptions appOptions;
     private final ApiUtils apiUtils;
+    private BigRanking bigRanking;
+    private CustomPlayer player;
     private CustomTableModel model;
     private JTable table;
     private PlaybackService playbackService;
 
-    // version 3
-    private BigRanking bigRanking;
-
-    // version 5
-    private CustomPlayer player;
+    private static final int ALBUM_COVERS_COLUMN = 1;
 
     public StatsFrame(ApiUtils apiUtils) throws HeadlessException {
+        this.appOptions = IOUtils.loadAppOptions();
         this.apiUtils = apiUtils;
     }
 
@@ -48,7 +52,6 @@ public class StatsFrame extends JFrame {
         setTitle(PersonalChartApp.APP_AUTHOR + " - " +
                 PersonalChartApp.APP_NAME + " v" + PersonalChartApp.APP_VERSION);
 
-        setIconImage(new ImageIcon("appicon.png").getImage());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(1000, 600);
 
@@ -59,18 +62,21 @@ public class StatsFrame extends JFrame {
         JMenuItem jmiSave = new JMenuItem("Save");
         JMenuItem jmiSaveAs = new JMenuItem("Save As...");
         JMenu viewMenu = new JMenu("View");
+        JMenuItem jmiAlbumCovers = new JMenuItem("Ranking Album Covers");
         JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
         JMenuItem jmiLocalTop100 = new JMenuItem("Local Top 100 Artists");
         JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
         jmiOpen.addActionListener(e -> openRankingsWindow());
         jmiSave.addActionListener(e -> System.out.println("Save pressed"));
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
+        jmiAlbumCovers.addActionListener(e -> changeAlbumCoversOption());
         jmiLocalTop10.addActionListener(e -> openLocalTop10());
         jmiLocalTop100.addActionListener(e -> openLocalTop100());
         jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
         fileMenu.add(jmiOpen);
         fileMenu.add(jmiSave);
         fileMenu.add(jmiSaveAs);
+        viewMenu.add(jmiAlbumCovers);
         viewMenu.add(jmiLocalTop10);
         viewMenu.add(jmiLocalTop100);
         viewMenu.add(jmiCurrentCollab);
@@ -80,23 +86,22 @@ public class StatsFrame extends JFrame {
         menuBar.add(viewMenu);
         menuBar.add(helpMenu);
 
+        // Player Panel
         JPanel playerPanel = new JPanel();
         player = new CustomPlayer(70);
-        playerPanel.add(player);
-
-        // Ranking Buttons
         JButton buttonNowPlaying = new JButton("Show what I'm listening to");
         playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
+        playerPanel.add(player);
         playerPanel.add(buttonNowPlaying);
 
         // Table
-        String[] columnNames = new String[]{
-                "Status", "Rank", "Change", "Song Name", "Artists", "Popularity"
-        };
+        String[] columnNames = new String[]{"Status", "Rank", "Change",
+                "Song Name", "Artists", "Popularity"};
 
         model = new CustomTableModel(columnNames, 0);
         table = new JTable(model);
         table.setRowHeight(50);
+        table.getTableHeader().setReorderingAllowed(false);
         customizeTexts();
 
         // Add Components
@@ -111,8 +116,8 @@ public class StatsFrame extends JFrame {
         setVisible(true);
         //show(TopTerms.SHORT);
 
-        // Version 4
-        init4();
+        // Ranking
+        initRanking();
 
         // Update Custom Thumbnail Properties
         player.setAverage((int) (bigRanking.getCode() / 100));
@@ -137,13 +142,13 @@ public class StatsFrame extends JFrame {
             }
         });
 
-        // Start Playback Service
-        player.setString("");
-        playbackService.setRanking(bigRanking);
-        playbackService.run();
+        // Finally (hard-work)
+        if (appOptions.isAlbumCovers())
+            addAlbumCoversColumn();
+        else startPlayback();
     }
 
-    private void init4(){
+    private void initRanking(){
         // Step 1: get actual top tracks from Spotify
         player.setString("Connecting to Spotify...");
         Track[] tracks1 = apiUtils.getUntilMostPopular(TopTerms.SHORT.getKey(), 50);
@@ -173,7 +178,7 @@ public class StatsFrame extends JFrame {
         long[] savedCodes = IOUtils.getSavedRankingCodes(userId);
         if (bigRanking.getCode() > 0 && bigRanking.getCode() != savedCodes[1]){
             IOUtils.updateRankingCodes(savedCodes[1], bigRanking.getCode(), userId);
-            IOUtils.saveRanking(bigRanking, true);
+            IOUtils.save(bigRanking, true);
             player.setString("Updating Library Files...");
             IOUtils.updateLibrary(bigRanking, player.getProgressBar());
             showSummary = true;
@@ -189,6 +194,12 @@ public class StatsFrame extends JFrame {
         // Step 6: show songs that left the chart
         if (showSummary)
             CommonUtils.summary(bigRanking, rankingToCompare, apiUtils);
+    }
+
+    private void startPlayback(){
+        player.setString("");
+        playbackService.setRanking(bigRanking);
+        playbackService.run();
     }
 
     private void buildTable(){
@@ -216,18 +227,82 @@ public class StatsFrame extends JFrame {
         cellRenderer.setHorizontalAlignment(JLabel.CENTER);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(3).setPreferredWidth(250);
-        table.getColumnModel().getColumn(4).setPreferredWidth(250);
+        table.getColumnModel().getColumn(1).setPreferredWidth(50);
+        table.getColumnModel().getColumn(2).setPreferredWidth(50);
+        table.getColumnModel().getColumn(3).setPreferredWidth(200);
+        table.getColumnModel().getColumn(4).setPreferredWidth(350);
+        table.getColumnModel().getColumn(5).setPreferredWidth(75);
 
         for (int i=1; i<model.getColumnCount(); i++){
             table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
         }
     }
 
+    private void customizeTexts2(){
+        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+        cellRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(50);
+        table.getColumnModel().getColumn(2).setPreferredWidth(50);
+        table.getColumnModel().getColumn(3).setPreferredWidth(50);
+        table.getColumnModel().getColumn(4).setPreferredWidth(200);
+        table.getColumnModel().getColumn(5).setPreferredWidth(350);
+        table.getColumnModel().getColumn(6).setPreferredWidth(75);
+
+        for (int i=2; i<model.getColumnCount(); i++){
+            table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
+        }
+    }
+
     private Object[] toRow(Song song){
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
-                song.getRank(), song.getInfoStatus(), song.getName(), song.getArtists(),
-                song.getPopularity()};
+                song.getRank(), song.getInfoStatus(), song.getName().split(" \\(")[0],
+                song.getArtists(), song.getPopularity()};
+    }
+
+    private void changeAlbumCoversOption() {
+        if (appOptions.isAlbumCovers()){
+            appOptions.setAlbumCovers(false);
+            this.removeAlbumCoversColumn();
+        } else {
+            appOptions.setAlbumCovers(true);
+            this.addAlbumCoversColumn();
+        }
+    }
+
+    private void addAlbumCoversColumn(){
+        TableColumn column = new TableColumn(model.getColumnCount());
+        column.setPreferredWidth(50);
+        column.setHeaderValue("Cover");
+
+        SwingUtilities.invokeLater(() -> {
+            ImageIcon[] coversImages = new ImageIcon[bigRanking.size()];
+            table.setEnabled(false);
+            super.setEnabled(false);
+            super.setTitle("Please wait...");
+
+            for (int i=0; i<bigRanking.size(); i++){
+                coversImages[i] = CommonUtils.downloadImage(bigRanking.get(i).getImageUrl(),50);
+            }
+
+            table.addColumn(column);
+            model.addColumn(column.getHeaderValue().toString(), coversImages);
+            table.moveColumn(table.getColumnCount()-1, 1);
+            table.setEnabled(true);
+            super.setEnabled(true);
+            super.setTitle(PersonalChartApp.APP_AUTHOR + " - " + PersonalChartApp.APP_NAME);
+            customizeTexts2();
+
+            if (!playbackService.isRunning())
+                startPlayback();
+        });
+    }
+
+    private void removeAlbumCoversColumn(){
+        table.removeColumn(table.getColumnModel().getColumn(ALBUM_COVERS_COLUMN));
+        model.setColumnCount(model.getColumnCount()-1);
+        customizeTexts();
     }
 
     private void openRankingsWindow(){

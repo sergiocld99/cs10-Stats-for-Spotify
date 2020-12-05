@@ -3,6 +3,7 @@ package cs10.apps.web.statsforspotify.utils;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.SimpleRanking;
@@ -16,15 +17,12 @@ import java.util.Random;
 
 public class IOUtils {
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final String APP_DATA_FILE = "appdata.bin";
     private static final String LIBRARY_FOLDER = "library";
     private static final String RANKING_FOLDER = "ranking";
 
     public static boolean isFirstTime(){
         return ! new File(RANKING_FOLDER).exists();
-    }
-
-    public static long getLastTime(){
-        return new File(RANKING_FOLDER).lastModified();
     }
 
     // ------------------------------ RANKING CODES ----------------------------------
@@ -209,7 +207,7 @@ public class IOUtils {
         return new SimpleRanking[0];
     }
 
-    public static void saveRanking(Ranking ranking, boolean replace){
+    public static void save(Ranking ranking, boolean replace){
         File directory = new File(RANKING_FOLDER);
 
         if (!directory.exists() && directory.mkdirs())
@@ -379,6 +377,39 @@ public class IOUtils {
         }
 
         return song;
+    }
+
+    // ------------------------------------- APP OPTIONS ----------------------------------
+
+    public static AppOptions loadAppOptions(){
+        AppOptions appOptions = new AppOptions();
+
+        File file = new File(APP_DATA_FILE);
+        if (!file.exists()) try {
+            if (file.createNewFile()) System.out.println("Created: " + APP_DATA_FILE);
+            return appOptions;
+        } catch (IOException e){
+            Maintenance.writeErrorFile(e, false);
+            return appOptions;
+        }
+
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+            appOptions = (AppOptions) ois.readObject();
+        } catch (IOException | ClassNotFoundException e){
+            Maintenance.writeErrorFile(e, true);
+        }
+
+        return appOptions;
+    }
+
+    public static void save(AppOptions options){
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new FileOutputStream(APP_DATA_FILE)
+        )){
+            oos.writeObject(options);
+        } catch (IOException e){
+            Maintenance.writeErrorFile(e, false);
+        }
     }
 
 }

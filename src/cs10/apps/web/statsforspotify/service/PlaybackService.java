@@ -4,6 +4,7 @@ import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
@@ -45,9 +46,14 @@ public class PlaybackService implements Runnable {
 
     @Override
     public void run() {
+        if (ranking == null) throw new DevelopException(this);
         ScheduledExecutorService scheduler0 = Executors.newSingleThreadScheduledExecutor();
         scheduler0.schedule(this::getCurrentData, 500, TimeUnit.MILLISECONDS);
         running = true;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
     public void setRanking(Ranking ranking) {
@@ -90,7 +96,8 @@ public class PlaybackService implements Runnable {
                 time = currentlyPlaying.getProgress_ms() / 1000;
                 switch (requestsCount % 3){
                     case 0:
-                        frame.setTitle(track.getName() + " (P: " + track.getPopularity() + ")");
+                        frame.setTitle(track.getName().split(" \\(")[0]
+                                + " (P: " + track.getPopularity() + ")");
                         return;
                     case 1:
                         String year = track.getAlbum().getReleaseDate().split("-")[0];

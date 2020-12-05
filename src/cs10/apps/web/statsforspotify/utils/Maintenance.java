@@ -59,7 +59,7 @@ public class Maintenance {
             fw.write(new Date(System.currentTimeMillis()).toString());
             fw.write('\n');
             if (detailed) e.printStackTrace(new PrintWriter(fw));
-            else fw.write(e.getMessage());
+            else if (e.getMessage() != null) fw.write(e.getMessage());
             fw.write("\n\n");
             System.err.println("Error " + e.getMessage() + " written in " + LOGS_FILE);
         } catch (IOException ioe){
@@ -70,6 +70,7 @@ public class Maintenance {
     public static void log(String str){
         try (FileWriter fw = new FileWriter(LOGS_FILE, true)){
             fw.write(str);
+            fw.write('\n');
             System.out.println("Log: " + str);
         } catch (IOException ioe){
             ioe.printStackTrace();

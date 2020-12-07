@@ -7,9 +7,9 @@ public class Test {
     private static final boolean APPLY_FIXES = false;
 
     public static void main(String[] args) {
+        Maintenance.clearPreviousReport();
+
         if (APPLY_FIXES) Maintenance.fixSongFiles();
         else new PersonalChartApp().init();
-
-        Maintenance.clearPreviousReport();
     }
 }

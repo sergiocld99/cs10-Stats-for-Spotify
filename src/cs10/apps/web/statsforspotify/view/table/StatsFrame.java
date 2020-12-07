@@ -142,10 +142,13 @@ public class StatsFrame extends AppFrame {
             }
         });
 
-        // Finally (hard-work)
+        // Hard tasks
         if (appOptions.isAlbumCovers())
             addAlbumCoversColumn();
         else startPlayback();
+
+        // Test only
+        apiUtils.analyzeRecentTracks();
     }
 
     private void initRanking(){

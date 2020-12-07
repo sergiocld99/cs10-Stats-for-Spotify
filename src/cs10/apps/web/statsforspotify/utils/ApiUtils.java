@@ -7,10 +7,7 @@ import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import com.wrapper.spotify.model_objects.specification.Recommendations;
-import com.wrapper.spotify.model_objects.specification.Track;
-import com.wrapper.spotify.model_objects.specification.TrackSimplified;
-import com.wrapper.spotify.model_objects.specification.User;
+import com.wrapper.spotify.model_objects.specification.*;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
@@ -28,7 +25,8 @@ public class ApiUtils {
 
     // This URI should equal to the saved URI on the App Dashboard
     private static final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost:8080");
-    private static final String SCOPE = "user-top-read user-read-currently-playing user-modify-playback-state";
+    private static final String SCOPE = "user-top-read user-read-currently-playing " +
+            "user-modify-playback-state user-read-recently-played";
 
 
     public ApiUtils(){
@@ -249,5 +247,35 @@ public class ApiUtils {
 
     public User getUser() throws Exception {
         return spotifyApi.getCurrentUsersProfile().build().execute();
+    }
+
+    public void analyzeRecentTracks(){
+        try {
+            // This returns only the last 30 played tracks
+            PagingCursorbased<PlayHistory> paging =
+                    spotifyApi.getCurrentUsersRecentlyPlayedTracks().build().execute();
+
+            PlayHistory[] playHistory = paging.getItems();
+            int alreadySaved = 0;
+
+            for (PlayHistory p : playHistory){
+                if (IOUtils.getTimesOnRanking(p.getTrack().getArtists()[0].getName(),
+                        p.getTrack().getId()) == 0) alreadySaved++;
+            }
+
+            int percentage = alreadySaved * 100 / playHistory.length;
+            OptionPanes.message(percentage + "% of your recent tracks are already in your library");
+
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+        }
+    }
+
+    public void analyzeDailyMixes(){
+        try {
+
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+        }
     }
 }

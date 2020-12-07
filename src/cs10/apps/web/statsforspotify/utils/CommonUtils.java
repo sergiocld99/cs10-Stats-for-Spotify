@@ -28,18 +28,15 @@ public class CommonUtils {
         return sb.toString();
     }
 
-    public static List<Track> combineWithoutRepeats(Track[] tracks1, Track[] tracks2, int maxSize){
-        List<Track> tracks = new ArrayList<>(Arrays.asList(tracks1));
-
+    public static void combineWithoutRepeats(Track[] tracks1, Track[] tracks2, int maxSize,
+                                                    List<Track> result, List<Track> repeats){
         for (Track track : tracks2){
             if (!alreadyExists(tracks1, track)) {
-                tracks.add(track);
-                if (tracks.size() == maxSize)
+                result.add(track);
+                if (result.size() == maxSize)
                     break;
-            }
+            } else repeats.add(track);
         }
-
-        return tracks;
     }
 
     private static boolean alreadyExists(Track[] array, Track track){

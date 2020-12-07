@@ -260,11 +260,11 @@ public class ApiUtils {
 
             for (PlayHistory p : playHistory){
                 if (IOUtils.getTimesOnRanking(p.getTrack().getArtists()[0].getName(),
-                        p.getTrack().getId()) == 0) alreadySaved++;
+                        p.getTrack().getId()) > 0) alreadySaved++;
             }
 
             int percentage = alreadySaved * 100 / playHistory.length;
-            OptionPanes.message(percentage + "% of your recent tracks are already in your library");
+            System.out.println(percentage + "% of your recent tracks are already in your library");
 
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);

@@ -10,13 +10,11 @@ public class Song implements Comparable<Song> {
     private String name, artists, infoStatus;
     private int rank, change, previousRank;
     private long timestamp;
+    private boolean mark, repeated;
 
     // For web
     private String imageUrl, id;
     private int popularity;
-
-    // Version 4
-    private boolean mark;
 
     public Song(){ }
 
@@ -126,6 +124,14 @@ public class Song implements Comparable<Song> {
 
     public void setMark(boolean mark) {
         this.mark = mark;
+    }
+
+    public boolean isRepeated() {
+        return repeated;
+    }
+
+    public void setRepeated(boolean repeated) {
+        this.repeated = repeated;
     }
 
     // PERSONAL METHODS

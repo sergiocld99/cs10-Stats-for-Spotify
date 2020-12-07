@@ -184,7 +184,7 @@ public class OldIOUtils {
         }
     }
 
-    public static ImageIcon getImageIcon(Status status){
+    public static Icon getImageIcon(Status status){
         return new ImageIcon(status.getPath());
     }
 }

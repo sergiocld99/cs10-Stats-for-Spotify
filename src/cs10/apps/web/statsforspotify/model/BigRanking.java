@@ -29,6 +29,14 @@ public class BigRanking extends Ranking {
         }
     }
 
+    public void updateRepeated(Collection<Track> repeats){
+        for (Track t : repeats){
+            Song s = getSong(t.getId());
+            if (s == null) System.err.println("Something gone wrong with " + CommonUtils.toString(t));
+            else s.setRepeated(true);
+        }
+    }
+
     public void updateAllStatus(BigRanking rankingToCompare){
         for (Song song : this){
             Song prevS = rankingToCompare.getSong(song.getId());

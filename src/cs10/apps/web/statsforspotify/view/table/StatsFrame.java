@@ -18,19 +18,21 @@ import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.CustomPlayer;
+import cs10.apps.web.statsforspotify.view.CustomTableCellRenderer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.histogram.ArtistFrame;
 import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Vector;
+import java.util.List;
 
 public class StatsFrame extends AppFrame {
     private final AppOptions appOptions;
@@ -100,9 +102,28 @@ public class StatsFrame extends AppFrame {
 
         model = new CustomTableModel(columnNames, 0);
         table = new JTable(model);
+
+        table = new JTable(model) {
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+            @Override
+            public TableCellRenderer getCellRenderer(int row, int column) {
+                CustomTableCellRenderer renderer = new CustomTableCellRenderer();
+                renderer.setHorizontalAlignment(JLabel.CENTER);
+
+                if (column == model.getColumnCount() - 2 || column == model.getColumnCount() - 3)
+                    getColumnModel().getColumn(column).setPreferredWidth(250);
+                return renderer;
+            }
+        };
+
         table.setRowHeight(50);
         table.getTableHeader().setReorderingAllowed(false);
-        customizeTexts();
+        //customizeTexts();
 
         // Add Components
         getContentPane().add(BorderLayout.NORTH, menuBar);
@@ -162,7 +183,11 @@ public class StatsFrame extends AppFrame {
         player.setProgress(100);
 
         // Step 2: build actual ranking
-        bigRanking = new BigRanking(CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100));
+        List<Track> resultTracks = new ArrayList<>(Arrays.asList(tracks1));
+        List<Track> repeatTracks = new ArrayList<>();
+        CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100, resultTracks, repeatTracks);
+        bigRanking = new BigRanking(resultTracks);
+        bigRanking.updateRepeated(repeatTracks);
 
         // Step 2.5: retrieve username
         String userId;
@@ -220,41 +245,13 @@ public class StatsFrame extends AppFrame {
                 else s.setInfoStatus(String.valueOf(s.getChange()));
             }
 
+            if (s.isRepeated()) {
+                System.out.println(s + " is repeated");
+                model.setHighlighted(s.getRank()-1);
+            }
+
             player.setProgress((++i) * 100 / bigRanking.size());
             model.addRow(toRow(s));
-        }
-    }
-
-    private void customizeTexts(){
-        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
-        cellRenderer.setHorizontalAlignment(JLabel.CENTER);
-
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setPreferredWidth(50);
-        table.getColumnModel().getColumn(2).setPreferredWidth(50);
-        table.getColumnModel().getColumn(3).setPreferredWidth(200);
-        table.getColumnModel().getColumn(4).setPreferredWidth(350);
-        table.getColumnModel().getColumn(5).setPreferredWidth(75);
-
-        for (int i=1; i<model.getColumnCount(); i++){
-            table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
-        }
-    }
-
-    private void customizeTexts2(){
-        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
-        cellRenderer.setHorizontalAlignment(JLabel.CENTER);
-
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setPreferredWidth(50);
-        table.getColumnModel().getColumn(2).setPreferredWidth(50);
-        table.getColumnModel().getColumn(3).setPreferredWidth(50);
-        table.getColumnModel().getColumn(4).setPreferredWidth(200);
-        table.getColumnModel().getColumn(5).setPreferredWidth(350);
-        table.getColumnModel().getColumn(6).setPreferredWidth(75);
-
-        for (int i=2; i<model.getColumnCount(); i++){
-            table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
         }
     }
 
@@ -295,7 +292,6 @@ public class StatsFrame extends AppFrame {
             table.setEnabled(true);
             super.setEnabled(true);
             super.setTitle(PersonalChartApp.APP_AUTHOR + " - " + PersonalChartApp.APP_NAME);
-            customizeTexts2();
 
             if (!playbackService.isRunning())
                 startPlayback();
@@ -305,7 +301,6 @@ public class StatsFrame extends AppFrame {
     private void removeAlbumCoversColumn(){
         table.removeColumn(table.getColumnModel().getColumn(ALBUM_COVERS_COLUMN));
         model.setColumnCount(model.getColumnCount()-1);
-        customizeTexts();
     }
 
     private void openRankingsWindow(){

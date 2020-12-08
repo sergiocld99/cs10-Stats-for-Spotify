@@ -247,7 +247,9 @@ public class StatsFrame extends AppFrame {
 
             if (s.isRepeated()) {
                 System.out.println(s + " is repeated");
-                model.setHighlighted(s.getRank()-1);
+                int row = s.getRank()-1;
+                if (row % 2 == 0) model.setRowColor(row, s.getPopularityStatus().getTablePairColor());
+                else model.setRowColor(row, s.getPopularityStatus().getTableUnpairColor());
             }
 
             player.setProgress((++i) * 100 / bigRanking.size());

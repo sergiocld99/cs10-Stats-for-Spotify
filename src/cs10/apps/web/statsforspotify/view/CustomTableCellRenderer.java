@@ -14,10 +14,8 @@ public class CustomTableCellRenderer extends DefaultTableCellRenderer {
         Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
         if (model.isHighlighted(row)){
-            if (row % 2 == 0) c.setBackground(Color.yellow);
-            else c.setBackground(Color.orange);
-        }
-        else c.setBackground(c.getBackground());
+            c.setBackground(model.getRowColor(row));
+        } else c.setBackground(c.getBackground());
 
         if (value instanceof Icon){
             Icon i = (Icon) value;

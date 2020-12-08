@@ -1,20 +1,21 @@
 package cs10.apps.desktop.statsforspotify.model;
 
 import com.wrapper.spotify.model_objects.specification.Track;
+import cs10.apps.web.statsforspotify.model.PopularityStatus;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
+import cs10.apps.web.statsforspotify.utils.IOUtils;
 
 import java.text.DecimalFormat;
 
 public class Song implements Comparable<Song> {
+    private String name, artists, infoStatus, imageUrl, id;
+
+    // status is necessary for the new ones
     private Status status;
-    private String name, artists, infoStatus;
-    private int rank, change, previousRank;
+
+    private int rank, change, previousRank, popularity, firstPopularity;
     private long timestamp;
     private boolean mark, repeated;
-
-    // For web
-    private String imageUrl, id;
-    private int popularity;
 
     public Song(){ }
 
@@ -28,6 +29,7 @@ public class Song implements Comparable<Song> {
         this.artists = CommonUtils.combineArtists(track.getArtists());
         this.imageUrl = track.getAlbum().getImages()[0].getUrl();
         this.popularity = track.getPopularity();
+        this.firstPopularity = IOUtils.getFirstPopularity(track);
     }
 
     public int getPreviousRank() {
@@ -116,6 +118,12 @@ public class Song implements Comparable<Song> {
 
     public void setPopularity(int popularity) {
         this.popularity = popularity;
+    }
+
+    public PopularityStatus getPopularityStatus(){
+        if (firstPopularity == popularity) return PopularityStatus.NORMAL;
+        else if (firstPopularity > popularity) return PopularityStatus.DECREASING;
+        else return PopularityStatus.INCREASING;
     }
 
     public boolean isMark() {

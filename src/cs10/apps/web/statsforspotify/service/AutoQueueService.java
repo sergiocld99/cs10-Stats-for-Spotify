@@ -45,12 +45,27 @@ public class AutoQueueService {
 
             for (Song song : ranking){
                 try {
+                    Maintenance.log("Sleeping for " + song.getPopularity() + " seconds");
                     TimeUnit.SECONDS.sleep(song.getPopularity());
                     if (song.isRepeated()){
-                        if (song.getPopularityStatus() == PopularityStatus.DECREASING)
+                        if (song.getPopularityStatus() == PopularityStatus.DECREASING) {
                             apiUtils.autoQueue(ranking, null);
-                        else if (!apiUtils.playThis(song.getId(), false)){
-                            System.err.println("Unable to execute AutoQueue");
+                            continue;
+                        }
+
+                        Song otherSelected = ranking.get(song.getRank()-1);
+
+                        if (song.getPopularityStatus() == PopularityStatus.NORMAL){
+                            if (otherSelected.getPopularityStatus() != PopularityStatus.INCREASING){
+                                if (!apiUtils.playThis(otherSelected.getId(), false)){
+                                    Maintenance.log("Unable to execute AutoQueue");
+                                    break;
+                                } else continue;
+                            } else Maintenance.log("Bad selection: " + otherSelected);
+                        }
+
+                        if (!apiUtils.playThis(song.getId(), false)){
+                            Maintenance.log("Unable to execute AutoQueue");
                             break;
                         }
                     }

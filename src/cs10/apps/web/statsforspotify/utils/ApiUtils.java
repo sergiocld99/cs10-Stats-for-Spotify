@@ -235,7 +235,7 @@ public class ApiUtils {
     public boolean playThis(String trackId, boolean immediately){
         try {
             spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+trackId).build().execute();
-            System.out.println("Added to Playback Queue: " + trackId);
+            Maintenance.log("Added to Playback Queue: " + trackId);
             if (immediately) spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
             return true;
         } catch (SpotifyWebApiException e){

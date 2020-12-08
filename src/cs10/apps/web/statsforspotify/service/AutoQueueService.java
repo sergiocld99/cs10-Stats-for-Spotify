@@ -42,38 +42,44 @@ public class AutoQueueService {
         @Override
         public void run() {
             button.setEnabled(false);
+            int count = 0;
 
             for (Song song : ranking){
+                button.setText("AutoQueue (" + count * 100 / ranking.size() + "%)");
+                count++;
+
                 try {
-                    Maintenance.log("Sleeping for " + song.getPopularity() + " seconds");
+                    System.out.println("AQ || Sleeping for " + song.getPopularity() + " seconds");
                     TimeUnit.SECONDS.sleep(song.getPopularity());
-                    if (song.isRepeated()){
-                        if (song.getPopularityStatus() == PopularityStatus.DECREASING) {
-                            apiUtils.autoQueue(ranking, null);
-                            continue;
-                        }
-
-                        Song otherSelected = ranking.get(song.getRank()-1);
-
-                        if (song.getPopularityStatus() == PopularityStatus.NORMAL){
-                            if (otherSelected.getPopularityStatus() != PopularityStatus.INCREASING){
-                                if (!apiUtils.playThis(otherSelected.getId(), false)){
-                                    Maintenance.log("Unable to execute AutoQueue");
-                                    break;
-                                } else continue;
-                            } else Maintenance.log("Bad selection: " + otherSelected);
-                        }
-
-                        if (!apiUtils.playThis(song.getId(), false)){
-                            Maintenance.log("Unable to execute AutoQueue");
-                            break;
-                        }
-                    }
                 } catch (InterruptedException e) {
                     Maintenance.writeErrorFile(e, false);
                 }
+
+                if (song.isRepeated()){
+                    if (song.getPopularityStatus() == PopularityStatus.DECREASING) {
+                        apiUtils.autoQueue(ranking, null);
+                        continue;
+                    }
+
+                    Song otherSelected = ranking.get(song.getRank()-1);
+
+                    if (song.getPopularityStatus() == PopularityStatus.NORMAL){
+                        if (otherSelected.getPopularityStatus() != PopularityStatus.INCREASING){
+                            if (!apiUtils.playThis(otherSelected.getId(), false)){
+                                Maintenance.log("AQ || Unable to execute");
+                                break;
+                            } else continue;
+                        } else Maintenance.log("AQ || Bad selection: " + otherSelected);
+                    }
+
+                    if (!apiUtils.playThis(song.getId(), false)){
+                        Maintenance.log("AQ || Unable to execute");
+                        break;
+                    }
+                }
             }
 
+            button.setText("AutoQueue (Premium only)");
             button.setEnabled(true);
         }
     }

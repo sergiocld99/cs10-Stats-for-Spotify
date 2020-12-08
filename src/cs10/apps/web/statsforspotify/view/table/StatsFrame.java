@@ -12,6 +12,7 @@ import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.SimpleRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
+import cs10.apps.web.statsforspotify.service.AutoQueueService;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
@@ -91,10 +92,10 @@ public class StatsFrame extends AppFrame {
         // Player Panel
         JPanel playerPanel = new JPanel();
         player = new CustomPlayer(70);
-        JButton buttonNowPlaying = new JButton("Show what I'm listening to");
+        JButton aqButton = new JButton("AutoQueue (Premium only)");
         playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
         playerPanel.add(player);
-        playerPanel.add(buttonNowPlaying);
+        playerPanel.add(aqButton);
 
         // Table
         String[] columnNames = new String[]{"Status", "Rank", "Change",
@@ -137,17 +138,24 @@ public class StatsFrame extends AppFrame {
         setVisible(true);
         //show(TopTerms.SHORT);
 
-        // Ranking
+        // Load ranking (hard work)
         initRanking();
 
-        // Update Custom Thumbnail Properties
+        // When ranking is totally loaded
         player.setAverage((int) (bigRanking.getCode() / 100));
 
-        // Set Listeners (buttons will be deleted on Version 3)
-        buttonNowPlaying.addActionListener(e -> {
-            playbackService.run();
-            OptionPanes.showPlaybackUpdated();
-        });
+        // Set Listeners
+        if (bigRanking.getRepeatedQuantity() < 5)
+            aqButton.setEnabled(false);
+        else {
+            AutoQueueService autoQueueService = new AutoQueueService(bigRanking, apiUtils, aqButton);
+            aqButton.addActionListener(e -> {
+                if (playbackService.isRunning()){
+                    autoQueueService.execute();
+                    playbackService.setCanSkip(false);
+                } else OptionPanes.message("Please, play something before");
+            });
+        }
 
         table.addMouseListener(new MouseAdapter() {
 
@@ -155,7 +163,7 @@ public class StatsFrame extends AppFrame {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() != 2) return;
 
-                if (apiUtils.playThis(bigRanking.get(table.getSelectedRow()).getId())){
+                if (apiUtils.playThis(bigRanking.get(table.getSelectedRow()).getId(), true)){
                     playbackService.setCanSkip(false);
                     playbackService.run();
                     OptionPanes.message("Current Playback updated");

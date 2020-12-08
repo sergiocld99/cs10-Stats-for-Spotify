@@ -98,7 +98,8 @@ public class ApiUtils {
         TrackSimplified t2;
 
         try {
-            Recommendations r = getRecommendations(song1.getId(), song2.getId(), current.getId());
+            Recommendations r = getRecommendations(song1.getId(), song2.getId(),
+                    (current == null) ? ranking.getRandomElement().getId() : current.getId());
             t2 = r.getTracks()[new Random().nextInt(r.getTracks().length)];
             tracks1 = spotifyApi.getArtistsTopTracks(t2.getArtists()[0].getId(), CountryCode.AR)
                     .build().execute();
@@ -231,10 +232,11 @@ public class ApiUtils {
         return false;
     }
 
-    public boolean playThis(String trackId){
+    public boolean playThis(String trackId, boolean immediately){
         try {
             spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+trackId).build().execute();
-            spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
+            System.out.println("Added to Playback Queue: " + trackId);
+            if (immediately) spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
             return true;
         } catch (SpotifyWebApiException e){
             Maintenance.writeErrorFile(e, false);

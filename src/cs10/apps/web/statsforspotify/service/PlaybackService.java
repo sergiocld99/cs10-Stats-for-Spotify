@@ -129,8 +129,11 @@ public class PlaybackService implements Runnable {
                         }
                     }
                     frame.setIconImage(new ImageIcon("appicon2.png").getImage());
-                } else frame.setIconImage(new ImageIcon("appicon.png").getImage());
-            } else canSkip = true;
+                } else {
+                    frame.setIconImage(new ImageIcon("appicon.png").getImage());
+                    setCanSkip(true);
+                }
+            }
 
             // Only if the track wasn't skipped
             frame.setTitle("Now Playing: " + CommonUtils.toString(track));

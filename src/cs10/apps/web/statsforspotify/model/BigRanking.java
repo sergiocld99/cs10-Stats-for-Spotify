@@ -17,6 +17,7 @@ public class BigRanking extends Ranking {
     private String date;
 
     private long code;
+    private int repeatedQuantity;
 
     public BigRanking(){ }
 
@@ -30,6 +31,8 @@ public class BigRanking extends Ranking {
     }
 
     public void updateRepeated(Collection<Track> repeats){
+        this.repeatedQuantity = repeats.size();
+
         for (Track t : repeats){
             Song s = getSong(t.getId());
             if (s == null) System.err.println("Something gone wrong with " + CommonUtils.toString(t));
@@ -158,6 +161,10 @@ public class BigRanking extends Ranking {
 
     public void setCode(long code) {
         this.code = code;
+    }
+
+    public int getRepeatedQuantity() {
+        return repeatedQuantity;
     }
 
     public void setDate(String date) {

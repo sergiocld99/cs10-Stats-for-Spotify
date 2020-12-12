@@ -95,7 +95,7 @@ public class AutoQueueService {
                 }
             }
 
-            button.setText("AutoQueue (Premium only)");
+            button.setText("AutoQueue (Premium)");
             button.setEnabled(true);
         }
     }

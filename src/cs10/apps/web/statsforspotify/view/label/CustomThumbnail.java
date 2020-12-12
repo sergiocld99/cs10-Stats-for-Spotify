@@ -1,4 +1,4 @@
-package cs10.apps.web.statsforspotify.view;
+package cs10.apps.web.statsforspotify.view.label;
 
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;

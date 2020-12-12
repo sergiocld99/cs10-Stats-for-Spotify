@@ -5,6 +5,7 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.DevelopException;
+import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
@@ -41,7 +42,8 @@ public class PlaybackService implements Runnable {
 
     public void allowAutoUpdate(){
         ScheduledExecutorService scheduler2 = Executors.newSingleThreadScheduledExecutor();
-        scheduler2.scheduleAtFixedRate(this, 30, AUTO_UPDATE_RATE, TimeUnit.SECONDS);
+        scheduler2.scheduleAtFixedRate(this, 30,
+                AUTO_UPDATE_RATE, TimeUnit.SECONDS);
     }
 
     @Override

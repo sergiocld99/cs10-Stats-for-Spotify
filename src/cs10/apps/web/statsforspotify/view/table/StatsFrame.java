@@ -8,6 +8,7 @@ import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
+import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.SimpleRanking;
@@ -22,7 +23,6 @@ import cs10.apps.web.statsforspotify.view.CustomPlayer;
 import cs10.apps.web.statsforspotify.view.CustomTableCellRenderer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.histogram.ArtistFrame;
-import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
 import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
 
 import javax.swing.*;
@@ -32,6 +32,7 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +45,7 @@ public class StatsFrame extends AppFrame {
     private CustomTableModel model;
     private JTable table;
     private PlaybackService playbackService;
+    private Library library;
 
     private static final int ALBUM_COVERS_COLUMN = 1;
 
@@ -96,7 +98,7 @@ public class StatsFrame extends AppFrame {
         // Player Panel
         JPanel playerPanel = new JPanel();
         player = new CustomPlayer(70);
-        JButton aqButton = new JButton("AutoQueue (Premium only)");
+        JButton aqButton = new JButton("AutoQueue (Premium)");
         playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
         playerPanel.add(player);
         playerPanel.add(aqButton);
@@ -147,6 +149,7 @@ public class StatsFrame extends AppFrame {
 
         // When ranking is totally loaded
         player.setAverage((int) (bigRanking.getCode() / 100));
+        library = Library.getInstance();
 
         // Set Listeners
         if (bigRanking.getRepeatedQuantity() < 5)
@@ -257,7 +260,8 @@ public class StatsFrame extends AppFrame {
             if (s.isRepeated()) {
                 System.out.println(s + " is repeated");
                 int row = s.getRank()-1;
-                if (row % 2 == 0) model.setRowColor(row, s.getPopularityStatus().getTablePairColor());
+                if (row % 2 == 0) model.setRowColor(row,
+                        s.getPopularityStatus().getTablePairColor());
                 else model.setRowColor(row, s.getPopularityStatus().getTableUnpairColor());
             }
 
@@ -268,7 +272,8 @@ public class StatsFrame extends AppFrame {
 
     private Object[] toRow(Song song){
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
-                song.getRank(), song.getInfoStatus(), song.getName().split(" \\(")[0],
+                "#" + song.getRank(), song.getInfoStatus(),
+                song.getName().split(" \\(")[0],
                 song.getArtists(), song.getPopularity()};
     }
 
@@ -382,7 +387,8 @@ public class StatsFrame extends AppFrame {
             //String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
             String[] artists = artistsNames.split(", ");
             String mainName = artists[0];
-            float[] scores = IOUtils.getDetailedArtistScores(mainName);
+            //float[] scores = IOUtils.getDetailedArtistScores(mainName);
+            float[] scores = library.getArtistByName(mainName).getPopularitySumByRank();
             ArtistFrame artistFrame = new ArtistFrame(mainName, scores);
             artistFrame.init();
             setTitle("Done");

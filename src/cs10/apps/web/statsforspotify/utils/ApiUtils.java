@@ -1,8 +1,6 @@
 package cs10.apps.web.statsforspotify.utils;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
@@ -18,7 +16,6 @@ import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;

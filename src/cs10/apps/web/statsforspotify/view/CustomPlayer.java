@@ -3,7 +3,10 @@ package cs10.apps.web.statsforspotify.view;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.web.statsforspotify.app.DevelopException;
-import cs10.apps.web.statsforspotify.utils.IOUtils;
+import cs10.apps.web.statsforspotify.io.ArtistDirectory;
+import cs10.apps.web.statsforspotify.io.Library;
+import cs10.apps.web.statsforspotify.io.SongFile;
+import cs10.apps.web.statsforspotify.view.label.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,25 +17,31 @@ import java.text.DecimalFormat;
 public class CustomPlayer extends JPanel {
     private final DecimalFormat decimalFormat = new DecimalFormat("#00");
     private final CustomThumbnail thumbnail;
-    private final CircleLabel popularityLabel;
+    private final CircleLabel popularityLabel, peakLabel;
     private final ScoreLabel scoreLabel;
     private final JProgressBar progressBar;
     private String currentSongId;
+    private Library library;
 
     public CustomPlayer(int thumbSize) {
+        new Thread(() -> library = Library.getInstance()).start();
+
         this.thumbnail = new CustomThumbnail(thumbSize);
-        this.popularityLabel = new CircleLabel("Popularity");
+        this.popularityLabel = new PopularityLabel();
         this.scoreLabel = new ScoreLabel();
+        this.peakLabel = new PeakLabel();
         this.progressBar = new JProgressBar(0, 100);
+
         this.customizeProgressBar();
         this.add(thumbnail);
         this.add(popularityLabel);
+        this.add(peakLabel);
         this.add(scoreLabel);
         this.add(progressBar);
     }
 
     private void customizeProgressBar(){
-        progressBar.setPreferredSize(new Dimension(400,30));
+        progressBar.setPreferredSize(new Dimension(360,30));
         progressBar.setBorder(new EmptyBorder(0,10,0,25));
         progressBar.setStringPainted(true);
         progressBar.setForeground(Color.GREEN);
@@ -61,6 +70,7 @@ public class CustomPlayer extends JPanel {
         this.progressBar.setString("");
         this.scoreLabel.setValue(0);
         this.popularityLabel.setValue(0);
+        this.peakLabel.setValue(0);
         this.thumbnail.setUnknown();
     }
 
@@ -83,10 +93,17 @@ public class CustomPlayer extends JPanel {
         float score = 0, multiplier = 1;
 
         // find previous popularity
-        int previousPop = IOUtils.getFirstPopularity(track);
+        //int previousPop = IOUtils.getFirstPopularity(track);
+        SongFile songFile = library.getSongFile(track);
+        int previousPop = 0;
+
+        if (songFile != null)
+            previousPop = songFile.getAppearances().get(0).getPopularity();
 
         for (ArtistSimplified a : track.getArtists()){
-            score += IOUtils.getArtistScore(a.getName()) * multiplier;
+            //score += IOUtils.getArtistScore(a.getName()) * multiplier;
+            ArtistDirectory d = library.getArtistByName(a.getName());
+            if (d != null) score += d.getArtistScore() * multiplier;
             multiplier /= 2;
         }
 
@@ -94,6 +111,8 @@ public class CustomPlayer extends JPanel {
         this.scoreLabel.setValue((int) score);
         this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
+        this.peakLabel.setValue(songFile == null ?
+                0 : songFile.getPeak().getChartPosition());
 
         if (previousPop > 0 && track.getPopularity() < previousPop){
             changeProgressColor(Color.orange);

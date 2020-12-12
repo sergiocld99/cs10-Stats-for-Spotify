@@ -1,6 +1,6 @@
 package cs10.apps.web.statsforspotify.model;
 
-import cs10.apps.web.statsforspotify.view.CircleColors;
+import cs10.apps.web.statsforspotify.view.label.CircleColors;
 
 import java.awt.*;
 

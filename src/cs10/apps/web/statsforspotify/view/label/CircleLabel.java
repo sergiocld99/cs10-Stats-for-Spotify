@@ -1,4 +1,4 @@
-package cs10.apps.web.statsforspotify.view;
+package cs10.apps.web.statsforspotify.view.label;
 
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 
@@ -11,6 +11,7 @@ public class CircleLabel extends JLabel {
 
     public CircleLabel(String title){
         this.title = title;
+        // don't use a width minor than 85!
         setPreferredSize(new Dimension(85, 100));
     }
 
@@ -25,7 +26,7 @@ public class CircleLabel extends JLabel {
     public void setValue(int value) {
         this.value = value;
         if (value == 0){
-            System.out.println("Empty value for " + title);
+            System.out.println("CL || Empty value for " + title);
             setVisible(false);
         } else setVisible(true);
     }

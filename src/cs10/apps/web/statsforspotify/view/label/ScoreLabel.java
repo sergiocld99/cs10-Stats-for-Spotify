@@ -1,6 +1,4 @@
-package cs10.apps.web.statsforspotify.view;
-
-import java.awt.*;
+package cs10.apps.web.statsforspotify.view.label;
 
 public class ScoreLabel extends CircleLabel {
     private static final String DEFAULT_LABEL = "Artist Score";
@@ -8,6 +6,7 @@ public class ScoreLabel extends CircleLabel {
 
     public ScoreLabel(){
         super(DEFAULT_LABEL);
+        setVisible(false);
     }
 
     public void setCollab(boolean isCollab){

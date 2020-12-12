@@ -1,5 +1,8 @@
 package cs10.apps.web.statsforspotify.utils;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
@@ -7,6 +10,7 @@ import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import com.wrapper.spotify.model_objects.miscellaneous.Device;
 import com.wrapper.spotify.model_objects.specification.*;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
@@ -27,8 +31,9 @@ public class ApiUtils {
 
     // This URI should equal to the saved URI on the App Dashboard
     private static final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost:8080");
-    private static final String SCOPE = "user-top-read user-read-currently-playing " +
-            "user-modify-playback-state user-read-recently-played playlist-read-private";
+    private static final String SCOPE = "user-top-read " +
+            "user-read-currently-playing user-read-playback-state user-read-recently-played " +
+            "user-modify-playback-state playlist-read-private";
 
 
     public ApiUtils(){
@@ -240,11 +245,24 @@ public class ApiUtils {
 
     public boolean playThis(String trackId, boolean immediately){
         try {
+            Device[] devices = spotifyApi.getUsersAvailableDevices().build().execute();
+            if (devices == null || devices.length == 0) return false;
+
+            JsonArray array = new JsonArray();
+            array.add("spotify:track:"+trackId);
+
+            if (immediately){
+                spotifyApi.startResumeUsersPlayback().device_id(devices[0].getId())
+                        .uris(array).build().execute();
+                return true;
+            }
+
             spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+trackId).build().execute();
-            if (immediately) spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
+            //if (immediately) spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
             return true;
         } catch (SpotifyWebApiException e){
             Maintenance.writeErrorFile(e, false);
+            e.printStackTrace();
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
         }

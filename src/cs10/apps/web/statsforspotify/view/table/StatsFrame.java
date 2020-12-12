@@ -302,7 +302,7 @@ public class StatsFrame extends AppFrame {
             table.moveColumn(table.getColumnCount()-1, 1);
             table.setEnabled(true);
             super.setEnabled(true);
-            super.setTitle(PersonalChartApp.APP_AUTHOR + " - " + PersonalChartApp.APP_NAME);
+            super.setTitle("Done");
 
             if (!playbackService.isRunning())
                 startPlayback();
@@ -316,7 +316,7 @@ public class StatsFrame extends AppFrame {
 
     private void openRankingsWindow(){
         new Thread(() -> {
-            System.out.println("Open pressed");
+            setTitle("Please wait...");
             SimpleRanking[] fromDisk = IOUtils.getAvailableRankings();
             if (fromDisk.length == 0) OptionPanes.message("There are no rankings yet");
             else {
@@ -324,11 +324,13 @@ public class StatsFrame extends AppFrame {
                 SelectFrame selectFrame = new SelectFrame(fromDisk, bigRanking);
                 selectFrame.init();
             }
+            setTitle("Done");
         }).start();
     }
 
     private void openLocalTop10(){
         new Thread(() -> {
+            setTitle("Please wait...");
             Artist[] artists = IOUtils.getAllArtistsScore();
             if (artists == null) return;
 
@@ -338,11 +340,13 @@ public class StatsFrame extends AppFrame {
             System.arraycopy(artists, 0, top10, 0, length);
             LocalTop10Frame localTop10Frame = new LocalTop10Frame(top10);
             localTop10Frame.init();
+            setTitle("Done");
         }).start();
     }
 
     private void openLocalTop100(){
         new Thread(() -> {
+            setTitle("Please wait...");
             Artist[] artists = IOUtils.getAllArtistsScore();
             if (artists == null) return;
 
@@ -351,19 +355,29 @@ public class StatsFrame extends AppFrame {
             Artist[] top100 = new Artist[length];
             System.arraycopy(artists, 0, top100, 0, length);
             new LocalTop100Frame(top100).init();
+            setTitle("Done");
         }).start();
     }
 
     private void openCurrentCollabScores(){
-        new Thread(() -> new CollabScoresFrame(bigRanking).init()).start();
+        new Thread(() -> {
+            setTitle("Please wait...");
+            new CollabScoresFrame(bigRanking).init();
+            setTitle("Done");
+        }).start();
     }
 
     private void openCurrentDailyMixesStats(){
-        new Thread(apiUtils::analyzeDailyMixes).start();
+        new Thread(() -> {
+            setTitle("Please wait...");
+            apiUtils.analyzeDailyMixes();
+            setTitle("Done");
+        }).start();
     }
 
     private void openArtistWindow(){
         new Thread(() -> {
+            setTitle("Please wait...");
             String artistsNames = bigRanking.get(table.getSelectedRow()).getArtists();
             //String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
             String[] artists = artistsNames.split(", ");
@@ -371,6 +385,7 @@ public class StatsFrame extends AppFrame {
             float[] scores = IOUtils.getDetailedArtistScores(mainName);
             ArtistFrame artistFrame = new ArtistFrame(mainName, scores);
             artistFrame.init();
+            setTitle("Done");
         }).start();
     }
 }

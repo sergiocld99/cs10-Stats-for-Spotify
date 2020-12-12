@@ -14,6 +14,7 @@ import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;

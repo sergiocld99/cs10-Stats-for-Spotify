@@ -12,6 +12,7 @@ import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
+import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
 
 import java.awt.*;
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class ApiUtils {
     // This URI should equal to the saved URI on the App Dashboard
     private static final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost:8080");
     private static final String SCOPE = "user-top-read user-read-currently-playing " +
-            "user-modify-playback-state user-read-recently-played";
+            "user-modify-playback-state user-read-recently-played playlist-read-private";
 
 
     public ApiUtils(){
@@ -109,8 +110,8 @@ public class ApiUtils {
         }
 
         if (tracks1[0].getPopularity() < 70) {
-            Maintenance.log("Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
-            Maintenance.log("Cause: popularity is " + tracks1[0].getPopularity());
+            Maintenance.log("AU || Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
+            Maintenance.log("AU || Cause: popularity is " + tracks1[0].getPopularity());
             return null;
         }
 
@@ -121,16 +122,20 @@ public class ApiUtils {
         StringBuilder errorSb = new StringBuilder("Failed to queue: \n\n");
 
         if (IOUtils.existsArtist(t1.getArtists()[0].getName())){
+            Maintenance.log("AU || Added from Artist Top Tracks: " + CommonUtils.toString(t1));
             uris.add(t1.getUri());
             errorSb.append(CommonUtils.toString(t1)).append('\n');
             if (!t2.getName().equals(t1.getName())) {
+                Maintenance.log("AU || Added from Recommendations: " + CommonUtils.toString(t2));
                 errorSb.append(CommonUtils.toString(t2));
                 uris.add(t2.getUri());
             }
         } else {
+            Maintenance.log("AU || Added from Recommendations: " + CommonUtils.toString(t2));
             uris.add(t2.getUri());
             errorSb.append(CommonUtils.toString(t2)).append('\n');
             if (t3 != null){
+                Maintenance.log("AU || Added from Library: " + t3.toStringWithArtist());
                 errorSb.append(t3.toStringWithArtist());
                 uris.add("spotify:track:"+t3.getId());
             }
@@ -235,7 +240,6 @@ public class ApiUtils {
     public boolean playThis(String trackId, boolean immediately){
         try {
             spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+trackId).build().execute();
-            Maintenance.log("Added to Playback Queue: " + trackId);
             if (immediately) spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
             return true;
         } catch (SpotifyWebApiException e){
@@ -251,7 +255,7 @@ public class ApiUtils {
         return spotifyApi.getCurrentUsersProfile().build().execute();
     }
 
-    public void analyzeRecentTracks(){
+    public int analyzeRecentTracks(){
         try {
             // This returns only the last 30 played tracks
             PagingCursorbased<PlayHistory> paging =
@@ -265,19 +269,50 @@ public class ApiUtils {
                         p.getTrack().getId()) > 0) alreadySaved++;
             }
 
-            int percentage = alreadySaved * 100 / playHistory.length;
-            System.out.println(percentage + "% of your recent tracks are already in your library");
-
+            if (playHistory.length == 0) return 0;
+            return alreadySaved * 100 / playHistory.length;
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
+            return 0;
         }
     }
 
     public void analyzeDailyMixes(){
-        try {
+        int dailyMixes = 6, count = 0;
+        int[] tracks = new int[dailyMixes];
+        int[] sizes = new int[dailyMixes];
+        int[] artists = new int[dailyMixes];
+        int[] times = new int[dailyMixes];
 
+        try {
+            PlaylistSimplified[] ps = spotifyApi.getListOfCurrentUsersPlaylists()
+                    .limit(49).build()
+                    .execute().getItems();
+            for (PlaylistSimplified p : ps){
+                if (p.getName().startsWith("Daily Mix")){
+                    sizes[count] = p.getTracks().getTotal();
+                    Playlist playlist = spotifyApi.getPlaylist(p.getId()).build().execute();
+                    for (PlaylistTrack pt : playlist.getTracks().getItems()){
+                        Track t = (Track) pt.getTrack();
+                        int ts = IOUtils.getTimesOnRanking(t.getArtists()[0].getName(), t.getId());
+                        if (ts > 0) {tracks[count]++; times[count] += ts;}
+                        if (IOUtils.existsArtist(t.getArtists()[0].getName()))
+                            artists[count]++;
+                    }
+                    if (++count == dailyMixes) break;
+                }
+            }
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
         }
+
+        for (int i=0; i<dailyMixes; i++){
+            System.out.println("DAILY MIX " + (i+1));
+            System.out.println(tracks[i] + "/" + sizes[i] + " tracks are already in your library");
+            int artistsPercentage = sizes[i] > 0 ? artists[i] * 100 / sizes[i] : 0;
+            System.out.println(artistsPercentage + "% artists that you already know");
+        }
+
+        new DailyMixesFrame(times).init();
     }
 }

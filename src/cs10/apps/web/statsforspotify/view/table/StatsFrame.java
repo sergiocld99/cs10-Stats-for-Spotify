@@ -22,6 +22,7 @@ import cs10.apps.web.statsforspotify.view.CustomPlayer;
 import cs10.apps.web.statsforspotify.view.CustomTableCellRenderer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.histogram.ArtistFrame;
+import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
 import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
 
 import javax.swing.*;
@@ -69,6 +70,7 @@ public class StatsFrame extends AppFrame {
         JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
         JMenuItem jmiLocalTop100 = new JMenuItem("Local Top 100 Artists");
         JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
+        JMenuItem jmiDailyMixes = new JMenuItem("Current Daily Mixes Stats");
         jmiOpen.addActionListener(e -> openRankingsWindow());
         jmiSave.addActionListener(e -> System.out.println("Save pressed"));
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
@@ -76,6 +78,7 @@ public class StatsFrame extends AppFrame {
         jmiLocalTop10.addActionListener(e -> openLocalTop10());
         jmiLocalTop100.addActionListener(e -> openLocalTop100());
         jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
+        jmiDailyMixes.addActionListener(e -> openCurrentDailyMixesStats());
         fileMenu.add(jmiOpen);
         fileMenu.add(jmiSave);
         fileMenu.add(jmiSaveAs);
@@ -83,6 +86,7 @@ public class StatsFrame extends AppFrame {
         viewMenu.add(jmiLocalTop10);
         viewMenu.add(jmiLocalTop100);
         viewMenu.add(jmiCurrentCollab);
+        viewMenu.add(jmiDailyMixes);
         JMenu helpMenu = new JMenu("Help");
         helpMenu.addActionListener(e -> System.out.println("Help pressed"));
         menuBar.add(fileMenu);
@@ -175,9 +179,6 @@ public class StatsFrame extends AppFrame {
         if (appOptions.isAlbumCovers())
             addAlbumCoversColumn();
         else startPlayback();
-
-        // Test only
-        apiUtils.analyzeRecentTracks();
     }
 
     private void initRanking(){
@@ -357,17 +358,19 @@ public class StatsFrame extends AppFrame {
         new Thread(() -> new CollabScoresFrame(bigRanking).init()).start();
     }
 
+    private void openCurrentDailyMixesStats(){
+        new Thread(apiUtils::analyzeDailyMixes).start();
+    }
+
     private void openArtistWindow(){
         new Thread(() -> {
-            String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
+            String artistsNames = bigRanking.get(table.getSelectedRow()).getArtists();
+            //String artistsNames = (String) model.getValueAt(table.getSelectedRow(), 3);
             String[] artists = artistsNames.split(", ");
             String mainName = artists[0];
             float[] scores = IOUtils.getDetailedArtistScores(mainName);
-            if (scores[scores.length-1] == 0) OptionPanes.message("Not enough data yet");
-            else {
-                ArtistFrame artistFrame = new ArtistFrame(mainName, scores);
-                artistFrame.init();
-            }
+            ArtistFrame artistFrame = new ArtistFrame(mainName, scores);
+            artistFrame.init();
         }).start();
     }
 }

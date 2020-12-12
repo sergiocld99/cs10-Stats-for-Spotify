@@ -27,7 +27,7 @@ public class Song implements Comparable<Song> {
         this.id = track.getId();
         this.name = track.getName();
         this.artists = CommonUtils.combineArtists(track.getArtists());
-        this.imageUrl = track.getAlbum().getImages()[0].getUrl();
+        this.imageUrl = track.getAlbum().getImages()[track.getAlbum().getImages().length-1].getUrl();
         this.popularity = track.getPopularity();
         this.firstPopularity = IOUtils.getFirstPopularity(track);
     }

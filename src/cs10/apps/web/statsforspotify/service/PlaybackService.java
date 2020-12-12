@@ -63,7 +63,7 @@ public class PlaybackService implements Runnable {
     private void getCurrentData() {
         requestsCount++;
 
-        System.out.println("Current Song - Request #" + requestsCount);
+        System.out.println("PS || Request #" + requestsCount);
         CurrentlyPlaying currentlyPlaying = apiUtils.getCurrentSong();
 
         if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {

@@ -117,7 +117,7 @@ public class IOUtils {
         File file = new File(LIBRARY_FOLDER+"//"+artist+"//"+id);
         int cant = 0;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))){
+        if (file.exists()) try (BufferedReader br = new BufferedReader(new FileReader(file))){
             // skip header
             br.readLine();
 

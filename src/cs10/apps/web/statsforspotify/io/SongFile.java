@@ -56,6 +56,10 @@ public class SongFile {
         }
     }
 
+    public SongAppearance getLastAppearance(){
+        return this.appearances.get(appearancesCount-1);
+    }
+
     public String getTrackName() {
         return trackName;
     }

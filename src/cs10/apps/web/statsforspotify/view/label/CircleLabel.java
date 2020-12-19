@@ -8,9 +8,11 @@ import java.awt.*;
 public class CircleLabel extends JLabel {
     private String title;
     private int value, average = 60, originalValue;
+    private final boolean inverted;
 
-    public CircleLabel(String title){
+    public CircleLabel(String title, boolean inverted){
         this.title = title;
+        this.inverted = inverted;
         // don't use a width minor than 85!
         setPreferredSize(new Dimension(85, 100));
     }
@@ -25,7 +27,7 @@ public class CircleLabel extends JLabel {
 
     public void setValue(int value) {
         this.value = value;
-        if (value == 0){
+        if (value <= 0){
             System.out.println("CL || Empty value for " + title);
             setVisible(false);
         } else setVisible(true);
@@ -50,8 +52,11 @@ public class CircleLabel extends JLabel {
             if (value == originalValue) graphics2D.setColor(CircleColors.LIGHT_BLUE_COLOR.get());
             else if (value < originalValue) graphics2D.setColor(Color.red);
             else graphics2D.setColor(CircleColors.GREEN_COLOR.get());
-        } else {
+        } else if (!inverted) {
             if (value < average) graphics2D.setColor(CircleColors.ORANGE_COLOR.get());
+            else graphics2D.setColor(CircleColors.DARK_GREEN_COLOR.get());
+        } else {
+            if (value > average) graphics2D.setColor(CircleColors.ORANGE_COLOR.get());
             else graphics2D.setColor(CircleColors.DARK_GREEN_COLOR.get());
         }
 

@@ -68,6 +68,21 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
         return null;
     }
 
+    public void multiplyScore(float factor){
+        System.out.println("AD || Multiplying " + factor + " points to " + artistName);
+        this.artistScore *= factor;
+    }
+
+    public void incrementScore(int delta){
+        System.out.println("AD || Adding " + delta + " points to " + artistName);
+        this.artistScore += delta;
+    }
+
+    public void decreaseScore(int delta){
+        System.out.println("AD || Subtracting " + delta + " points to " + artistName);
+        this.artistScore -= delta;
+    }
+
     @Override
     public int compareTo(ArtistDirectory o) {
         return Float.compare(o.getArtistScore(), artistScore);

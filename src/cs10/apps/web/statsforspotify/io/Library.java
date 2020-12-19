@@ -17,7 +17,6 @@ public class Library {
 
         rankingsAmount = IOUtils.getRankingsAmount();
         this.explore(rootFile);
-        Collections.sort(artistDirectories);
         System.out.println("Library loaded in " + (System.currentTimeMillis()-startTime) + " ms");
     }
 
@@ -56,5 +55,10 @@ public class Library {
         ArtistDirectory d = getArtistByName(track.getArtists()[0].getName());
         if (d != null) return d.getSongById(track.getId());
         else return null;
+    }
+
+    public List<ArtistDirectory> getTop(int size){
+        Collections.sort(artistDirectories);
+        return artistDirectories.subList(0, Math.min(size, artistDirectories.size()));
     }
 }

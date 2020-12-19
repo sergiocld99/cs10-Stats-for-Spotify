@@ -8,11 +8,9 @@ import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
+import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
-import cs10.apps.web.statsforspotify.model.Artist;
-import cs10.apps.web.statsforspotify.model.BigRanking;
-import cs10.apps.web.statsforspotify.model.SimpleRanking;
-import cs10.apps.web.statsforspotify.model.TopTerms;
+import cs10.apps.web.statsforspotify.model.*;
 import cs10.apps.web.statsforspotify.service.AutoQueueService;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
@@ -146,10 +144,28 @@ public class StatsFrame extends AppFrame {
 
         // Load ranking (hard work)
         initRanking();
+        player.enableLibrary();
 
         // When ranking is totally loaded
         player.setAverage((int) (bigRanking.getCode() / 100));
         library = Library.getInstance();
+
+        // Hard tasks
+        if (appOptions.isAlbumCovers())
+            new Thread(this::addAlbumCoversColumn).start();
+        else startPlayback();
+
+        // TODO: Experimental Artist Score
+        for (int i=0; i<bigRanking.getCode() / 100; i++){
+            Song s = bigRanking.get(i);
+            if (s.getPopularityStatus() != PopularityStatus.NORMAL){
+                for (String artist : s.getArtists().split(", ")){
+                    ArtistDirectory a = library.getArtistByName(artist);
+                    int delta = (s.getPopularity() - s.getFirstPopularity()) * 2;
+                    a.multiplyScore(1 + delta / 100f);
+                }
+            }
+        }
 
         // Set Listeners
         if (bigRanking.getRepeatedQuantity() < 5)
@@ -177,11 +193,6 @@ public class StatsFrame extends AppFrame {
                 } else openArtistWindow();
             }
         });
-
-        // Hard tasks
-        if (appOptions.isAlbumCovers())
-            addAlbumCoversColumn();
-        else startPlayback();
     }
 
     private void initRanking(){
@@ -295,7 +306,7 @@ public class StatsFrame extends AppFrame {
         SwingUtilities.invokeLater(() -> {
             ImageIcon[] coversImages = new ImageIcon[bigRanking.size()];
             table.setEnabled(false);
-            super.setEnabled(false);
+            //super.setEnabled(false);
             super.setTitle("Please wait...");
 
             for (int i=0; i<bigRanking.size(); i++){
@@ -306,7 +317,7 @@ public class StatsFrame extends AppFrame {
             model.addColumn(column.getHeaderValue().toString(), coversImages);
             table.moveColumn(table.getColumnCount()-1, 1);
             table.setEnabled(true);
-            super.setEnabled(true);
+            //super.setEnabled(true);
             super.setTitle("Done");
 
             if (!playbackService.isRunning())
@@ -334,42 +345,18 @@ public class StatsFrame extends AppFrame {
     }
 
     private void openLocalTop10(){
-        new Thread(() -> {
-            setTitle("Please wait...");
-            Artist[] artists = IOUtils.getAllArtistsScore();
-            if (artists == null) return;
-
-            int length = Math.min(artists.length, 10);
-            Arrays.sort(artists);
-            Artist[] top10 = new Artist[length];
-            System.arraycopy(artists, 0, top10, 0, length);
-            LocalTop10Frame localTop10Frame = new LocalTop10Frame(top10);
-            localTop10Frame.init();
-            setTitle("Done");
-        }).start();
+        ArtistDirectory[] artists = library.getTop(10).toArray(new ArtistDirectory[0]);
+        LocalTop10Frame localTop10Frame = new LocalTop10Frame(artists);
+        localTop10Frame.init();
     }
 
     private void openLocalTop100(){
-        new Thread(() -> {
-            setTitle("Please wait...");
-            Artist[] artists = IOUtils.getAllArtistsScore();
-            if (artists == null) return;
-
-            int length = Math.min(artists.length, 100);
-            Arrays.sort(artists);
-            Artist[] top100 = new Artist[length];
-            System.arraycopy(artists, 0, top100, 0, length);
-            new LocalTop100Frame(top100).init();
-            setTitle("Done");
-        }).start();
+        ArtistDirectory[] artists = library.getTop(100).toArray(new ArtistDirectory[0]);
+        new LocalTop100Frame(artists).init();
     }
 
     private void openCurrentCollabScores(){
-        new Thread(() -> {
-            setTitle("Please wait...");
-            new CollabScoresFrame(bigRanking).init();
-            setTitle("Done");
-        }).start();
+        new CollabScoresFrame(bigRanking).init();
     }
 
     private void openCurrentDailyMixesStats(){

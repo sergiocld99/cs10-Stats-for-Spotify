@@ -32,6 +32,10 @@ public class Song implements Comparable<Song> {
         this.firstPopularity = IOUtils.getFirstPopularity(track);
     }
 
+    public int getFirstPopularity() {
+        return firstPopularity;
+    }
+
     public int getPreviousRank() {
         return previousRank;
     }
@@ -82,6 +86,10 @@ public class Song implements Comparable<Song> {
 
     public String getArtists() {
         return artists;
+    }
+
+    public String getMainArtist(){
+        return artists.split(", ")[0];
     }
 
     public void setArtists(String artists) {

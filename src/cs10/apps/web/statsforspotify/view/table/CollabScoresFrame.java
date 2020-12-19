@@ -3,6 +3,7 @@ package cs10.apps.web.statsforspotify.view.table;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
+import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.Collab;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
@@ -24,12 +25,15 @@ public class CollabScoresFrame extends AppFrame {
     }
 
     private void buildArray(){
+        Library library = Library.getInstance();
+
         for (Song s : bigRanking){
             if (s.getArtists().contains(",")){
                 float score = 0, multiplier = 1;
 
                 for (String a : s.getArtists().split(", ")){
-                    score += IOUtils.getArtistScore(a) * multiplier;
+                    score += library.getArtistByName(a).getArtistScore() * multiplier;
+                    //score += IOUtils.getArtistScore(a) * multiplier;
                     multiplier /= 2;
                 }
 
@@ -54,7 +58,8 @@ public class CollabScoresFrame extends AppFrame {
         super.customizeTexts(table, model);
         this.modifyColumnsWidth(table);
 
-        float maxPreference = list.get(0).getTotalScore() + list.get(list.size() / 2).getTotalScore();
+        double maxPreference = Math.log(1 + list.get(0).getTotalScore()) +
+                Math.log(1 + list.get(list.size() / 2).getTotalScore());
         for (int i=0; i<list.size(); i++)
             model.addRow(toRow(list.get(i), maxPreference,i+1));
 
@@ -72,9 +77,9 @@ public class CollabScoresFrame extends AppFrame {
         table.getColumnModel().getColumn(4).setPreferredWidth(70);
     }
 
-    private Object[] toRow(Collab collab, float maxPreference, int number){
+    private Object[] toRow(Collab collab, double maxPreference, int number){
         return new Object[]{"#"+number, collab.getName(), collab.getArtists(),
-                collab.getTotalScore(),
-                String.format("%.2f", collab.getTotalScore() * 100 / maxPreference) + "%"};
+                collab.getTotalScore(), String.format("%.2f",
+                Math.log(1 + collab.getTotalScore()) * 100 / maxPreference) + "%"};
     }
 }

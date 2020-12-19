@@ -2,15 +2,16 @@ package cs10.apps.web.statsforspotify.view.table;
 
 import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
+import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.model.Artist;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class LocalTop100Frame extends AppFrame {
-    private final Artist[] artists;
+    private final ArtistDirectory[] artists;
 
-    public LocalTop100Frame(Artist[] artists) throws HeadlessException {
+    public LocalTop100Frame(ArtistDirectory[] artists) throws HeadlessException {
         this.artists = artists;
     }
 
@@ -25,7 +26,9 @@ public class LocalTop100Frame extends AppFrame {
         table.setRowHeight(50);
         super.customizeTexts(table, model);
 
-        float maxPreference = artists[0].getScore() + artists[artists.length / 2].getScore();
+        double maxPreference = Math.log(1 + artists[0].getArtistScore()) +
+                Math.log(1 + artists[artists.length / 2].getArtistScore());
+
         for (int i=0; i<artists.length; i++)
             model.addRow(toRow(artists[i], maxPreference,i+1));
 
@@ -35,9 +38,10 @@ public class LocalTop100Frame extends AppFrame {
         setVisible(true);
     }
 
-    private Object[] toRow(Artist artist, float maxPreference, int number){
-        return new Object[]{"#"+number, artist.getName(),
-                String.format("%.2f", artist.getScore()),
-                String.format("%.2f", artist.getScore() * 100 / maxPreference) + "%"};
+    private Object[] toRow(ArtistDirectory artist, double maxPreference, int number){
+        return new Object[]{"#"+number, artist.getArtistName(),
+                String.format("%.2f", artist.getArtistScore()),
+                String.format("%.2f", Math.log(1 + artist.getArtistScore()) * 100
+                        / maxPreference) + "%"};
     }
 }

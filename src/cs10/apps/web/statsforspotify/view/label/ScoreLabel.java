@@ -5,7 +5,7 @@ public class ScoreLabel extends CircleLabel {
     private static final String SPECIAL_LABEL = "Collab Score";
 
     public ScoreLabel(){
-        super(DEFAULT_LABEL);
+        super(DEFAULT_LABEL, false);
         setVisible(false);
     }
 

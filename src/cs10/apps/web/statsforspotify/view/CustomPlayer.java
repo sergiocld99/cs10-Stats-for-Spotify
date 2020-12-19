@@ -24,8 +24,6 @@ public class CustomPlayer extends JPanel {
     private Library library;
 
     public CustomPlayer(int thumbSize) {
-        new Thread(() -> library = Library.getInstance()).start();
-
         this.thumbnail = new CustomThumbnail(thumbSize);
         this.popularityLabel = new PopularityLabel();
         this.scoreLabel = new ScoreLabel();
@@ -35,9 +33,13 @@ public class CustomPlayer extends JPanel {
         this.customizeProgressBar();
         this.add(thumbnail);
         this.add(popularityLabel);
-        this.add(peakLabel);
         this.add(scoreLabel);
+        this.add(peakLabel);
         this.add(progressBar);
+    }
+
+    public void enableLibrary(){
+        new Thread(() -> library = Library.getInstance()).start();
     }
 
     private void customizeProgressBar(){
@@ -62,6 +64,7 @@ public class CustomPlayer extends JPanel {
     public void setAverage(int average){
         this.popularityLabel.setAverage(average);
         this.scoreLabel.setAverage(average);
+        this.peakLabel.setAverage(average / 3);
     }
 
     public void clear(){
@@ -111,8 +114,7 @@ public class CustomPlayer extends JPanel {
         this.scoreLabel.setValue((int) score);
         this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
-        this.peakLabel.setValue(songFile == null ?
-                0 : songFile.getPeak().getChartPosition());
+        this.peakLabel.setValue(songFile == null ? 0 : songFile.getPeak().getChartPosition());
 
         if (previousPop > 0 && track.getPopularity() < previousPop){
             changeProgressColor(Color.orange);

@@ -1,6 +1,8 @@
 # cs10-Stats-for-Spotify
 Personal Chart History - Java Desktop - This application reads your Top Tracks and generates stats for each artist
 
+![alt text](https://i.imgur.com/TXx9sG0.png)
+
 # Ranking Algorithm
 1 - After you grant permissions for read your Top Tracks and Current Playback, this application downloads three rankings from Spotify: "Short Term (Last 4 Weeks)", "Medium Term (Last 6 Months)" and "Long Term" (All Time)
 
@@ -39,5 +41,3 @@ Here, each artist has their folder. An artist folder contains "Song Files".
 * Column 1: rank (positive number)
 * Column 2: popularity (positive number, 0-100)
 * Column 3: ranking code (positive number, 0-15000)
-
-![alt text](https://i.imgur.com/TNJsCFB.png)

@@ -167,6 +167,9 @@ public class StatsFrame extends AppFrame {
             }
         }
 
+        // Important for maintain order
+        library.sort();
+
         // Set Listeners
         if (bigRanking.getRepeatedQuantity() < 5)
             aqButton.setEnabled(false);

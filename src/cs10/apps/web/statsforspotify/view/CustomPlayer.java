@@ -6,6 +6,7 @@ import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.io.SongFile;
+import cs10.apps.web.statsforspotify.model.Collab;
 import cs10.apps.web.statsforspotify.view.label.*;
 
 import javax.swing.*;
@@ -22,6 +23,7 @@ public class CustomPlayer extends JPanel {
     private final JProgressBar progressBar;
     private String currentSongId;
     private Library library;
+    private int average;
 
     public CustomPlayer(int thumbSize) {
         this.thumbnail = new CustomThumbnail(thumbSize);
@@ -62,8 +64,8 @@ public class CustomPlayer extends JPanel {
     }
 
     public void setAverage(int average){
+        this.average = average;
         this.popularityLabel.setAverage(average);
-        this.scoreLabel.setAverage(average);
         this.peakLabel.setAverage(average / 3);
     }
 
@@ -93,25 +95,23 @@ public class CustomPlayer extends JPanel {
         this.progressBar.setMaximum(track.getDurationMs() / 1000 + 1);
         this.progressBar.setValue(0);
 
-        float score = 0, multiplier = 1;
-
-        // find previous popularity
-        //int previousPop = IOUtils.getFirstPopularity(track);
         SongFile songFile = library.getSongFile(track);
         int previousPop = 0;
 
         if (songFile != null)
             previousPop = songFile.getAppearances().get(0).getPopularity();
 
-        for (ArtistSimplified a : track.getArtists()){
-            //score += IOUtils.getArtistScore(a.getName()) * multiplier;
-            ArtistDirectory d = library.getArtistByName(a.getName());
-            if (d != null) score += d.getArtistScore() * multiplier;
-            multiplier /= 2;
+        if (track.getArtists().length > 1){
+            this.scoreLabel.setCollab(true);
+            this.scoreLabel.setAverage(average);
+            this.scoreLabel.setValue((int) Collab.calcScore(track.getArtists(),
+                    track.getPopularity()));
+        } else {
+            this.scoreLabel.setCollab(false);
+            this.scoreLabel.setAverage(average / 3);
+            this.scoreLabel.setValue(library.getArtistRank(track.getArtists()[0].getName()));
         }
 
-        this.scoreLabel.setCollab(track.getArtists().length > 1);
-        this.scoreLabel.setValue((int) score);
         this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
         this.peakLabel.setValue(songFile == null ? 0 : songFile.getPeak().getChartPosition());

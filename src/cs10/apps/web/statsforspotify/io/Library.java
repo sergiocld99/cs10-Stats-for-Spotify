@@ -51,14 +51,26 @@ public class Library {
         return null;
     }
 
+    public int getArtistRank(String artistName){
+        for (int i=0; i<artistDirectories.size(); i++){
+            if (artistDirectories.get(i).getArtistName().equals(artistName))
+                return i+1;
+        }
+
+        return 0;
+    }
+
     public SongFile getSongFile(Track track){
         ArtistDirectory d = getArtistByName(track.getArtists()[0].getName());
         if (d != null) return d.getSongById(track.getId());
         else return null;
     }
 
-    public List<ArtistDirectory> getTop(int size){
+    public void sort(){
         Collections.sort(artistDirectories);
+    }
+
+    public List<ArtistDirectory> getTop(int size){
         return artistDirectories.subList(0, Math.min(size, artistDirectories.size()));
     }
 }

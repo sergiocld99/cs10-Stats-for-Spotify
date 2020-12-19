@@ -8,6 +8,19 @@ public class Collab implements Comparable<Collab> {
     private float totalScore;
     private String name, artists;
 
+    public static float calcScore(String artists, int actualPopularity){
+        Library library = Library.getInstance();
+        float score = 0, multiplier = 1;
+
+        for (String artist : artists.split(", ")){
+            ArtistDirectory a = library.getArtistByName(artist);
+            if (a != null) score += a.getArtistScore() * multiplier;
+            multiplier /= 2;
+        }
+
+        return score * actualPopularity / 100f;
+    }
+
     public static float calcScore(ArtistSimplified[] artists, int actualPopularity){
         Library library = Library.getInstance();
         float score = 0, multiplier = 1;

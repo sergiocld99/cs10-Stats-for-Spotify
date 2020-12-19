@@ -8,8 +8,7 @@ import java.awt.*;
 public class CircleLabel extends JLabel {
     private String title;
     private int value, average = 60, originalValue;
-    private boolean sharp;
-    private final boolean inverted;
+    private boolean inverted;
 
     public CircleLabel(String title, boolean inverted){
         this.title = title;
@@ -18,8 +17,8 @@ public class CircleLabel extends JLabel {
         setPreferredSize(new Dimension(85, 100));
     }
 
-    public void setSharp(boolean sharp) {
-        this.sharp = sharp;
+    public void setInverted(boolean inverted) {
+        this.inverted = inverted;
     }
 
     public void setTitle(String title) {

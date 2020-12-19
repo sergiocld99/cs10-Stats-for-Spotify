@@ -12,10 +12,10 @@ public class ScoreLabel extends CircleLabel {
     public void setCollab(boolean isCollab){
         if (isCollab) {
             super.setTitle(SPECIAL_LABEL);
-            super.setSharp(false);
+            super.setInverted(false);
         } else {
             super.setTitle(DEFAULT_LABEL);
-            super.setSharp(true);
+            super.setInverted(true);
         }
     }
 }

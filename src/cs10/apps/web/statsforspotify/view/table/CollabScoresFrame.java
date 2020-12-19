@@ -3,10 +3,8 @@ package cs10.apps.web.statsforspotify.view.table;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
-import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.Collab;
-import cs10.apps.web.statsforspotify.utils.IOUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,22 +23,12 @@ public class CollabScoresFrame extends AppFrame {
     }
 
     private void buildArray(){
-        Library library = Library.getInstance();
-
         for (Song s : bigRanking){
             if (s.getArtists().contains(",")){
-                float score = 0, multiplier = 1;
-
-                for (String a : s.getArtists().split(", ")){
-                    score += library.getArtistByName(a).getArtistScore() * multiplier;
-                    //score += IOUtils.getArtistScore(a) * multiplier;
-                    multiplier /= 2;
-                }
-
                 Collab collab = new Collab();
                 collab.setArtists(s.getArtists());
                 collab.setName(s.getName());
-                collab.setTotalScore(score);
+                collab.setTotalScore(Collab.calcScore(s.getArtists(), s.getPopularity()));
                 list.add(collab);
             }
         }

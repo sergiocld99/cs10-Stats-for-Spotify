@@ -156,16 +156,23 @@ public class StatsFrame extends AppFrame {
         else startPlayback();
 
         // TODO: Experimental Artist Score
-        for (int i=0; i<bigRanking.getCode() / 100; i++){
+        float averageNumber = bigRanking.getCode() / 100f;
+        for (int i=0; i<averageNumber; i++){
             Song s = bigRanking.get(i);
-            if (s.getFirstPopularity() == 0) continue;
-            if (s.getPopularityStatus() != PopularityStatus.NORMAL){
+            //if (s.getFirstPopularity() == 0) continue;
+            //if (s.getPopularityStatus() != PopularityStatus.NORMAL){
+            //if (s.getChange() != 0){
+            float multiplier = s.getPopularity() / averageNumber;
+            if (multiplier < 1) continue;
                 for (String artist : s.getArtists().split(", ")){
                     ArtistDirectory a = library.getArtistByName(artist);
-                    int delta = (s.getPopularity() - s.getFirstPopularity()) * 2;
-                    a.multiplyScore(1 + delta / 100f);
+                    a.multiplyScore(Math.sqrt(multiplier));
+                    //if (s.getChange() > 0) a.incrementScore(s.getChange());
+                    //else a.decreaseScore(s.getChange() / 2);
+                    //int delta = (s.getPopularity() - s.getFirstPopularity()) * 2;
+                    //a.multiplyScore(1 + delta / 100f);
                 }
-            }
+            //}
         }
 
         // Important for maintain order

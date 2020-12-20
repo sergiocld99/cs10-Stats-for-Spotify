@@ -68,7 +68,7 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
         return null;
     }
 
-    public void multiplyScore(float factor){
+    public void multiplyScore(double factor){
         System.out.println("AD || Multiplying " + factor + " points to " + artistName);
         this.artistScore *= factor;
     }

@@ -158,6 +158,7 @@ public class StatsFrame extends AppFrame {
         // TODO: Experimental Artist Score
         for (int i=0; i<bigRanking.getCode() / 100; i++){
             Song s = bigRanking.get(i);
+            if (s.getFirstPopularity() == 0) continue;
             if (s.getPopularityStatus() != PopularityStatus.NORMAL){
                 for (String artist : s.getArtists().split(", ")){
                     ArtistDirectory a = library.getArtistByName(artist);

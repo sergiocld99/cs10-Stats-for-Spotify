@@ -35,7 +35,8 @@ public class BigRanking extends Ranking {
 
         for (Track t : repeats){
             Song s = getSong(t.getId());
-            if (s == null) System.err.println("Something gone wrong with " + CommonUtils.toString(t));
+            if (s == null) System.err.println("Something gone wrong with " +
+                    CommonUtils.toString(t));
             else s.setRepeated(true);
         }
     }

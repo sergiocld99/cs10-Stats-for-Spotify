@@ -69,16 +69,17 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
     }
 
     public void multiplyScore(double factor){
-        System.out.println("AD || Multiplying " + factor + " points to " + artistName);
+        float previous = artistScore;
         this.artistScore *= factor;
+        System.out.println("AD || " + artistName + ": " + previous + " to " + artistScore);
     }
 
-    public void incrementScore(int delta){
+    public void incrementScore(double delta){
         System.out.println("AD || Adding " + delta + " points to " + artistName);
         this.artistScore += delta;
     }
 
-    public void decreaseScore(int delta){
+    public void decreaseScore(double delta){
         System.out.println("AD || Subtracting " + delta + " points to " + artistName);
         this.artistScore -= delta;
     }

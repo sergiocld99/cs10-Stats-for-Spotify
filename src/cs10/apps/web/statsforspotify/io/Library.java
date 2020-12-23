@@ -52,6 +52,8 @@ public class Library {
     }
 
     public int getArtistRank(String artistName){
+        artistName = artistName.replace("/\\","");
+
         for (int i=0; i<artistDirectories.size(); i++){
             if (artistDirectories.get(i).getArtistName().equals(artistName))
                 return i+1;

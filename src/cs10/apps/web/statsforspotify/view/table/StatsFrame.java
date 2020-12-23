@@ -10,7 +10,9 @@ import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
-import cs10.apps.web.statsforspotify.model.*;
+import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.SimpleRanking;
+import cs10.apps.web.statsforspotify.model.TopTerms;
 import cs10.apps.web.statsforspotify.service.AutoQueueService;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
@@ -30,7 +32,6 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -144,36 +145,14 @@ public class StatsFrame extends AppFrame {
 
         // Load ranking (hard work)
         initRanking();
-        player.enableLibrary();
 
         // When ranking is totally loaded
         player.setAverage((int) (bigRanking.getCode() / 100));
-        library = Library.getInstance();
+        player.enableLibrary();
 
         // Hard tasks
-        if (appOptions.isAlbumCovers())
-            new Thread(this::addAlbumCoversColumn).start();
-        else startPlayback();
-
-        // TODO: Experimental Artist Score
-        float averageNumber = bigRanking.getCode() / 100f;
-        for (int i=0; i<averageNumber; i++){
-            Song s = bigRanking.get(i);
-            //if (s.getFirstPopularity() == 0) continue;
-            //if (s.getPopularityStatus() != PopularityStatus.NORMAL){
-            //if (s.getChange() != 0){
-            float multiplier = s.getPopularity() / averageNumber;
-            if (multiplier < 1) continue;
-                for (String artist : s.getArtists().split(", ")){
-                    ArtistDirectory a = library.getArtistByName(artist);
-                    a.multiplyScore(Math.sqrt(multiplier));
-                    //if (s.getChange() > 0) a.incrementScore(s.getChange());
-                    //else a.decreaseScore(s.getChange() / 2);
-                    //int delta = (s.getPopularity() - s.getFirstPopularity()) * 2;
-                    //a.multiplyScore(1 + delta / 100f);
-                }
-            //}
-        }
+        if (appOptions.isAlbumCovers()) new Thread(this::addAlbumCoversColumn).start();
+        startPlayback();
 
         // Important for maintain order
         library.sort();
@@ -204,6 +183,42 @@ public class StatsFrame extends AppFrame {
                 } else openArtistWindow();
             }
         });
+    }
+
+    private void experimentalModifyArtistScore1() {
+        float average = bigRanking.getCode() / 100f;
+        int offset = (int) (average / 10);
+        for (int i=0; i<average; i+=offset){
+            List<Song> sublist = bigRanking.subList(i,i+offset);
+            int maxP = 0, maxIndex = 0;
+            for (Song s : sublist){
+                if (s.getPopularity() > maxP){
+                    maxP = s.getPopularity();
+                    maxIndex = s.getRank()-1;
+                }
+            }
+            Song selected = bigRanking.get(maxIndex);
+            for (String artist : selected.getArtists().split(", ")){
+                ArtistDirectory a = library.getArtistByName(artist);
+                a.multiplyScore(Math.sqrt(maxP / average));
+            }
+        }
+    }
+
+    private void experimentalModifyArtistScore2(){
+        float average = bigRanking.getCode() / 100f;
+        int max = (int) average;
+
+        for (Song s : bigRanking){
+            if (s.getPopularity() > max){
+                max = s.getPopularity();
+                double delta = s.getPopularity() - average;
+                for (String artist : s.getArtists().split(", ")){
+                    ArtistDirectory a = library.getArtistByName(artist);
+                    a.incrementScore(delta);
+                }
+            }
+        }
     }
 
     private void initRanking(){
@@ -251,11 +266,12 @@ public class StatsFrame extends AppFrame {
         bigRanking.updateAllStatus(rankingToCompare);
 
         // Step 5: build and show UI
+        library = Library.getInstance();
         buildTable();
 
         // Step 6: show songs that left the chart
-        if (showSummary)
-            CommonUtils.summary(bigRanking, rankingToCompare, apiUtils);
+        if (showSummary) new Thread(() ->
+                CommonUtils.summary(bigRanking, rankingToCompare, apiUtils)).start();
     }
 
     private void startPlayback(){
@@ -267,6 +283,7 @@ public class StatsFrame extends AppFrame {
     private void buildTable(){
         player.setString("Loading ranking...");
         int i = 0;
+        float average = bigRanking.getCode() / 100f;
 
         for (Song s : bigRanking){
             if (s.getStatus() == Status.NEW){
@@ -280,7 +297,15 @@ public class StatsFrame extends AppFrame {
             }
 
             if (s.isRepeated()) {
-                System.out.println(s + " is repeated");
+                //System.out.println(s + " is repeated");
+                double multiplier = Math.sqrt(s.getPopularity() / average);
+                for (String artist : s.getArtists().split(", ")){
+                    ArtistDirectory a = library.getArtistByName(artist);
+                    a.multiplyScore(multiplier);
+                }
+            }
+
+            if (bigRanking.getCode() % s.getRank() == 0){
                 int row = s.getRank()-1;
                 if (row % 2 == 0) model.setRowColor(row,
                         s.getPopularityStatus().getTablePairColor());
@@ -314,25 +339,16 @@ public class StatsFrame extends AppFrame {
         column.setPreferredWidth(50);
         column.setHeaderValue("Cover");
 
+        ImageIcon[] coversImages = new ImageIcon[bigRanking.size()];
+
+        for (int i=0; i<bigRanking.size(); i++){
+            coversImages[i] = CommonUtils.downloadImage(bigRanking.get(i).getImageUrl(),50);
+        }
+
         SwingUtilities.invokeLater(() -> {
-            ImageIcon[] coversImages = new ImageIcon[bigRanking.size()];
-            table.setEnabled(false);
-            //super.setEnabled(false);
-            super.setTitle("Please wait...");
-
-            for (int i=0; i<bigRanking.size(); i++){
-                coversImages[i] = CommonUtils.downloadImage(bigRanking.get(i).getImageUrl(),50);
-            }
-
             table.addColumn(column);
             model.addColumn(column.getHeaderValue().toString(), coversImages);
             table.moveColumn(table.getColumnCount()-1, 1);
-            table.setEnabled(true);
-            //super.setEnabled(true);
-            super.setTitle("Done");
-
-            if (!playbackService.isRunning())
-                startPlayback();
         });
     }
 

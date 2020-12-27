@@ -1,5 +1,6 @@
 package cs10.apps.web.statsforspotify.view;
 
+import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
 
 import javax.swing.*;
@@ -67,5 +68,20 @@ public class OptionPanes {
     public static void message(String str){
         JOptionPane.showMessageDialog(null, str,
                 PersonalChartApp.APP_NAME, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public static void inputUsername(AppOptions appOptions){
+        String input = JOptionPane.showInputDialog(null,
+                "Enter your LastFM username",
+                PersonalChartApp.APP_NAME,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (input != null && input.trim().length() > 0){
+            if (input.contains(" ")) message("No blanks allowed");
+            else {
+                appOptions.setLastFmUser(input);
+                message("Done! Peak Label will be Scrobbles Label now");
+            }
+        }
     }
 }

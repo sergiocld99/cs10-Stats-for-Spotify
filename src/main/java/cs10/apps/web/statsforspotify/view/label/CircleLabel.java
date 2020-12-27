@@ -31,10 +31,8 @@ public class CircleLabel extends JLabel {
 
     public void setValue(int value) {
         this.value = value;
-        if (value <= 0){
-            System.out.println("CL || Empty value for " + title);
-            setVisible(false);
-        } else setVisible(true);
+        if (value <= 0) setVisible(false);
+        else setVisible(true);
     }
 
     public void setAverage(int average) {

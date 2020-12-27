@@ -73,11 +73,15 @@ public class StatsFrame extends AppFrame {
         JMenuItem jmiSave = new JMenuItem("Save");
         JMenuItem jmiSaveAs = new JMenuItem("Save As...");
         JMenu viewMenu = new JMenu("View");
-        JMenuItem jmiAlbumCovers = new JMenuItem("Ranking Album Covers");
         JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
         JMenuItem jmiLocalTop100 = new JMenuItem("Local Top 100 Artists");
         JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
         JMenuItem jmiDailyMixes = new JMenuItem("Current Daily Mixes Stats");
+        JMenu optionsMenu = new JMenu("Options");
+        JMenuItem jmiAlbumCovers = new JMenuItem("Toggle Album Covers");
+        JMenuItem jmiLastFmUser = new JMenuItem("Last FM Username");
+        JMenu helpMenu = new JMenu("Help");
+
         jmiOpen.addActionListener(e -> openRankingsWindow());
         jmiSave.addActionListener(e -> System.out.println("Save pressed"));
         jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
@@ -86,23 +90,26 @@ public class StatsFrame extends AppFrame {
         jmiLocalTop100.addActionListener(e -> openLocalTop100());
         jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
         jmiDailyMixes.addActionListener(e -> openCurrentDailyMixesStats());
+        jmiLastFmUser.addActionListener(e -> OptionPanes.inputUsername(appOptions));
+        helpMenu.addActionListener(e -> System.out.println("Help pressed"));
+
         fileMenu.add(jmiOpen);
         fileMenu.add(jmiSave);
         fileMenu.add(jmiSaveAs);
-        viewMenu.add(jmiAlbumCovers);
         viewMenu.add(jmiLocalTop10);
         viewMenu.add(jmiLocalTop100);
         viewMenu.add(jmiCurrentCollab);
         viewMenu.add(jmiDailyMixes);
-        JMenu helpMenu = new JMenu("Help");
-        helpMenu.addActionListener(e -> System.out.println("Help pressed"));
+        optionsMenu.add(jmiAlbumCovers);
+        optionsMenu.add(jmiLastFmUser);
         menuBar.add(fileMenu);
         menuBar.add(viewMenu);
+        menuBar.add(optionsMenu);
         menuBar.add(helpMenu);
 
         // Player Panel
         JPanel playerPanel = new JPanel();
-        player = new CustomPlayer(70);
+        player = new CustomPlayer(70, appOptions);
         JButton aqButton = new JButton("AutoQueue (Premium)");
         playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
         playerPanel.add(player);

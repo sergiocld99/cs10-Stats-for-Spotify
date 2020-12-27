@@ -5,9 +5,20 @@ import java.awt.*;
 public class PeakLabel extends CircleLabel {
 
     public PeakLabel(){
-        super("Track Peak", true);
+        super("--", true);
         setVisible(false);
+    }
+
+    public void changeToPeak(){
+        setTitle("Track Peak");
+        setInverted(true);
         setAverage(1);
+    }
+
+    public void changeToLastFM(){
+        setTitle("Scrobbles");
+        setInverted(false);
+        setAverage(50);
     }
 
     @Override

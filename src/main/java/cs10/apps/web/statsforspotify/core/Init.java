@@ -44,8 +44,13 @@ public class Init {
 
         boolean showSummary = false;
         long[] savedCodes = IOUtils.getSavedRankingCodes(userId);
-        if (apiRanking.getCode() > 0 && apiRanking.getCode() != savedCodes[1]){
-            IOUtils.updateRankingCodes(savedCodes[1], apiRanking.getCode(), userId);
+        long actualCode = apiRanking.getCode();
+
+        System.out.println("Actual Code is " + actualCode);
+        System.out.println("Saved Code is " + savedCodes[1]);
+
+        if (actualCode > 0 && actualCode != savedCodes[1]){
+            IOUtils.updateRankingCodes(savedCodes[1], actualCode, userId);
             IOUtils.save(apiRanking, true);
             library.update(apiRanking);
             showSummary = true;

@@ -1,34 +1,17 @@
 package cs10.apps.web.statsforspotify.core;
 
-import cs10.apps.web.statsforspotify.app.Private;
-import de.umass.lastfm.Track;
-import de.umass.lastfm.User;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 
 public class LastFmIntegration {
 
-    public static void main(String[] args) {
-        String key = Private.LAST_FM_API_KEY;
-        String user = "cs10_sergiocarp";
-
-        Track track = getNowPlayingTrack(user, key);
-        int count = getPlayCount(track.getArtist(), track.getName(), user, key);
-        if (count <= 0) count = getPlayCount(track.getId(), user, key);
-        System.out.println(track.getName() + ": " + count);
-    }
-
-    public static Track getNowPlayingTrack(String user, String key){
-        Collection<Track> tracks = User.getRecentTracks(user, 1, 1, key).getPageResults();
-        return tracks.iterator().next();
-    }
-
     public static int getPlayCount(String artistName, String trackName, String user, String key){
+        if (user == null || user.isEmpty()) return -1;
+
         String baseUrl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=";
         String url = baseUrl + key + "&artist=" + replaceBlank(artistName) +
                 "&track=" + replaceBlank(trackName) +
@@ -37,9 +20,13 @@ public class LastFmIntegration {
         try {
             String source = readJsonFromUrl(url);
             JSONObject jsonObject = new JSONObject(source);
-            return jsonObject.getJSONObject("track").getInt("userplaycount");
+            JSONObject track = jsonObject.getJSONObject("track");
+            System.out.println(track.getString("name"));
+            System.out.println("Listeners: " + track.getInt("listeners"));
+            System.out.println("Streams: " + track.getInt("playcount"));
+            return track.getInt("userplaycount");
         } catch (Exception e){
-            e.printStackTrace();
+            System.err.println("No data found for " + trackName);
         }
 
         return -1;
@@ -55,14 +42,14 @@ public class LastFmIntegration {
             JSONObject jsonObject = new JSONObject(source);
             return jsonObject.getJSONObject("track").getInt("userplaycount");
         } catch (Exception e){
-            e.printStackTrace();
+            System.err.println("No data found for " + musicBrainzID);
         }
 
         return -1;
     }
 
     private static String replaceBlank(String str){
-        return str.replace(" ", "%20%").toLowerCase();
+        return str.replace(" ", "+").toLowerCase();
     }
 
     public static String readJsonFromUrl(String url) throws IOException, JSONException {

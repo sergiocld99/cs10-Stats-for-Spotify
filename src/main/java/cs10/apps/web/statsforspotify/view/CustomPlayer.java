@@ -2,7 +2,10 @@ package cs10.apps.web.statsforspotify.view;
 
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
+import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
+import cs10.apps.web.statsforspotify.app.Private;
+import cs10.apps.web.statsforspotify.core.LastFmIntegration;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.io.SongFile;
@@ -18,14 +21,17 @@ import java.text.DecimalFormat;
 public class CustomPlayer extends JPanel {
     private final DecimalFormat decimalFormat = new DecimalFormat("#00");
     private final CustomThumbnail thumbnail;
-    private final CircleLabel popularityLabel, peakLabel;
+    private final CircleLabel popularityLabel;
     private final ScoreLabel scoreLabel;
+    private final PeakLabel peakLabel;
     private final JProgressBar progressBar;
+    private final AppOptions appOptions;
     private String currentSongId;
     private Library library;
     private int average;
 
-    public CustomPlayer(int thumbSize) {
+    public CustomPlayer(int thumbSize, AppOptions appOptions) {
+        this.appOptions = appOptions;
         this.thumbnail = new CustomThumbnail(thumbSize);
         this.popularityLabel = new PopularityLabel();
         this.scoreLabel = new ScoreLabel();
@@ -114,7 +120,26 @@ public class CustomPlayer extends JPanel {
 
         this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
-        this.peakLabel.setValue(songFile == null ? 0 : songFile.getPeak().getChartPosition());
+        this.peakLabel.setValue(0);
+
+        new Thread(() -> {
+            //int playCount = LastFmIntegration.getLastFmCount();
+            int playCount = LastFmIntegration.getPlayCount(
+                    track.getArtists()[0].getName(), track.getName(),
+                    appOptions.getLastFmUser(), Private.LAST_FM_API_KEY);
+            if (playCount > 0) {
+                peakLabel.changeToLastFM();
+                peakLabel.setValue(playCount);
+                peakLabel.repaint();
+            } else if (songFile != null){
+                peakLabel.changeToPeak();
+                peakLabel.setValue(songFile.getPeak().getChartPosition());
+                peakLabel.repaint();
+            } else peakLabel.setValue(0);
+        }).start();
+
+        //this.peakLabel.setValue(LastFmIntegration.getLastFmCount());
+        //this.peakLabel.setValue(songFile == null ? 0 : songFile.getPeak().getChartPosition());
 
         if (previousPop > 0 && track.getPopularity() < previousPop){
             changeProgressColor(Color.orange);

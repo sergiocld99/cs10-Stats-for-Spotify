@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="de.u-mass:lastfm-java:0.1.2" type="repository">
+    <properties maven-id="de.u-mass:lastfm-java:0.1.2" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/de/u-mass/lastfm-java/0.1.2/lastfm-java-0.1.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

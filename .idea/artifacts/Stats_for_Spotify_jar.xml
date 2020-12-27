@@ -3,7 +3,7 @@
     <output-path>$PROJECT_DIR$/jar</output-path>
     <root id="archive" name="Stats for Spotify.jar">
       <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/src/cs10/apps/web/META-INF/MANIFEST.MF" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/java/cs10/apps/web/META-INF/MANIFEST.MF" />
       </element>
       <element id="module-output" name="Stats for Spotify" />
       <element id="extracted-dir" path="$PROJECT_DIR$/okio-2.9.0.jar" path-in-jar="/" />

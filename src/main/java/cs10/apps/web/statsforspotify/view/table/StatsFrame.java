@@ -159,10 +159,12 @@ public class StatsFrame extends AppFrame {
         else {
             AutoPlayService autoPlayService = new AutoPlayService(bigRanking, apiUtils, autoPlayButton);
             autoPlayButton.addActionListener(e -> {
-                if (playbackService.isRunning()){
+                apiUtils.playThis(bigRanking.getRandomElement().getId(), true);
+                //if (playbackService.isRunning()){
                     autoPlayService.execute();
                     playbackService.setCanSkip(false);
-                } else OptionPanes.message("Please, play something before");
+                    playbackService.run();
+                //} else OptionPanes.message("Please, play something before");
             });
         }
 

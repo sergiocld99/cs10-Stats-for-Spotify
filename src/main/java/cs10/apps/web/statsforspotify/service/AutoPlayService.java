@@ -59,7 +59,7 @@ public class AutoPlayService {
 
                 int time = ranking.get(i+minIndex).getPopularity() * offset;
                 apiUtils.playThis(ranking.get(i+minIndex).getId(), false);
-                if (minCount % 3 == 1) apiUtils.autoQueue(ranking, null);
+                apiUtils.autoQueue(ranking, null);
 
                 try {
                     TimeUnit.SECONDS.sleep(time);

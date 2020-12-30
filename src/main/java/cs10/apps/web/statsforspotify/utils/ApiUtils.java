@@ -16,20 +16,19 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
-import org.apache.hc.core5.http.ParseException;
 
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class ApiUtils {
     private final SpotifyApi spotifyApi;
     private final Random random;
+    private ArrayList<Track> missedTracks;
     private final boolean ready;
 
     // This URI should equal to the saved URI on the App Dashboard
@@ -108,12 +107,24 @@ public class ApiUtils {
         Track[] tracks1;
         TrackSimplified t2;
 
+        if (missedTracks != null && missedTracks.size() > 1){
+            try {
+                spotifyApi.addItemToUsersPlaybackQueue(missedTracks.remove(0).getUri()).build().execute();
+                spotifyApi.addItemToUsersPlaybackQueue(missedTracks.remove(0).getUri()).build().execute();
+                System.out.println("Missed tracks enqueued!");
+            } catch (Exception e){
+                Maintenance.writeErrorFile(e, true);
+            }
+            return null;
+        }
+
         try {
             Recommendations r = getRecommendations(song1.getId(), song2.getId(),
                     (current == null) ? ranking.getRandomElement().getId() : current.getId());
             t2 = r.getTracks()[random.nextInt(r.getTracks().length)];
             tracks1 = spotifyApi.getArtistsTopTracks(t2.getArtists()[0].getId(), CountryCode.AR)
                     .build().execute();
+            System.out.println(Arrays.toString(tracks1));
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
             return null;
@@ -202,6 +213,9 @@ public class ApiUtils {
             result = new Track[tracks1.length + mostPopularIndex2 + 1];
             System.arraycopy(tracks1, 0, result, 0, tracks1.length);
             System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
+            missedTracks = new ArrayList<>();
+            missedTracks.addAll(Arrays.asList(tracks2).subList(mostPopularIndex2 + 1, tracks2.length));
+            Collections.shuffle(missedTracks);
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
         }

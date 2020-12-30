@@ -115,5 +115,6 @@
     <orderEntry type="library" name="org.jsoup:jsoup:1.13.1" level="project" />
     <orderEntry type="library" name="de.u-mass:lastfm-java:0.1.2" level="project" />
     <orderEntry type="library" name="org.json:json:20201115" level="project" />
+    <orderEntry type="library" name="org.jfree:jfreechart:1.5.1" level="project" />
   </component>
 </module>

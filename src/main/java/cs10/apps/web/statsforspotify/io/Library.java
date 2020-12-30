@@ -123,7 +123,13 @@ public class Library {
         }
     }
 
-    public int getRankingsAmount() {
-        return rankingsAmount;
+    public int getSongCount(){
+        int count = 0;
+
+        for (ArtistDirectory a : artistDirectories){
+            count += a.getSongCount();
+        }
+
+        return count;
     }
 }

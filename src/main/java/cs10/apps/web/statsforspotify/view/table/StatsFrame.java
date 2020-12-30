@@ -1,6 +1,7 @@
 package cs10.apps.web.statsforspotify.view.table;
 
 import com.wrapper.spotify.model_objects.specification.Track;
+import com.wrapper.spotify.model_objects.specification.User;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
@@ -23,8 +24,10 @@ import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.CustomPlayer;
 import cs10.apps.web.statsforspotify.view.CustomTableCellRenderer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
+import cs10.apps.web.statsforspotify.view.chart.SongChartHistoryView;
 import cs10.apps.web.statsforspotify.view.histogram.ArtistFrame;
 import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
+import cs10.apps.web.statsforspotify.view.label.CustomThumbnail;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -73,9 +76,15 @@ public class StatsFrame extends AppFrame {
         JPanel playerPanel = new JPanel();
         player = new CustomPlayer(70, appOptions);
         JButton autoPlayButton = new JButton("AutoPlay (Premium)");
+        JLabel textAboveButton = new JLabel("Loading...", JLabel.CENTER);
+
         playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
         playerPanel.add(player);
-        playerPanel.add(autoPlayButton);
+        JPanel autoPlayPanel = new JPanel(new GridLayout(2,1));
+        textAboveButton.setFont(new Font("Arial",Font.BOLD,10));
+        autoPlayPanel.add(textAboveButton);
+        autoPlayPanel.add(autoPlayButton);
+        playerPanel.add(autoPlayPanel);
 
         // Table
         String[] columnNames = new String[]{"Status", "Rank", "Change",
@@ -129,6 +138,7 @@ public class StatsFrame extends AppFrame {
 
         bigRanking = init.getProcessedRanking();
         library = init.getLibrary();
+        textAboveButton.setText(library.getSongCount() + " songs in your charts");
 
         // When ranking is totally loaded
         buildTable();
@@ -160,7 +170,10 @@ public class StatsFrame extends AppFrame {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() != 2) return;
+                if (e.getClickCount() != 2){
+                    openSongChartHistory();
+                    return;
+                }
 
                 if (apiUtils.playThis(bigRanking.get(table.getSelectedRow()).getId(), true)){
                     playbackService.setCanSkip(false);
@@ -453,5 +466,17 @@ public class StatsFrame extends AppFrame {
             artistFrame.init();
             setTitle("Done");
         }, "Open Artist Window").start();
+    }
+
+    private void openSongChartHistory(){
+        SwingUtilities.invokeLater(() -> {
+            Song selected = bigRanking.get(table.getSelectedRow());
+            SongChartHistoryView view = new SongChartHistoryView(
+                    library, selected.getMainArtist(), selected.getId());
+
+            view.init();
+            view.setSize(1000,500);
+            view.setVisible(true);
+        });
     }
 }

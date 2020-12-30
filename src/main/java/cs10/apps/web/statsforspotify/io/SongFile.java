@@ -99,6 +99,10 @@ public class SongFile {
         return popularitySumByRank;
     }
 
+    public String getArtistName(){
+        return file.getParentFile().getName();
+    }
+
     @Override
     public String toString() {
         return getTrackName() + " - Peak: " + getPeak().getChartPosition();

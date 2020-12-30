@@ -9,7 +9,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +32,8 @@ public class LastFmIntegration {
     public static double analyzeFanaticism(Song song, String user){
         String baseUrl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=";
         String url = baseUrl + Private.LAST_FM_API_KEY + "&artist=" +
-                replaceBlank(song.getArtists().split(", ")[0]) +
-                "&track=" + replaceBlank(song.getName()) +
+                normalize(song.getArtists().split(", ")[0]) +
+                "&track=" + normalize(song.getName()) +
                 "&username=" + user + "&format=json";
 
         try {
@@ -54,8 +56,8 @@ public class LastFmIntegration {
 
         String baseUrl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=";
         String url = baseUrl + Private.LAST_FM_API_KEY + "&artist=" +
-                replaceBlank(nowPlayingTrack.getArtists()[0].getName()) +
-                "&track=" + replaceBlank(nowPlayingTrack.getName()) +
+                normalize(nowPlayingTrack.getArtists()[0].getName()) +
+                "&track=" + normalize(nowPlayingTrack.getName()) +
                 "&username=" + user + "&format=json";
 
         try {
@@ -70,8 +72,8 @@ public class LastFmIntegration {
         return -1;
     }
 
-    private static String replaceBlank(String str){
-        return str.replace(" ", "+").toLowerCase();
+    private static String normalize(String str){
+        return str.replace(" ", "+").replace("&","%26").toLowerCase();
     }
 
     public static String readJsonFromUrl(String url) throws IOException, JSONException {

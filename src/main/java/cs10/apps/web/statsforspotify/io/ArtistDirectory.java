@@ -91,6 +91,10 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
         return file;
     }
 
+    public int getSongCount(){
+        return songFiles.size();
+    }
+
     @Override
     public int compareTo(ArtistDirectory o) {
         return Float.compare(o.getArtistScore(), artistScore);

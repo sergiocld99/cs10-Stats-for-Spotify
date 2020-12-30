@@ -140,7 +140,11 @@ public class IOUtils {
         else return files.length;
     }
 
-    private static String getRankingDate(String code){
+    public static String getRankingDate(int code){
+        return getRankingDate(String.valueOf(code));
+    }
+
+    public static String getRankingDate(String code){
         String filename = RANKING_FOLDER+"//"+ code;
         String date = null;
 

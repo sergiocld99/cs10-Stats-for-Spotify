@@ -1,3 +1,0 @@
-Manifest-Version: 1.0
-Main-Class: cs10.apps.web.statsforspotify.Test
-

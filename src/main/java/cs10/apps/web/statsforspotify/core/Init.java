@@ -26,8 +26,10 @@ public class Init {
 
     public void execute(){
         long startTime = System.currentTimeMillis();
-        Thread apiThread = new Thread(() -> apiRanking = selectCustomRankingFromAPI());
-        Thread libraryThread = new Thread(() -> library = Library.getInstance());
+        Thread apiThread = new Thread(() ->
+                apiRanking = selectCustomRankingFromAPI(), "Build Ranking from API");
+        Thread libraryThread = new Thread(() ->
+                library = Library.getInstance(), "Get Instance of Library");
 
         apiThread.start();
         libraryThread.start();
@@ -62,7 +64,8 @@ public class Init {
         library.analyze();
 
         if (showSummary) new Thread(() ->
-                CommonUtils.summary(apiRanking, diskRanking, apiUtils)).start();
+                CommonUtils.summary(apiRanking, diskRanking, apiUtils),
+                "Summary of New Ranking").start();
 
         System.out.println("Init -- " + (System.currentTimeMillis() - startTime) + " ms");
     }

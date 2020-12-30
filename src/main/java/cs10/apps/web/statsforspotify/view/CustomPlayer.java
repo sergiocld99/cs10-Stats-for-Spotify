@@ -1,12 +1,9 @@
 package cs10.apps.web.statsforspotify.view;
 
-import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
-import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.core.LastFmIntegration;
-import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.io.SongFile;
 import cs10.apps.web.statsforspotify.model.Collab;
@@ -92,7 +89,7 @@ public class CustomPlayer extends JPanel {
      */
     public boolean setTrack(Track track){
         if (track == null) throw new DevelopException(this);
-        currentSongId = track.getId();
+        peakLabel.changeToPeak();
 
         if (track.getAlbum().getImages().length > 0){
             this.thumbnail.setCover(track.getAlbum().getImages()[0].getUrl());
@@ -120,23 +117,14 @@ public class CustomPlayer extends JPanel {
 
         this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
-        this.peakLabel.setValue(0);
+        this.peakLabel.setValue(-1);
 
-        new Thread(() -> {
-            //int playCount = LastFmIntegration.getLastFmCount();
-            int playCount = LastFmIntegration.getPlayCount(
-                    track.getArtists()[0].getName(), track.getName(),
-                    appOptions.getLastFmUser(), Private.LAST_FM_API_KEY);
-            if (playCount > 0) {
-                peakLabel.changeToLastFM();
-                peakLabel.setValue(playCount);
-                peakLabel.repaint();
-            } else if (songFile != null){
-                peakLabel.changeToPeak();
-                peakLabel.setValue(songFile.getPeak().getChartPosition());
-                peakLabel.repaint();
-            } else peakLabel.setValue(0);
-        }).start();
+        if (songFile != null){
+            peakLabel.changeToPeak();
+            peakLabel.setAverage(average / 3);
+            peakLabel.setValue(songFile.getPeak().getChartPosition());
+            peakLabel.repaint();
+        } else peakLabel.setValue(0);
 
         //this.peakLabel.setValue(LastFmIntegration.getLastFmCount());
         //this.peakLabel.setValue(songFile == null ? 0 : songFile.getPeak().getChartPosition());
@@ -156,22 +144,38 @@ public class CustomPlayer extends JPanel {
         this.progressBar.setValue(value);
     }
 
-    public void setTime(int value){
-        this.setProgress(value);
-        int seconds = value % 60;
-        int minutes = value / 60;
+    public void setTime(int timeInSeconds){
+        this.setProgress(timeInSeconds);
+        int seconds = timeInSeconds % 60;
+        int minutes = timeInSeconds / 60;
         progressBar.setString(minutes + ":" + decimalFormat.format(seconds));
+
+        if (peakLabel.isMinutes()){
+            peakLabel.updateMinutes(timeInSeconds);
+        }
+    }
+
+    public void setCurrentSongId(String currentSongId) {
+        this.currentSongId = currentSongId;
     }
 
     public String getCurrentSongId() {
         return currentSongId == null ? "" : currentSongId;
     }
 
-    public int getArtistScore(){
-        return scoreLabel.getValue();
-    }
-
     public void changeProgressColor(Color color){
         this.progressBar.setForeground(color);
+    }
+
+    public AppOptions getAppOptions() {
+        return appOptions;
+    }
+
+    public PeakLabel getPeakLabel() {
+        return peakLabel;
+    }
+
+    public int getAverage() {
+        return average;
     }
 }

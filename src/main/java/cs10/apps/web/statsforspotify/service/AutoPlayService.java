@@ -1,17 +1,14 @@
 package cs10.apps.web.statsforspotify.service;
 
-import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.model.BigRanking;
-import cs10.apps.web.statsforspotify.model.PopularityStatus;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
-import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-public class AutoQueueService {
+public class AutoPlayService {
     private final BigRanking ranking;
     private final ApiUtils apiUtils;
     private final JButton button;
@@ -19,7 +16,7 @@ public class AutoQueueService {
 
     private int lastTracksPercentage;
 
-    public AutoQueueService(BigRanking originalRanking, ApiUtils apiUtils, JButton button) {
+    public AutoPlayService(BigRanking originalRanking, ApiUtils apiUtils, JButton button) {
         this.apiUtils = apiUtils;
         this.button = button;
 
@@ -31,7 +28,7 @@ public class AutoQueueService {
         if (thread == null || !thread.isAlive()) {
             Collections.shuffle(ranking);
             lastTracksPercentage = apiUtils.analyzeRecentTracks();
-            thread = new Thread(new HardAutoQueueRunnable(), "AutoQueue Service");
+            thread = new Thread(new AutoPlayRunnable(), "AutoQueue Service");
             thread.start();
             OptionPanes.message(thread.getName() + " is running now");
         } else {
@@ -40,7 +37,7 @@ public class AutoQueueService {
         }
     }
 
-    private class HardAutoQueueRunnable implements Runnable {
+    private class AutoPlayRunnable implements Runnable {
 
         @Override
         public void run() {
@@ -62,10 +59,9 @@ public class AutoQueueService {
 
                 int time = ranking.get(i+minIndex).getPopularity() * offset;
                 apiUtils.playThis(ranking.get(i+minIndex).getId(), false);
-                apiUtils.autoQueue(ranking, null);
+                if (minCount % 3 == 1) apiUtils.autoQueue(ranking, null);
 
                 try {
-                    System.out.println("AQ || Sleeping for " + time + " seconds");
                     TimeUnit.SECONDS.sleep(time);
                 } catch (InterruptedException e){
                     e.printStackTrace();
@@ -73,7 +69,7 @@ public class AutoQueueService {
                 }
             }
 
-            button.setText("AutoQueue (Premium)");
+            button.setText("AutoPlay (Premium)");
             button.setEnabled(true);
         }
     }

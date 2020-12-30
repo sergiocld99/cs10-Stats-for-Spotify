@@ -6,13 +6,6 @@
         <element id="file-copy" path="$PROJECT_DIR$/src/main/java/cs10/apps/web/META-INF/MANIFEST.MF" />
       </element>
       <element id="module-output" name="Stats for Spotify" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/okio-2.9.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/jsoup-1.13.1.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/kotlin-stdlib-jdk7-1.4.10.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/kotlin-stdlib-jdk8-1.4.10.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/converter-gson-2.9.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/retrofit-2.9.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/annotations-13.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/se/michaelthelin/spotify/spotify-web-api-java/6.4.1/spotify-web-api-java-6.4.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-databind/2.11.2/jackson-databind-2.11.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-annotations/2.11.2/jackson-annotations-2.11.2.jar" path-in-jar="/" />
@@ -25,10 +18,9 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/httpcomponents/core5/httpcore5-h2/5.0.2/httpcore5-h2-5.0.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.13/commons-codec-1.13.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/okhttp-urlconnection-4.10.0-RC1.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/gson-2.8.6.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/okhttp-4.10.0-RC1.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/kotlin-stdlib-1.4.10.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/jsoup/jsoup/1.13.1/jsoup-1.13.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/json/json/20201115/json-20201115.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/de/u-mass/lastfm-java/0.1.2/lastfm-java-0.1.2.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

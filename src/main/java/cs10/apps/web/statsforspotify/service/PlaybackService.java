@@ -4,12 +4,15 @@ import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
+import cs10.apps.web.statsforspotify.core.LastFmIntegration;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.CustomPlayer;
+import cs10.apps.web.statsforspotify.view.label.PeakLabel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -65,7 +68,6 @@ public class PlaybackService implements Runnable {
     private void getCurrentData() {
         requestsCount++;
 
-        System.out.println("PS || Request #" + requestsCount);
         CurrentlyPlaying currentlyPlaying = apiUtils.getCurrentSong();
 
         if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
@@ -89,17 +91,16 @@ public class PlaybackService implements Runnable {
                     frame.setVisible(true);
             }
 
-            /*if (requestsCount % QUEUE_RATE == QUEUE_RATE / 2){
-                attemptQueue(track);
-            }*/
-
             // Check current
             if (player.getCurrentSongId().equals(track.getId())){
                 time = currentlyPlaying.getProgress_ms() / 1000;
                 switch (requestsCount % 3){
                     case 0:
-                        frame.setTitle(track.getName().split(" \\(")[0]
-                                + " (P: " + track.getPopularity() + ")");
+                        if (track.getPopularity() > 9)
+                            frame.setTitle(track.getName().split(" \\(")[0]
+                                    + " (P: " + track.getPopularity() + ")");
+                        else frame.setTitle(track.getName() + " (" +
+                                track.getAlbum().getAlbumType().getType() + ")");
                         return;
                     case 1:
                         String year = track.getAlbum().getReleaseDate().split("-")[0];
@@ -114,8 +115,10 @@ public class PlaybackService implements Runnable {
             }
 
             System.out.println("Updating Custom Player...");
+            player.setCurrentSongId(track.getId());
             boolean isBecomingUnpopular = player.setTrack(track);
             boolean isRecommended = checkRecommended(track);
+            this.attemptGetMinutes(track);
 
             if (!isRecommended){
                 if (canSkip && isBecomingUnpopular){
@@ -155,6 +158,7 @@ public class PlaybackService implements Runnable {
             progressScheduler.scheduleAtFixedRate(() -> {
                 player.setTime(time);
                 if (time >= maximum || !running){
+                    player.setCurrentSongId("--");
                     progressScheduler.shutdown();
                     getCurrentData();
                 } else time++;
@@ -207,5 +211,25 @@ public class PlaybackService implements Runnable {
 
     public void setCanSkip(boolean canSkip) {
         this.canSkip = canSkip;
+    }
+
+    private void attemptGetMinutes(Track track){
+        AppOptions appOptions = player.getAppOptions();
+        PeakLabel peakLabel = player.getPeakLabel();
+
+        new Thread(() -> {
+            //int playCount = LastFmIntegration.getLastFmCount();
+            int playCount = LastFmIntegration.getPlayCount(track, appOptions.getLastFmUser());
+            if (playCount > 0) {
+                int averageTime = player.getAverage() * 3;
+                float minutes = playCount * track.getDurationMs() / 60000f;
+                peakLabel.changeToLastFM(minutes, playCount, averageTime);
+                //peakLabel.repaint();
+
+                if (minutes > 100 && minutes < averageTime){
+                    apiUtils.enqueueTwoTracksOfTheSameAlbum(track);
+                }
+            }
+        }, "Set Minutes Label").start();
     }
 }

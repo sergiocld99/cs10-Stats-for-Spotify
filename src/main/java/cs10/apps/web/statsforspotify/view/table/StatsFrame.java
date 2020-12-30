@@ -14,7 +14,7 @@ import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.SimpleRanking;
 import cs10.apps.web.statsforspotify.model.TopTerms;
-import cs10.apps.web.statsforspotify.service.AutoQueueService;
+import cs10.apps.web.statsforspotify.service.AutoPlayService;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
@@ -57,7 +57,7 @@ public class StatsFrame extends AppFrame {
 
     public void init() {
         init = new Init(apiUtils);
-        Thread initThread = new Thread(() -> init.execute());
+        Thread initThread = new Thread(() -> init.execute(), "Init Thread");
         initThread.start();
 
         setTitle(PersonalChartApp.APP_AUTHOR + " - " +
@@ -67,61 +67,21 @@ public class StatsFrame extends AppFrame {
         setSize(1000, 600);
 
         // Menu Bar
-        JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
-        JMenuItem jmiOpen = new JMenuItem("Open...");
-        JMenuItem jmiSave = new JMenuItem("Save");
-        JMenuItem jmiSaveAs = new JMenuItem("Save As...");
-        JMenu viewMenu = new JMenu("View");
-        JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
-        JMenuItem jmiLocalTop100 = new JMenuItem("Local Top 100 Artists");
-        JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
-        JMenuItem jmiDailyMixes = new JMenuItem("Current Daily Mixes Stats");
-        JMenu optionsMenu = new JMenu("Options");
-        JMenuItem jmiAlbumCovers = new JMenuItem("Toggle Album Covers");
-        JMenuItem jmiLastFmUser = new JMenuItem("Last FM Username");
-        JMenu helpMenu = new JMenu("Help");
-
-        jmiOpen.addActionListener(e -> openRankingsWindow());
-        jmiSave.addActionListener(e -> System.out.println("Save pressed"));
-        jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
-        jmiAlbumCovers.addActionListener(e -> changeAlbumCoversOption());
-        jmiLocalTop10.addActionListener(e -> openLocalTop10());
-        jmiLocalTop100.addActionListener(e -> openLocalTop100());
-        jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
-        jmiDailyMixes.addActionListener(e -> openCurrentDailyMixesStats());
-        jmiLastFmUser.addActionListener(e -> OptionPanes.inputUsername(appOptions));
-        helpMenu.addActionListener(e -> System.out.println("Help pressed"));
-
-        fileMenu.add(jmiOpen);
-        fileMenu.add(jmiSave);
-        fileMenu.add(jmiSaveAs);
-        viewMenu.add(jmiLocalTop10);
-        viewMenu.add(jmiLocalTop100);
-        viewMenu.add(jmiCurrentCollab);
-        viewMenu.add(jmiDailyMixes);
-        optionsMenu.add(jmiAlbumCovers);
-        optionsMenu.add(jmiLastFmUser);
-        menuBar.add(fileMenu);
-        menuBar.add(viewMenu);
-        menuBar.add(optionsMenu);
-        menuBar.add(helpMenu);
+        JMenuBar menuBar = getCustomMenuBar();
 
         // Player Panel
         JPanel playerPanel = new JPanel();
         player = new CustomPlayer(70, appOptions);
-        JButton aqButton = new JButton("AutoQueue (Premium)");
+        JButton autoPlayButton = new JButton("AutoPlay (Premium)");
         playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
         playerPanel.add(player);
-        playerPanel.add(aqButton);
+        playerPanel.add(autoPlayButton);
 
         // Table
         String[] columnNames = new String[]{"Status", "Rank", "Change",
                 "Song Name", "Artists", "Popularity"};
 
         model = new CustomTableModel(columnNames, 0);
-        table = new JTable(model);
-
         table = new JTable(model) {
 
             @Override
@@ -176,7 +136,8 @@ public class StatsFrame extends AppFrame {
         player.enableLibrary();
 
         // Hard tasks
-        if (appOptions.isAlbumCovers()) new Thread(this::addAlbumCoversColumn).start();
+        if (appOptions.isAlbumCovers())
+            new Thread(this::addAlbumCoversColumn, "Load Album Covers").start();
         startPlayback();
 
         // Important for maintain order
@@ -184,12 +145,12 @@ public class StatsFrame extends AppFrame {
 
         // Set Listeners
         if (bigRanking.getRepeatedQuantity() < 5)
-            aqButton.setEnabled(false);
+            autoPlayButton.setEnabled(false);
         else {
-            AutoQueueService autoQueueService = new AutoQueueService(bigRanking, apiUtils, aqButton);
-            aqButton.addActionListener(e -> {
+            AutoPlayService autoPlayService = new AutoPlayService(bigRanking, apiUtils, autoPlayButton);
+            autoPlayButton.addActionListener(e -> {
                 if (playbackService.isRunning()){
-                    autoQueueService.execute();
+                    autoPlayService.execute();
                     playbackService.setCanSkip(false);
                 } else OptionPanes.message("Please, play something before");
             });
@@ -208,6 +169,52 @@ public class StatsFrame extends AppFrame {
                 } else openArtistWindow();
             }
         });
+    }
+
+    private JMenuBar getCustomMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem jmiOpen = new JMenuItem("Open...");
+        JMenuItem jmiSave = new JMenuItem("Save");
+        JMenuItem jmiSaveAs = new JMenuItem("Save As...");
+        JMenu viewMenu = new JMenu("View");
+        JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
+        JMenuItem jmiLocalTop100 = new JMenuItem("Local Top 100 Artists");
+        JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
+        JMenuItem jmiDailyMixes = new JMenuItem("Current Daily Mixes Stats");
+        JMenuItem jmiFanaticism = new JMenuItem("Current Fanaticism");
+        JMenu optionsMenu = new JMenu("Options");
+        JMenuItem jmiAlbumCovers = new JMenuItem("Toggle Album Covers");
+        JMenuItem jmiLastFmUser = new JMenuItem("Last FM Username");
+        JMenu helpMenu = new JMenu("Help");
+
+        jmiOpen.addActionListener(e -> openRankingsWindow());
+        jmiSave.addActionListener(e -> System.out.println("Save pressed"));
+        jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
+        jmiAlbumCovers.addActionListener(e -> changeAlbumCoversOption());
+        jmiLocalTop10.addActionListener(e -> openLocalTop10());
+        jmiLocalTop100.addActionListener(e -> openLocalTop100());
+        jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
+        jmiDailyMixes.addActionListener(e -> openCurrentDailyMixesStats());
+        jmiFanaticism.addActionListener(e -> openFanaticismWindow());
+        jmiLastFmUser.addActionListener(e -> OptionPanes.inputUsername(appOptions));
+        helpMenu.addActionListener(e -> System.out.println("Help pressed"));
+
+        fileMenu.add(jmiOpen);
+        fileMenu.add(jmiSave);
+        fileMenu.add(jmiSaveAs);
+        viewMenu.add(jmiLocalTop10);
+        viewMenu.add(jmiLocalTop100);
+        viewMenu.add(jmiCurrentCollab);
+        viewMenu.add(jmiDailyMixes);
+        viewMenu.add(jmiFanaticism);
+        optionsMenu.add(jmiAlbumCovers);
+        optionsMenu.add(jmiLastFmUser);
+        menuBar.add(fileMenu);
+        menuBar.add(viewMenu);
+        menuBar.add(optionsMenu);
+        menuBar.add(helpMenu);
+        return menuBar;
     }
 
     private void experimentalModifyArtistScore1() {
@@ -295,8 +302,10 @@ public class StatsFrame extends AppFrame {
         buildTable();
 
         // Step 6: show songs that left the chart
-        if (showSummary) new Thread(() ->
-                CommonUtils.summary(bigRanking, rankingToCompare, apiUtils)).start();
+        if (showSummary)
+            new Thread(() ->
+                CommonUtils.summary(bigRanking, rankingToCompare, apiUtils),
+                   "Summary of New Ranking").start();
     }
 
     private void startPlayback(){
@@ -397,7 +406,7 @@ public class StatsFrame extends AppFrame {
                 selectFrame.init();
             }
             setTitle("Done");
-        }).start();
+        }, "Open Rankings Window").start();
     }
 
     private void openLocalTop10(){
@@ -420,7 +429,15 @@ public class StatsFrame extends AppFrame {
             setTitle("Please wait...");
             apiUtils.analyzeDailyMixes();
             setTitle("Done");
-        }).start();
+        }, "Open Current Daily Mixes Stats").start();
+    }
+
+    private void openFanaticismWindow(){
+        new Thread(() -> {
+            setTitle("Please wait...");
+            new FanaticismFrame(bigRanking, appOptions).init();
+            setTitle("Done");
+        }, "Open Fanaticism Window").start();
     }
 
     private void openArtistWindow(){
@@ -435,6 +452,6 @@ public class StatsFrame extends AppFrame {
             ArtistFrame artistFrame = new ArtistFrame(mainName, scores);
             artistFrame.init();
             setTitle("Done");
-        }).start();
+        }, "Open Artist Window").start();
     }
 }

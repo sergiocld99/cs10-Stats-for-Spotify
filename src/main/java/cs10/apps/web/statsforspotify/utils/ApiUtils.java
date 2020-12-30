@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
+import com.wrapper.spotify.enums.AlbumType;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
@@ -15,6 +16,7 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
+import org.apache.hc.core5.http.ParseException;
 
 import java.awt.*;
 import java.io.IOException;
@@ -24,6 +26,7 @@ import java.util.Random;
 
 public class ApiUtils {
     private final SpotifyApi spotifyApi;
+    private final Random random;
     private final boolean ready;
 
     // This URI should equal to the saved URI on the App Dashboard
@@ -41,6 +44,7 @@ public class ApiUtils {
                 .build();
 
         this.ready = authenticate();
+        this.random = new Random();
     }
 
     private boolean authenticate(){
@@ -104,7 +108,7 @@ public class ApiUtils {
         try {
             Recommendations r = getRecommendations(song1.getId(), song2.getId(),
                     (current == null) ? ranking.getRandomElement().getId() : current.getId());
-            t2 = r.getTracks()[new Random().nextInt(r.getTracks().length)];
+            t2 = r.getTracks()[random.nextInt(r.getTracks().length)];
             tracks1 = spotifyApi.getArtistsTopTracks(t2.getArtists()[0].getId(), CountryCode.AR)
                     .build().execute();
         } catch (Exception e){
@@ -118,7 +122,7 @@ public class ApiUtils {
             return null;
         }
 
-        Track t1 = tracks1[new Random().nextInt(tracks1.length)];
+        Track t1 = tracks1[random.nextInt(tracks1.length)];
         Song t3 = IOUtils.pickRandomSongFromLibrary();
 
         ArrayList<String> uris = new ArrayList<>();
@@ -330,5 +334,36 @@ public class ApiUtils {
         }
 
         new DailyMixesFrame(times).init();
+    }
+
+    public void enqueueTwoTracksOfTheSameAlbum(Track track){
+        int actualNumber = track.getTrackNumber();
+        if (track.getAlbum().getAlbumType() == AlbumType.SINGLE){
+            System.err.println("This track is a single - Unable to enqueue album");
+            return;
+        }
+
+        try {
+            Album album = spotifyApi.getAlbum(track.getAlbum().getId()).build().execute();
+            int max = album.getTracks().getItems().length;
+            if (max < 6) {
+                System.err.println("This album has less than 3 songs. That's not enough");
+                return;
+            }
+
+            int n1, n2;
+
+            do {
+                n1 = random.nextInt(max);
+                n2 = random.nextInt(max);
+            } while (n1 == actualNumber || n2 == actualNumber || n1 == n2);
+
+            playThis(album.getTracks().getItems()[n1].getId(), false);
+            playThis(album.getTracks().getItems()[n2].getId(), false);
+            System.out.println("Two tracks from " + album.getName() + " enqueued!");
+        } catch (Exception e) {
+            Maintenance.writeErrorFile(e, true);
+            e.printStackTrace();
+        }
     }
 }

@@ -4,11 +4,13 @@ import cs10.apps.web.statsforspotify.utils.CommonUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.DecimalFormat;
 
 public class CircleLabel extends JLabel {
     private String title;
     private int value, average = 60, originalValue;
-    private boolean inverted;
+    private boolean inverted, minutes;
+    private final DecimalFormat format = new DecimalFormat("0.0");
 
     public CircleLabel(String title, boolean inverted){
         this.title = title;
@@ -43,6 +45,14 @@ public class CircleLabel extends JLabel {
         this.originalValue = originalValue;
     }
 
+    public boolean isMinutes() {
+        return minutes;
+    }
+
+    public void setMinutes(boolean minutes) {
+        this.minutes = minutes;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -67,7 +77,16 @@ public class CircleLabel extends JLabel {
 
         // Draw Score Number
         graphics2D.setColor(Color.white);
-        CommonUtils.drawCenteredString(graphics2D, String.valueOf(value),
+        String scoreNumber;
+
+        if (isMinutes() && value > average){
+            setTitle("Hours");
+            double hours = value / 60d;
+            if (hours >= 10) scoreNumber = String.valueOf((int) hours);
+            else scoreNumber = format.format(hours);
+        } else scoreNumber = String.valueOf(value);
+
+        CommonUtils.drawCenteredString(graphics2D, scoreNumber,
                 new Rectangle(25,30,50,50), new Font("Arial", Font.BOLD, 24));
 
         // Draw Score Title

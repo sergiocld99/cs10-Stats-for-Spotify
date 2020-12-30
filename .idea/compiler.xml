@@ -9,8 +9,8 @@
         <module name="Stats for Spotify" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="Stats for Spotify" target="14" />
+    <bytecodeTargetLevel target="9">
+      <module name="Stats for Spotify" target="9" />
     </bytecodeTargetLevel>
   </component>
 </project>

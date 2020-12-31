@@ -73,7 +73,9 @@ public class LastFmIntegration {
     }
 
     private static String normalize(String str){
-        return str.replace(" ", "+").replace("&","%26").toLowerCase();
+        return str.replace(" ", "+")
+                .replace("&","%26")
+                .replace("é","%E9").toLowerCase();
     }
 
     public static String readJsonFromUrl(String url) throws IOException, JSONException {

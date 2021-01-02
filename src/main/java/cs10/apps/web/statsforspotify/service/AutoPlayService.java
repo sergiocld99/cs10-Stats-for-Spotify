@@ -14,8 +14,6 @@ public class AutoPlayService {
     private final JButton button;
     private Thread thread;
 
-    private int lastTracksPercentage;
-
     public AutoPlayService(BigRanking originalRanking, ApiUtils apiUtils, JButton button) {
         this.apiUtils = apiUtils;
         this.button = button;
@@ -27,7 +25,6 @@ public class AutoPlayService {
     public void execute() {
         if (thread == null || !thread.isAlive()) {
             Collections.shuffle(ranking);
-            lastTracksPercentage = apiUtils.analyzeRecentTracks();
             thread = new Thread(new AutoPlayRunnable(), "AutoQueue Service");
             thread.start();
             OptionPanes.message(thread.getName() + " is running now");

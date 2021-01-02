@@ -73,7 +73,8 @@ public class LastFmIntegration {
     }
 
     private static String normalize(String str){
-        return str.replace(" ", "+")
+        return str.replace("+","%2B")
+                .replace(" ", "+")
                 .replace("&","%26")
                 .replace("é","%E9").toLowerCase();
     }

@@ -1,13 +1,13 @@
 package cs10.apps.web.statsforspotify.service;
 
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import com.wrapper.spotify.model_objects.specification.PlayHistory;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.core.LastFmIntegration;
-import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
@@ -17,6 +17,8 @@ import cs10.apps.web.statsforspotify.view.label.PeakLabel;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,10 +31,11 @@ public class PlaybackService implements Runnable {
     private Ranking ranking;
     private ScheduledExecutorService progressScheduler;
     private ArrayList<String> autoQueueUris;
+    private Set<String> avoidInitials;
 
     private static final int AUTO_UPDATE_RATE = 24;
     private boolean running, canSkip;
-    private int time, requestsCount;
+    private int time, requestsCount, auxIndex;
 
     public PlaybackService(ApiUtils apiUtils, JTable table, JFrame frame, CustomPlayer player) {
         progressScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -41,6 +44,40 @@ public class PlaybackService implements Runnable {
         this.frame = frame;
         this.player = player;
         this.canSkip = true;
+
+        setAvoidInitials();
+    }
+
+    private void setAvoidInitials(){
+        avoidInitials = new HashSet<>();
+
+        for (PlayHistory ph : apiUtils.getRecentTracks())
+            avoidInitials.add(initials(ph.getTrack().getName()));
+    }
+
+    private void playNext(){
+        Song nextSong = ranking.get(auxIndex++);
+        apiUtils.playThis(nextSong.getId(),false);
+        apiUtils.skipCurrentTrack();
+        avoidInitials.add(initials(nextSong.getName()));
+        run();
+    }
+
+    private boolean checkInitials(Track track){
+        for (String s : avoidInitials){
+            if (track.getName().startsWith(s)){
+                System.out.println(track.getName() + " skipped for initials");
+                playNext();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private String initials(String s){
+        int lastIndex = Math.min(s.length(), 3);
+        return s.substring(0,lastIndex);
     }
 
     public void allowAutoUpdate(){
@@ -114,7 +151,9 @@ public class PlaybackService implements Runnable {
                 if (progressScheduler != null) progressScheduler.shutdown();
             }
 
-            System.out.println("Updating Custom Player...");
+            System.out.println(track.getName() + " set in Playback Service");
+            if (checkInitials(track)) return;
+
             player.setCurrentSongId(track.getId());
             boolean isBecomingUnpopular = player.setTrack(track);
             boolean isRecommended = checkRecommended(track);

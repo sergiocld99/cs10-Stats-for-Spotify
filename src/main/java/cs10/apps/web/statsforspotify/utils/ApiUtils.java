@@ -292,25 +292,14 @@ public class ApiUtils {
         return spotifyApi.getCurrentUsersProfile().build().execute();
     }
 
-    public int analyzeRecentTracks(){
+    public PlayHistory[] getRecentTracks(){
         try {
             // This returns only the last 30 played tracks
-            PagingCursorbased<PlayHistory> paging =
-                    spotifyApi.getCurrentUsersRecentlyPlayedTracks().build().execute();
-
-            PlayHistory[] playHistory = paging.getItems();
-            int alreadySaved = 0;
-
-            for (PlayHistory p : playHistory){
-                if (IOUtils.getTimesOnRanking(p.getTrack().getArtists()[0].getName(),
-                        p.getTrack().getId()) > 0) alreadySaved++;
-            }
-
-            if (playHistory.length == 0) return 0;
-            return alreadySaved * 100 / playHistory.length;
+            return spotifyApi.getCurrentUsersRecentlyPlayedTracks()
+                    .build().execute().getItems();
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
-            return 0;
+            return new PlayHistory[0];
         }
     }
 

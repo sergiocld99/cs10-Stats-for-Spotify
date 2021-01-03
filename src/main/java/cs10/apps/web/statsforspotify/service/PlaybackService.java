@@ -33,7 +33,7 @@ public class PlaybackService implements Runnable {
 
     private static final int AUTO_UPDATE_RATE = 24;
     private boolean running, canSkip;
-    private int time, requestsCount, auxIndex;
+    private int time, requestsCount, auxIndex, idleCount;
     private long lastRequestTime;
 
     public PlaybackService(ApiUtils apiUtils, JTable table, JFrame frame, CustomPlayer player) {
@@ -95,7 +95,7 @@ public class PlaybackService implements Runnable {
     public void run() {
         if (ranking == null) throw new DevelopException(this);
         ScheduledExecutorService scheduler0 = Executors.newSingleThreadScheduledExecutor();
-        scheduler0.schedule(this::getCurrentData, 500, TimeUnit.MILLISECONDS);
+        scheduler0.schedule(this::getCurrentData, 1200, TimeUnit.MILLISECONDS);
         lastRequestTime = 0;
         running = true;
     }
@@ -119,9 +119,10 @@ public class PlaybackService implements Runnable {
 
         if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
             frame.setTitle("Ranking #" + ranking.getCode());
+            if (++idleCount == 8) System.exit(0);
             running = false;
             return;
-        }
+        } else idleCount = 0;
 
         try {
             Track track = (Track) currentlyPlaying.getItem();
@@ -171,12 +172,9 @@ public class PlaybackService implements Runnable {
             if (canSkip && isBecomingUnpopular){
                 //attemptQueue(track);
                 if (requestsCount % 2 == 0) {
-                    System.out.println("Attempting to skip current track...");
+                    System.out.println(track.getName() + " is becoming unpopular");
                     if (apiUtils.skipCurrentTrack()){
-                        ScheduledExecutorService skipDelayedExecutor
-                                = Executors.newSingleThreadScheduledExecutor();
-                        skipDelayedExecutor.schedule(this::getCurrentData,
-                                1, TimeUnit.SECONDS);
+                        run();
                         return;
                     }
                 }

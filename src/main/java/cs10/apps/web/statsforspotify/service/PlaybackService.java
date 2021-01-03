@@ -16,7 +16,6 @@ import cs10.apps.web.statsforspotify.view.label.PeakLabel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -30,7 +29,6 @@ public class PlaybackService implements Runnable {
     private final JFrame frame;
     private Ranking ranking;
     private ScheduledExecutorService progressScheduler;
-    private ArrayList<String> autoQueueUris;
     private Set<String> avoidInitials;
 
     private static final int AUTO_UPDATE_RATE = 24;
@@ -109,10 +107,6 @@ public class PlaybackService implements Runnable {
         run();
     }
 
-    public boolean isRunning() {
-        return running;
-    }
-
     public void setRanking(Ranking ranking) {
         this.ranking = ranking;
     }
@@ -172,27 +166,24 @@ public class PlaybackService implements Runnable {
 
             player.setCurrentSongId(track.getId());
             boolean isBecomingUnpopular = player.setTrack(track);
-            boolean isRecommended = checkRecommended(track);
             this.attemptGetMinutes(track);
 
-            if (!isRecommended){
-                if (canSkip && isBecomingUnpopular){
-                    //attemptQueue(track);
-                    if (requestsCount % 2 == 0) {
-                        System.out.println("Attempting to skip current track...");
-                        if (apiUtils.skipCurrentTrack()){
-                            ScheduledExecutorService skipDelayedExecutor
-                                    = Executors.newSingleThreadScheduledExecutor();
-                            skipDelayedExecutor.schedule(this::getCurrentData,
-                                    1, TimeUnit.SECONDS);
-                            return;
-                        }
+            if (canSkip && isBecomingUnpopular){
+                //attemptQueue(track);
+                if (requestsCount % 2 == 0) {
+                    System.out.println("Attempting to skip current track...");
+                    if (apiUtils.skipCurrentTrack()){
+                        ScheduledExecutorService skipDelayedExecutor
+                                = Executors.newSingleThreadScheduledExecutor();
+                        skipDelayedExecutor.schedule(this::getCurrentData,
+                                1, TimeUnit.SECONDS);
+                        return;
                     }
-                    frame.setIconImage(new ImageIcon("appicon2.png").getImage());
-                } else {
-                    frame.setIconImage(new ImageIcon("appicon.png").getImage());
-                    setCanSkip(true);
                 }
+                frame.setIconImage(new ImageIcon("appicon2.png").getImage());
+            } else {
+                frame.setIconImage(new ImageIcon("appicon.png").getImage());
+                setCanSkip(true);
             }
 
             // Only if the track wasn't skipped
@@ -223,18 +214,6 @@ public class PlaybackService implements Runnable {
         }
     }
 
-    private boolean checkRecommended(Track track){
-        if (autoQueueUris != null) for (String id : autoQueueUris){
-            if (id.equals("spotify:track:"+track.getId())){
-                frame.setIconImage(new ImageIcon("appicon3.png").getImage());
-                frame.setTitle("Playing a Recommended Song: " + CommonUtils.toString(track));
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private void selectCurrentRow(Track track){
         Song song = ranking.getSong(track.getId());
         if (song != null){
@@ -242,11 +221,6 @@ public class PlaybackService implements Runnable {
             table.getSelectionModel().setSelectionInterval(i,i);
             scrollToCenter(table, i, i % 5);
         } else table.clearSelection();
-    }
-
-    private void attemptQueue(Track currentTrack){
-        if (ranking.size() > 0) new Thread(() ->
-                autoQueueUris = apiUtils.autoQueue(ranking, currentTrack)).start();
     }
 
     private void scrollToCenter(JTable table, int rowIndex, int vColIndex) {

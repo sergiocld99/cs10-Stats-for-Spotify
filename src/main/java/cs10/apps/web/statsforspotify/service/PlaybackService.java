@@ -36,6 +36,7 @@ public class PlaybackService implements Runnable {
     private static final int AUTO_UPDATE_RATE = 24;
     private boolean running, canSkip;
     private int time, requestsCount, auxIndex;
+    private long lastRequestTime;
 
     public PlaybackService(ApiUtils apiUtils, JTable table, JFrame frame, CustomPlayer player) {
         progressScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -50,23 +51,29 @@ public class PlaybackService implements Runnable {
 
     private void setAvoidInitials(){
         avoidInitials = new HashSet<>();
-
         for (PlayHistory ph : apiUtils.getRecentTracks())
             avoidInitials.add(initials(ph.getTrack().getName()));
+        System.out.println("Avoid Initials Size: " + avoidInitials.size());
     }
 
     private void playNext(){
-        Song nextSong = ranking.get(auxIndex++);
+        auxIndex += (int) (Math.random() * 4);
+        Song nextSong = ranking.get(auxIndex);
+        Song avoidSong = ranking.get(ranking.size()-auxIndex);
+        System.out.println(avoidSong + " added to Avoid List");
+        avoidInitials.add(initials(avoidSong.getId()));
         apiUtils.playThis(nextSong.getId(),false);
         apiUtils.skipCurrentTrack();
-        avoidInitials.add(initials(nextSong.getName()));
         run();
     }
 
     private boolean checkInitials(Track track){
+        if (!canSkip || requestsCount < 8) return false;
+
         for (String s : avoidInitials){
             if (track.getName().startsWith(s)){
                 System.out.println(track.getName() + " skipped for initials");
+                avoidInitials.remove(s);
                 playNext();
                 return true;
             }
@@ -91,7 +98,15 @@ public class PlaybackService implements Runnable {
         if (ranking == null) throw new DevelopException(this);
         ScheduledExecutorService scheduler0 = Executors.newSingleThreadScheduledExecutor();
         scheduler0.schedule(this::getCurrentData, 500, TimeUnit.MILLISECONDS);
+        lastRequestTime = 0;
         running = true;
+    }
+
+    public void restart(){
+        System.out.println("Restarting Playback Service");
+        player.setCurrentSongId("..");
+        canSkip = false;
+        run();
     }
 
     public boolean isRunning() {
@@ -103,9 +118,10 @@ public class PlaybackService implements Runnable {
     }
 
     private void getCurrentData() {
-        requestsCount++;
-
+        if (System.currentTimeMillis() - lastRequestTime < 6400) return;
         CurrentlyPlaying currentlyPlaying = apiUtils.getCurrentSong();
+        lastRequestTime = System.currentTimeMillis();
+        requestsCount++;
 
         if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
             frame.setTitle("Ranking #" + ranking.getCode());

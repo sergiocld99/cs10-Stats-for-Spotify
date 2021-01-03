@@ -280,7 +280,6 @@ public class ApiUtils {
             return true;
         } catch (SpotifyWebApiException e){
             Maintenance.writeErrorFile(e, false);
-            e.printStackTrace();
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
         }
@@ -296,7 +295,7 @@ public class ApiUtils {
         try {
             // This returns only the last 30 played tracks
             return spotifyApi.getCurrentUsersRecentlyPlayedTracks()
-                    .build().execute().getItems();
+                    .limit(50).build().execute().getItems();
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
             return new PlayHistory[0];

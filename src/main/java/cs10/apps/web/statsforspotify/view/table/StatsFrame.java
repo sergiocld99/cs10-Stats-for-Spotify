@@ -40,6 +40,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static javax.swing.JOptionPane.CLOSED_OPTION;
+
 public class StatsFrame extends AppFrame {
     private final AppOptions appOptions;
     private final ApiUtils apiUtils;
@@ -172,16 +174,33 @@ public class StatsFrame extends AppFrame {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() != 2){
-                    openSongChartHistory();
-                    return;
-                }
+                if (e.getClickCount() == 2){
+                    int selected = table.getSelectedRow();
 
-                if (apiUtils.playThis(bigRanking.get(table.getSelectedRow()).getId(), true)){
-                    playbackService.setCanSkip(false);
-                    playbackService.run();
-                    OptionPanes.message("Current Playback updated");
-                } else openArtistWindow();
+                    int result = JOptionPane.showOptionDialog(null,
+                            "Select an option", PersonalChartApp.APP_NAME,
+                            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                            null, new String[]{"Play this now", "View Song Chart",
+                                    "View Artist Histogram"}, null);
+
+                    table.setRowSelectionInterval(selected,selected);
+
+                    switch (result) {
+                        case 0:
+                            if (apiUtils.playThis(bigRanking.get(table.getSelectedRow()).getId(), true)) {
+                                playbackService.setCanSkip(false);
+                                playbackService.run();
+                                OptionPanes.message("Current Playback updated");
+                            } else OptionPanes.message("Unable to play this song");
+                            break;
+                        case 1:
+                            openSongChartHistory();
+                            break;
+                        case 2:
+                            openArtistWindow();
+                            break;
+                    }
+                }
             }
         });
     }
@@ -212,7 +231,10 @@ public class StatsFrame extends AppFrame {
         jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
         jmiDailyMixes.addActionListener(e -> openCurrentDailyMixesStats());
         jmiFanaticism.addActionListener(e -> openFanaticismWindow());
-        jmiLastFmUser.addActionListener(e -> OptionPanes.inputUsername(appOptions));
+        jmiLastFmUser.addActionListener(e -> {
+            boolean restart = OptionPanes.inputUsername(appOptions);
+            if (restart) playbackService.restart();
+        });
         helpMenu.addActionListener(e -> System.out.println("Help pressed"));
 
         fileMenu.add(jmiOpen);

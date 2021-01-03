@@ -13,4 +13,11 @@ public class CustomList<E> extends ArrayList<E> {
     public E getRandomElement(){
         return get(random.nextInt(size()));
     }
+
+    @Override
+    public E get(int index) {
+        if (index >= size()) return get(index - size());
+        else if (index < 0) return get(index + size());
+        else return super.get(index);
+    }
 }

@@ -353,7 +353,7 @@ public class StatsFrame extends AppFrame {
 
     private void buildTable(){
         player.setString("Loading ranking...");
-        int i = 0;
+        table.getTableHeader().setDefaultRenderer(new CustomHeaderRenderer(table));
         float average = bigRanking.getCode() / 100f;
 
         int min = 100;
@@ -387,7 +387,6 @@ public class StatsFrame extends AppFrame {
                 else model.setRowColor(row, s.getPopularityStatus().getTableUnpairColor());
             }
 
-            player.setProgress((++i) * 100 / bigRanking.size());
             model.addRow(toRow(s));
         }
     }

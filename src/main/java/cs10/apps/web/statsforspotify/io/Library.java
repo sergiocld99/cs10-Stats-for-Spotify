@@ -3,6 +3,7 @@ package cs10.apps.web.statsforspotify.io;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.CustomList;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
@@ -17,6 +18,7 @@ public class Library {
     private static Library instance;
 
     private final int rankingsAmount;
+    private int auxIndex;
 
     private Library(File rootFile){
         this.rankingsAmount = IOUtils.getRankingsAmount();
@@ -32,7 +34,7 @@ public class Library {
     }
 
     private void explore(File rootFile){
-        artistDirectories = new ArrayList<>();
+        artistDirectories = new CustomList<>();
 
         File[] internalDirectories = rootFile.listFiles();
         if (internalDirectories != null){
@@ -131,5 +133,10 @@ public class Library {
         }
 
         return count;
+    }
+
+    public ArtistDirectory next(){
+        auxIndex += (int) (Math.random() * 4);
+        return artistDirectories.get(auxIndex);
     }
 }

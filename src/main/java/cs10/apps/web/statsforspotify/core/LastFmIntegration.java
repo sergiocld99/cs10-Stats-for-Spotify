@@ -5,6 +5,8 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.Fanaticism;
+import cs10.apps.web.statsforspotify.model.LastFmData;
+import cs10.apps.web.statsforspotify.utils.Maintenance;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,17 +40,54 @@ public class LastFmIntegration {
 
         try {
             String source = readJsonFromUrl(url);
-            JSONObject jsonObject = new JSONObject(source);
+            return analyzeFanaticism(new JSONObject(source));
+        } catch (Exception e){
+            System.err.println("No data found for " + song.getName());
+        }
+
+        return -1;
+    }
+
+    private static double analyzeFanaticism(JSONObject jsonObject){
+        try {
             JSONObject track = jsonObject.getJSONObject("track");
             double fansMinutes = track.getInt("playcount") / Math.sqrt(track.getInt("listeners"));
             double myMinutes = 3 * track.getInt("userplaycount");
             double percentage = myMinutes * 100 / fansMinutes;
             if (percentage > 1) return Math.log(percentage) / Math.log(100);
         } catch (Exception e){
-            System.err.println("No data found for " + song.getName());
+            Maintenance.writeErrorFile(e, true);
         }
 
         return -1;
+    }
+
+    public static LastFmData analyze(Track nowPlayingTrack, String user){
+        if (user == null || user.isEmpty())
+            return new LastFmData(-1,null);
+
+        String baseUrl = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=";
+        String url = baseUrl + Private.LAST_FM_API_KEY + "&artist=" +
+                normalize(nowPlayingTrack.getArtists()[0].getName()) +
+                "&track=" + normalize(nowPlayingTrack.getName()) +
+                "&username=" + user + "&format=json";
+
+        try {
+            String source = readJsonFromUrl(url);
+            JSONObject jsonObject = new JSONObject(source);
+            JSONObject track = jsonObject.getJSONObject("track");
+            int userPlayCount = track.getInt("userplaycount");
+            double topFan = analyzeFanaticism(jsonObject);
+
+            if (topFan > 0.5) {
+                Fanaticism fanaticism = new Fanaticism(null, topFan);
+                return new LastFmData(userPlayCount, fanaticism);
+            } else return new LastFmData(userPlayCount, null);
+        } catch (Exception e){
+            System.err.println("No data found for " + nowPlayingTrack.getName());
+        }
+
+        return new LastFmData(-1, null);
     }
 
     public static int getPlayCount(Track nowPlayingTrack, String user){

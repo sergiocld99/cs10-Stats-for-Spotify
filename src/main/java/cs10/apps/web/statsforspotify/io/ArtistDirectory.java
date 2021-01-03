@@ -1,11 +1,11 @@
 package cs10.apps.web.statsforspotify.io;
 
+import cs10.apps.web.statsforspotify.model.CustomList;
+
 import java.io.File;
-import java.util.Collection;
-import java.util.HashSet;
 
 public class ArtistDirectory implements Comparable<ArtistDirectory> {
-    private Collection<SongFile> songFiles;
+    private CustomList<SongFile> songFiles;
     private final File file;
 
     private float artistScore;
@@ -29,7 +29,7 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
     }
 
     private void explore(){
-        songFiles = new HashSet<>();
+        songFiles = new CustomList<>();
 
         File[] filesInsideDirectory = file.listFiles();
         if (filesInsideDirectory != null){
@@ -93,6 +93,10 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
 
     public int getSongCount(){
         return songFiles.size();
+    }
+
+    public SongFile getRandom(){
+        return songFiles.getRandomElement();
     }
 
     @Override

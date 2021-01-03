@@ -82,6 +82,10 @@ public class CustomPlayer extends JPanel {
         this.thumbnail.setUnknown();
     }
 
+    public Library getLibrary() {
+        return library;
+    }
+
     /**
      * Updates thumbnail and circle labels
      * @param track current track from playback

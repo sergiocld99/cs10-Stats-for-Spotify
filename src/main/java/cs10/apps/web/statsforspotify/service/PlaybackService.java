@@ -8,6 +8,8 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.core.LastFmIntegration;
+import cs10.apps.web.statsforspotify.io.SongFile;
+import cs10.apps.web.statsforspotify.model.LastFmData;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
@@ -33,7 +35,7 @@ public class PlaybackService implements Runnable {
 
     private static final int AUTO_UPDATE_RATE = 24;
     private boolean running, canSkip;
-    private int time, requestsCount, auxIndex, idleCount;
+    private int time, requestsCount, idleCount;
     private long lastRequestTime;
 
     public PlaybackService(ApiUtils apiUtils, JTable table, JFrame frame, CustomPlayer player) {
@@ -55,12 +57,11 @@ public class PlaybackService implements Runnable {
     }
 
     private void playNext(){
-        auxIndex += (int) (Math.random() * 4);
-        Song nextSong = ranking.get(auxIndex);
-        Song avoidSong = ranking.get(ranking.size()-auxIndex);
-        System.out.println(avoidSong + " added to Avoid List");
+        SongFile nextSong = player.getLibrary().next().getRandom();
+        Song avoidSong = ranking.getRandomElement();
+        System.out.println("Play Next: " + nextSong);
         avoidInitials.add(initials(avoidSong.getId()));
-        apiUtils.playThis(nextSong.getId(),false);
+        apiUtils.playThis(nextSong.getTrackId(),false);
         apiUtils.skipCurrentTrack();
         run();
     }
@@ -81,7 +82,7 @@ public class PlaybackService implements Runnable {
     }
 
     private String initials(String s){
-        int lastIndex = Math.min(s.length(), 3);
+        int lastIndex = Math.min(s.length(), 8);
         return s.substring(0,lastIndex);
     }
 
@@ -98,6 +99,12 @@ public class PlaybackService implements Runnable {
         scheduler0.schedule(this::getCurrentData, 1200, TimeUnit.MILLISECONDS);
         lastRequestTime = 0;
         running = true;
+    }
+
+    private void runWithoutDelay(){
+        lastRequestTime = 0;
+        running = true;
+        getCurrentData();
     }
 
     public void restart(){
@@ -204,7 +211,8 @@ public class PlaybackService implements Runnable {
                 if (time >= maximum || !running){
                     player.setCurrentSongId("--");
                     progressScheduler.shutdown();
-                    getCurrentData();
+                    player.setTime(0);
+                    runWithoutDelay();
                 } else time++;
             }, 0, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -245,13 +253,18 @@ public class PlaybackService implements Runnable {
         PeakLabel peakLabel = player.getPeakLabel();
 
         new Thread(() -> {
-            //int playCount = LastFmIntegration.getLastFmCount();
-            int playCount = LastFmIntegration.getPlayCount(track, appOptions.getLastFmUser());
-            if (playCount > 0) {
+            LastFmData data = LastFmIntegration.analyze(track, appOptions.getLastFmUser());
+            //int playCount = LastFmIntegration.getPlayCount(track, appOptions.getLastFmUser());
+            if (data.getUserPlayCount() > 0) {
                 int averageTime = player.getAverage() * 3;
-                float minutes = playCount * track.getDurationMs() / 60000f;
-                peakLabel.changeToLastFM(minutes, playCount, averageTime);
-                //peakLabel.repaint();
+                float minutes = data.getUserPlayCount() * track.getDurationMs() / 60000f;
+                peakLabel.changeToLastFM(minutes, data.getUserPlayCount(), averageTime);
+
+                if (data.getFanaticism() != null){
+                    ImageIcon icon = new ImageIcon(data.getFanaticism().getIconName());
+                    frame.setIconImage(icon.getImage());
+                    frame.setTitle(data.getFanaticism().getLabel());
+                }
 
                 if (minutes > 100 && minutes < averageTime){
                     apiUtils.enqueueTwoTracksOfTheSameAlbum(track);

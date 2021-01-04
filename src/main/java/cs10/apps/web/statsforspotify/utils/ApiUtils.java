@@ -20,15 +20,14 @@ import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class ApiUtils {
     private final SpotifyApi spotifyApi;
     private final Random random;
     private ArrayList<Track> missedTracks;
+    private final Set<String> enqueuedUris = new HashSet<>();
     private final boolean ready;
 
     // This URI should equal to the saved URI on the App Dashboard
@@ -100,6 +99,27 @@ public class ApiUtils {
         }
     }
 
+    private Track findPopularTrackOfArtist(String artistId){
+        try {
+            Track[] tracks = spotifyApi.getArtistsTopTracks(artistId, CountryCode.AR).build().execute();
+            if (tracks.length > 0) return tracks[random.nextInt(tracks.length)];
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+        }
+
+        return null;
+    }
+
+    private void queue(String uri){
+        try {
+            if (enqueuedUris.contains(uri)) return;
+            spotifyApi.addItemToUsersPlaybackQueue(uri).build().execute();
+            enqueuedUris.add(uri);
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+        }
+    }
+
     public ArrayList<String> autoQueue(Ranking ranking, Track current){
         Song song1 = ranking.getRandomElement();
         Song song2 = ranking.getRandomElement();
@@ -109,12 +129,19 @@ public class ApiUtils {
 
         if (missedTracks != null && missedTracks.size() > 1){
             try {
-                spotifyApi.addItemToUsersPlaybackQueue(missedTracks.remove(0).getUri()).build().execute();
-                spotifyApi.addItemToUsersPlaybackQueue(missedTracks.remove(0).getUri()).build().execute();
-                System.out.println("Missed tracks enqueued!");
+                for (int i=0; i<2; i++){
+                    Track mt = missedTracks.remove(0);
+                    if (missedTracks.size() % 5 == 0){
+                        Track pt = findPopularTrackOfArtist(mt.getArtists()[0].getId());
+                        if (pt != null) queue(pt.getUri());
+                    } else queue(mt.getUri());
+                }
+                System.out.println(missedTracks.size() + " missed tracks left");
             } catch (Exception e){
                 Maintenance.writeErrorFile(e, true);
             }
+
+            // do not continue
             return null;
         }
 
@@ -164,14 +191,11 @@ public class ApiUtils {
 
         try {
             for (String uri : uris){
-                spotifyApi.addItemToUsersPlaybackQueue(uri).build().execute();
-                Thread.sleep(1000);
+                queue(uri);
+                TimeUnit.SECONDS.sleep(1);
             }
-        } catch (SpotifyWebApiException e){
+        } catch (InterruptedException e){
             Maintenance.writeErrorFile(e, false);
-            Maintenance.log(errorSb.toString());
-        } catch (Exception e){
-            Maintenance.writeErrorFile(e, true);
         }
 
         return uris;
@@ -215,13 +239,18 @@ public class ApiUtils {
             System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
             missedTracks = new ArrayList<>();
             missedTracks.addAll(Arrays.asList(tracks2).subList(mostPopularIndex2 + 1, tracks2.length));
-            Collections.shuffle(missedTracks);
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
         }
 
         if (result == null) result = new Track[0];
         return result;
+    }
+
+    public void addToMissedTracks(Collection<Track> tracks){
+        System.out.println(tracks.size() + " tracks added to Missed List");
+        missedTracks.addAll(tracks);
+        Collections.shuffle(missedTracks);
     }
 
     public Track[] getTopTracks(String termKey){
@@ -275,8 +304,7 @@ public class ApiUtils {
                 return true;
             }
 
-            spotifyApi.addItemToUsersPlaybackQueue("spotify:track:"+trackId).build().execute();
-            //if (immediately) spotifyApi.skipUsersPlaybackToNextTrack().build().execute();
+            queue("spotify:track:"+trackId);
             return true;
         } catch (SpotifyWebApiException e){
             Maintenance.writeErrorFile(e, false);
@@ -302,6 +330,33 @@ public class ApiUtils {
         }
     }
 
+    public Collection<Track> findDailyMix(int number, int minPopularity){
+        Collection<Track> result = new HashSet<>();
+        if (number < 1 || number > 6) number = random.nextInt(6) + 1;
+
+        try {
+            PlaylistSimplified[] ps = spotifyApi.getListOfCurrentUsersPlaylists()
+                    .limit(49).build().execute().getItems();
+
+            for (PlaylistSimplified p : ps){
+                if (p.getName().equals("Daily Mix " + number)){
+                    System.out.println(p.getName() + " was selected for Missed Tracks");
+                    Playlist playlist = spotifyApi.getPlaylist(p.getId()).build().execute();
+                    for (PlaylistTrack pt : playlist.getTracks().getItems()){
+                        Track track = (Track) pt.getTrack();
+                        if (track.getPopularity() > minPopularity)
+                            result.add(track);
+                    }
+                    break;
+                }
+            }
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+        }
+
+        return result;
+    }
+
     public void analyzeDailyMixes(){
         int dailyMixes = 6, count = 0;
         int[] tracks = new int[dailyMixes];
@@ -311,19 +366,22 @@ public class ApiUtils {
 
         try {
             PlaylistSimplified[] ps = spotifyApi.getListOfCurrentUsersPlaylists()
-                    .limit(49).build()
-                    .execute().getItems();
+                    .limit(49).build().execute().getItems();
             for (PlaylistSimplified p : ps){
                 if (p.getName().startsWith("Daily Mix")){
+                    int popularitySum = 0;
                     sizes[count] = p.getTracks().getTotal();
                     Playlist playlist = spotifyApi.getPlaylist(p.getId()).build().execute();
                     for (PlaylistTrack pt : playlist.getTracks().getItems()){
                         Track t = (Track) pt.getTrack();
+                        popularitySum += t.getPopularity();
                         int ts = IOUtils.getTimesOnRanking(t.getArtists()[0].getName(), t.getId());
                         if (ts > 0) {tracks[count]++; times[count] += ts;}
                         if (IOUtils.existsArtist(t.getArtists()[0].getName()))
                             artists[count]++;
                     }
+                    System.out.println(p.getName() + " average popularity: " +
+                            popularitySum / p.getTracks().getTotal());
                     if (++count == dailyMixes) break;
                 }
             }
@@ -342,7 +400,7 @@ public class ApiUtils {
     }
 
     public void enqueueTwoTracksOfTheSameAlbum(Track track){
-        int actualNumber = track.getTrackNumber();
+        int actualNumber = track.getTrackNumber() - 1;  // 1 -> 0
         if (track.getAlbum().getAlbumType() == AlbumType.SINGLE){
             System.err.println("This track is a single - Unable to enqueue album");
             return;

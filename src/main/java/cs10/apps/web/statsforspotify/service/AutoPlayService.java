@@ -2,6 +2,7 @@ package cs10.apps.web.statsforspotify.service;
 
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
@@ -9,6 +10,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 public class AutoPlayService {
+    public static final String NAME = "AutoPlay";
     private final BigRanking ranking;
     private final ApiUtils apiUtils;
     private final JButton button;
@@ -25,7 +27,7 @@ public class AutoPlayService {
     public void execute() {
         if (thread == null || !thread.isAlive()) {
             Collections.shuffle(ranking);
-            thread = new Thread(new AutoPlayRunnable(), "AutoQueue Service");
+            thread = new Thread(new AutoPlayRunnable(), NAME + " Service");
             thread.start();
             OptionPanes.message(thread.getName() + " is running now");
         } else {
@@ -54,19 +56,22 @@ public class AutoPlayService {
                     }
                 }
 
-                int time = ranking.get(i+minIndex).getPopularity() * offset;
-                apiUtils.playThis(ranking.get(i+minIndex).getId(), false);
-                apiUtils.autoQueue(ranking, null);
-
                 try {
-                    TimeUnit.SECONDS.sleep(time);
+                    apiUtils.playThis(ranking.get(i+minIndex).getId(), false);
+                    int percentage = i * 100 / ranking.size();
+                    button.setText(NAME + " (" + percentage + "%)");
+                    TimeUnit.SECONDS.sleep(150);
+                    apiUtils.autoQueue(ranking, null);
+                    percentage += offset / 2;
+                    button.setText(NAME + " (" + percentage + "%)");
+                    TimeUnit.SECONDS.sleep(300);
                 } catch (InterruptedException e){
-                    e.printStackTrace();
+                    Maintenance.writeErrorFile(e, false);
                     break;
                 }
             }
 
-            button.setText("AutoPlay (Premium)");
+            button.setText(NAME + " (Premium)");
             button.setEnabled(true);
         }
     }

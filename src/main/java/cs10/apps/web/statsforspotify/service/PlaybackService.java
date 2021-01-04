@@ -59,8 +59,8 @@ public class PlaybackService implements Runnable {
     private void playNext(){
         SongFile nextSong = player.getLibrary().next().getRandom();
         Song avoidSong = ranking.getRandomElement();
+        if (avoidSong.getRank() > 16) avoidInitials.add(initials(avoidSong.getId()));
         System.out.println("Play Next: " + nextSong);
-        avoidInitials.add(initials(avoidSong.getId()));
         apiUtils.playThis(nextSong.getTrackId(),false);
         apiUtils.skipCurrentTrack();
         run();

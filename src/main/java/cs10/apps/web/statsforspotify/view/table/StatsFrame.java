@@ -77,7 +77,7 @@ public class StatsFrame extends AppFrame {
         // Player Panel
         JPanel playerPanel = new JPanel();
         player = new CustomPlayer(70, appOptions);
-        JButton autoPlayButton = new JButton("AutoPlay (Premium)");
+        JButton autoPlayButton = new JButton(AutoPlayService.NAME + " (Premium)");
         JLabel textAboveButton = new JLabel("Loading...", JLabel.CENTER);
 
         playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
@@ -120,15 +120,9 @@ public class StatsFrame extends AppFrame {
         getContentPane().add(BorderLayout.CENTER, playerPanel);
         getContentPane().add(BorderLayout.SOUTH, new JScrollPane(table));
 
-        // Show all
+        // Set Playback
         playbackService = new PlaybackService(apiUtils, table, this, player);
         playbackService.allowAutoUpdate();
-        setResizable(false);
-        setVisible(true);
-        //show(TopTerms.SHORT);
-
-        // Load ranking (hard work)
-        //initRanking();
 
         try {
             initThread.join();
@@ -141,6 +135,8 @@ public class StatsFrame extends AppFrame {
         bigRanking = init.getProcessedRanking();
         library = init.getLibrary();
         textAboveButton.setText(library.getSongCount() + " songs in your charts");
+        apiUtils.addToMissedTracks(apiUtils.findDailyMix(
+                library.getSongCount() % 10, (int) bigRanking.getCode() / 100));
 
         // When ranking is totally loaded
         buildTable();

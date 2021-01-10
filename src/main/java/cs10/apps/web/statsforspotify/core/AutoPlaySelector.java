@@ -9,6 +9,7 @@ import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.service.AutoPlayService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -37,7 +38,10 @@ public class AutoPlaySelector {
         this.data = new ArrayList<>(6);
         this.magicNumbers = new LinkedList<>();
         this.runnable = runnable;
-        this.switcher = Calendar.getInstance().get(Calendar.HOUR) % 2 == 0;
+
+        int hour = Calendar.getInstance().get(Calendar.HOUR);
+        this.switcher = hour % 2 == 0;
+        this.itemIndex = hour;
 
         prepare();
         setConstants();
@@ -57,6 +61,12 @@ public class AutoPlaySelector {
     }
 
     public void run(){
+        if (data.size() < 6) {
+            OptionPanes.message("Unable to start AutoPlay: " +
+                    "Make sure that your Daily Mixes are at the top of your library");
+            return;
+        }
+
         service = Executors.newSingleThreadScheduledExecutor();
         service.scheduleAtFixedRate(this::runOnce, 0, 3, TimeUnit.MINUTES);
     }
@@ -82,7 +92,7 @@ public class AutoPlaySelector {
             Song random = ranking.getRandomElement();
             if (switcher) itemIndex++;
 
-            if (random.getRank() < (minPopularity + 100) / 2)
+            if (random.getRank() < (minPopularity / 2) || random.getRank() > minPopularity)
                 apiUtils.playThis(random.getId(), false);
             else apiUtils.autoQueue(ranking, selectedTrack);
                 //apiUtils.playThis(library.next().getRandom().getTrackId(), false);

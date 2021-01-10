@@ -51,6 +51,10 @@ public class Library {
         }
     }
 
+    /**
+     * @param artistName the exactly name of the artist
+     * @return their directory (null if not exists)
+     */
     public ArtistDirectory getArtistByName(String artistName){
         artistName = artistName.replace("/\\","");
 

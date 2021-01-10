@@ -32,11 +32,12 @@ public class PlaybackService implements Runnable {
     private Ranking ranking;
     private ScheduledExecutorService progressScheduler;
     private Set<String> avoidInitials;
-
+    private Thread lastFmThread;
     private static final int AUTO_UPDATE_RATE = 24;
     private boolean running, canSkip;
     private int time, requestsCount, idleCount;
     private long lastRequestTime;
+    private static final boolean EXPERIMENTAL = false;
 
     public PlaybackService(ApiUtils apiUtils, JTable table, JFrame frame, CustomPlayer player) {
         progressScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -251,8 +252,16 @@ public class PlaybackService implements Runnable {
     private void attemptGetMinutes(Track track){
         AppOptions appOptions = player.getAppOptions();
         PeakLabel peakLabel = player.getPeakLabel();
+        if (lastFmThread != null && lastFmThread.isAlive())
+            lastFmThread.interrupt();
 
-        new Thread(() -> {
+        lastFmThread = new Thread(() -> {
+            try {
+                Thread.sleep(8000);
+            } catch (InterruptedException e){
+                Maintenance.writeErrorFile(e, false);
+            }
+
             LastFmData data = LastFmIntegration.analyze(track, appOptions.getLastFmUser());
             //int playCount = LastFmIntegration.getPlayCount(track, appOptions.getLastFmUser());
             if (data.getUserPlayCount() > 0) {
@@ -266,10 +275,12 @@ public class PlaybackService implements Runnable {
                     frame.setTitle(data.getFanaticism().getLabel());
                 }
 
-                if (minutes > 100 && minutes < averageTime){
+                if (EXPERIMENTAL && minutes > 100 && minutes < averageTime){
                     apiUtils.enqueueTwoTracksOfTheSameAlbum(track);
                 }
             }
-        }, "Set Minutes Label").start();
+        }, "Set Minutes Label");
+
+        lastFmThread.start();
     }
 }

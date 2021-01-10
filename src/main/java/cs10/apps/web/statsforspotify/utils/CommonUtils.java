@@ -4,6 +4,7 @@ import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.model_objects.specification.TrackSimplified;
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
@@ -114,14 +115,28 @@ public class CommonUtils {
         }
 
         List<Song> nonMarkedSongs = compare.getNonMarked();
-        if (!nonMarkedSongs.isEmpty()){
+        sb.append(nonMarkedSongs.size()).append(" songs left the chart").append('\n');
+
+        int entries = 0, reentries = 0;
+
+        for (Song s : bigRanking){
+            if (s.getStatus() == Status.NEW){
+                if (s.getInfoStatus().equals("NEW")) entries++;
+                else reentries++;
+            }
+        }
+
+        sb.append(entries).append(" new songs in your chart, ");
+        sb.append(reentries).append(" re-entries");
+
+        /*if (!nonMarkedSongs.isEmpty()){
             sb.append("Songs that left the chart: ").append('\n');
             for (Song s : nonMarkedSongs){
                 Track t = apiUtils.getTrackById(s.getId());
                 sb.append(t.getName()).append(" by ")
                         .append(t.getArtists()[0].getName()).append('\n');
             }
-        }
+        }*/
 
         String message = sb.toString();
         if (!message.isEmpty()) OptionPanes.message(message);

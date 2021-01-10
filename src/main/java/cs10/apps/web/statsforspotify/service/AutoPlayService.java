@@ -1,5 +1,7 @@
 package cs10.apps.web.statsforspotify.service;
 
+import cs10.apps.web.statsforspotify.core.AutoPlaySelector;
+import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
@@ -36,28 +38,21 @@ public class AutoPlayService {
         }
     }
 
-    private class AutoPlayRunnable implements Runnable {
+    public class AutoPlayRunnable implements Runnable {
 
         @Override
         public void run() {
             button.setEnabled(false);
 
-            int offset = (int) ranking.getCode() / 1000;
+            new AutoPlaySelector(Library.getInstance(), apiUtils, ranking, this).run();
+
+            /*int offset = (int) ranking.getCode() / 1000;
             if (offset == 0) offset = 10;
 
             for (int i=0; i<ranking.size(); i+=offset){
-                int minCount = 100, minIndex = 0;
-
-                for (int j=0; j<offset; j++){
-                    int actualCount = ranking.get(i+j).getSongFile().getAppearancesCount();
-                    if (actualCount < minCount){
-                        minCount = actualCount;
-                        minIndex = j;
-                    }
-                }
 
                 try {
-                    apiUtils.playThis(ranking.get(i+minIndex).getId(), false);
+                    apiUtils.playThis(ranking.get(i).getId(), false);
                     int percentage = i * 100 / ranking.size();
                     button.setText(NAME + " (" + percentage + "%)");
                     TimeUnit.SECONDS.sleep(150);
@@ -71,6 +66,10 @@ public class AutoPlayService {
                 }
             }
 
+            enable()*/
+        }
+
+        public void enable(){
             button.setText(NAME + " (Premium)");
             button.setEnabled(true);
         }

@@ -21,6 +21,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ApiUtils {
@@ -299,7 +300,17 @@ public class ApiUtils {
             array.add("spotify:track:"+trackId);
 
             if (immediately){
-                spotifyApi.startResumeUsersPlayback().device_id(devices[0].getId())
+                Device active = null;
+
+                for (Device device : devices){
+                    if (device.getIs_active()){
+                        active = device;
+                        break;
+                    }
+                }
+
+                if (active == null) active = devices[0];
+                spotifyApi.startResumeUsersPlayback().device_id(active.getId())
                         .uris(array).build().execute();
                 return true;
             }
@@ -348,6 +359,27 @@ public class ApiUtils {
                             result.add(track);
                     }
                     break;
+                }
+            }
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+        }
+
+        return result;
+    }
+
+    public List<Playlist> getDailyMixes(){
+        List<Playlist> result = new ArrayList<>(6);
+
+        try {
+            PlaylistSimplified[] ps = spotifyApi.getListOfCurrentUsersPlaylists()
+                    .limit(49).build().execute().getItems();
+
+            for (PlaylistSimplified p : ps){
+                if (p.getName().startsWith("Daily Mix")){
+                    Playlist playlist = spotifyApi.getPlaylist(p.getId()).build().execute();
+                    result.add(playlist);
+                    if (result.size() == 6) break;
                 }
             }
         } catch (Exception e){

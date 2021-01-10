@@ -135,8 +135,8 @@ public class StatsFrame extends AppFrame {
         bigRanking = init.getProcessedRanking();
         library = init.getLibrary();
         textAboveButton.setText(library.getSongCount() + " songs in your charts");
-        apiUtils.addToMissedTracks(apiUtils.findDailyMix(
-                library.getSongCount() % 10, (int) bigRanking.getCode() / 100));
+        //apiUtils.addToMissedTracks(apiUtils.findDailyMix(
+        //        library.getSongCount() % 10, (int) bigRanking.getCode() / 100));
 
         // When ranking is totally loaded
         buildTable();

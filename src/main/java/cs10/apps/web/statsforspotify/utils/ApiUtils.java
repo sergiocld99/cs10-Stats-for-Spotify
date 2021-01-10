@@ -240,6 +240,7 @@ public class ApiUtils {
             System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
             missedTracks = new ArrayList<>();
             missedTracks.addAll(Arrays.asList(tracks2).subList(mostPopularIndex2 + 1, tracks2.length));
+            Collections.shuffle(missedTracks);
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
         }

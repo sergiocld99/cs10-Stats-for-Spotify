@@ -78,7 +78,7 @@ public class AutoPlaySelector {
         if (condition1 || condition2)
             apiUtils.playThis(selectedTrack.getId(), false);
         else {
-            System.out.println(selectedTrack + " was skipped for AutoPlay");
+            System.out.println(selectedTrack.getName() + " was skipped for AutoPlay");
             Song random = ranking.getRandomElement();
             if (switcher) itemIndex++;
 

@@ -130,13 +130,11 @@ public class ApiUtils {
 
         if (missedTracks != null && missedTracks.size() > 1){
             try {
-                for (int i=0; i<2; i++){
-                    Track mt = missedTracks.remove(0);
-                    if (missedTracks.size() % 5 == 0){
-                        Track pt = findPopularTrackOfArtist(mt.getArtists()[0].getId());
-                        if (pt != null) queue(pt.getUri());
-                    } else queue(mt.getUri());
-                }
+                Track mt = missedTracks.remove(0);
+                if (missedTracks.size() % 3 == 0){
+                    Track pt = findPopularTrackOfArtist(mt.getArtists()[0].getId());
+                    if (pt != null) queue(pt.getUri());
+                } else queue(mt.getUri());
                 System.out.println(missedTracks.size() + " missed tracks left");
             } catch (Exception e){
                 Maintenance.writeErrorFile(e, true);

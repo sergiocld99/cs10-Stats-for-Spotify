@@ -11,10 +11,7 @@ import cs10.apps.web.statsforspotify.service.AutoPlayService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,11 +21,11 @@ public class AutoPlaySelector {
     private final ApiUtils apiUtils;
     private final BigRanking ranking;
     private int dailyMixIndex, itemIndex, minScore, minPopularity;
-    private final List<PlaylistTrack[]> data;
+    private final List<List<PlaylistTrack>> data;
     private final List<Integer> magicNumbers;
     private ScheduledExecutorService service;
     private final AutoPlayService.AutoPlayRunnable runnable;
-    private final boolean switcher;
+    //private final boolean switcher;
 
     public AutoPlaySelector(Library library, ApiUtils apiUtils, BigRanking ranking,
                             AutoPlayService.AutoPlayRunnable runnable) {
@@ -39,9 +36,9 @@ public class AutoPlaySelector {
         this.magicNumbers = new LinkedList<>();
         this.runnable = runnable;
 
-        int hour = Calendar.getInstance().get(Calendar.HOUR);
+        /*int hour = Calendar.getInstance().get(Calendar.HOUR);
         this.switcher = hour % 2 == 0;
-        this.itemIndex = hour;
+        this.itemIndex = hour;*/
 
         prepare();
         setConstants();
@@ -51,7 +48,9 @@ public class AutoPlaySelector {
         List<Playlist> list = apiUtils.getDailyMixes();
 
         for (Playlist p : list){
-            data.add(p.getTracks().getItems());
+            List<PlaylistTrack> tracks = Arrays.asList(p.getTracks().getItems());
+            Collections.shuffle(tracks);
+            data.add(tracks);
         }
     }
 
@@ -72,14 +71,10 @@ public class AutoPlaySelector {
     }
 
     private void runOnce(){
-        PlaylistTrack[] dailyMix = data.get(dailyMixIndex++);
-        if (dailyMixIndex == 6) {
-            if (switcher) itemIndex++;
-            dailyMixIndex = 0;
-        }
+        List<PlaylistTrack> dailyMix = data.get(dailyMixIndex++);
+        if (dailyMixIndex == 6) dailyMixIndex = 0;
 
-        Track selectedTrack = (Track) dailyMix[itemIndex].getTrack();
-        if (!switcher) itemIndex++;
+        Track selectedTrack = (Track) dailyMix.get(itemIndex++).getTrack();
         if (itemIndex == 50) shutdown();
 
         boolean condition1 = isArtistSaved(selectedTrack.getArtists()[0].getName());
@@ -90,9 +85,8 @@ public class AutoPlaySelector {
         else {
             System.out.println(selectedTrack.getName() + " was skipped for AutoPlay");
             Song random = ranking.getRandomElement();
-            if (switcher) itemIndex++;
 
-            if (random.getRank() < (minPopularity / 2) || random.getRank() > minPopularity)
+            if (random.getSongFile().getPeak().getChartPosition() < minScore * 2)
                 apiUtils.playThis(random.getId(), false);
             else apiUtils.autoQueue(ranking, selectedTrack);
                 //apiUtils.playThis(library.next().getRandom().getTrackId(), false);

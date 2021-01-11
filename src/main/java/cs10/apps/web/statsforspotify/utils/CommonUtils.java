@@ -117,17 +117,15 @@ public class CommonUtils {
         List<Song> nonMarkedSongs = compare.getNonMarked();
         sb.append(nonMarkedSongs.size()).append(" songs left the chart").append('\n');
 
-        int entries = 0, reentries = 0;
+        int entries = 0;
 
         for (Song s : bigRanking){
             if (s.getStatus() == Status.NEW){
-                if (s.getInfoStatus().equals("NEW")) entries++;
-                else reentries++;
+                entries++;
             }
         }
 
-        sb.append(entries).append(" new songs in your chart, ");
-        sb.append(reentries).append(" re-entries");
+        sb.append(entries).append(" entries or re-entries");
 
         /*if (!nonMarkedSongs.isEmpty()){
             sb.append("Songs that left the chart: ").append('\n');

@@ -7,6 +7,7 @@ import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
+import cs10.apps.web.statsforspotify.core.GenresTracker;
 import cs10.apps.web.statsforspotify.core.LastFmIntegration;
 import cs10.apps.web.statsforspotify.io.SongFile;
 import cs10.apps.web.statsforspotify.model.LastFmData;
@@ -33,6 +34,7 @@ public class PlaybackService implements Runnable {
     private ScheduledExecutorService progressScheduler;
     private Set<String> avoidInitials;
     private Thread lastFmThread;
+    //private final GenresTracker genresTracker = new GenresTracker();
     private static final int AUTO_UPDATE_RATE = 24;
     private boolean running, canSkip;
     private int time, requestsCount, idleCount;
@@ -194,6 +196,7 @@ public class PlaybackService implements Runnable {
 
             // Only if the track wasn't skipped
             frame.setTitle("Now Playing: " + CommonUtils.toString(track));
+            //genresTracker.update(apiUtils.getArtist(track.getArtists()[0].getId()));
 
             // Update table scroll
             SwingUtilities.invokeLater(()->{

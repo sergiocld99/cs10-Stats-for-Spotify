@@ -44,8 +44,9 @@ public class Histograma extends JPanel{
         add(panelEtiqueta, BorderLayout.PAGE_END);
     }
 
-    public void agregarColumna(String etiqueta, float valor, Color color) {
-        Barra barra = new Barra(etiqueta, valor, color);
+    public void agregarColumna(String tag, float valor, Color color) {
+        if (tag.length() > 16) tag = tag.substring(0, 13) + "...";
+        Barra barra = new Barra(tag, valor, color);
         barras.add(barra);
     }
 

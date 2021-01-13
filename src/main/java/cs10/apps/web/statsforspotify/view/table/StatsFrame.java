@@ -26,6 +26,7 @@ import cs10.apps.web.statsforspotify.view.CustomTableCellRenderer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.chart.SongChartHistoryView;
 import cs10.apps.web.statsforspotify.view.histogram.ArtistFrame;
+import cs10.apps.web.statsforspotify.view.histogram.GenreFrame;
 import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
 import cs10.apps.web.statsforspotify.view.label.CustomThumbnail;
 
@@ -157,12 +158,13 @@ public class StatsFrame extends AppFrame {
         else {
             AutoPlayService autoPlayService = new AutoPlayService(bigRanking, apiUtils, autoPlayButton);
             autoPlayButton.addActionListener(e -> {
-                apiUtils.playThis(bigRanking.getRandomElement().getId(), true);
-                //if (playbackService.isRunning()){
+                if (apiUtils.playThis(bigRanking.getRandomElement().getId(), true)){
                     autoPlayService.execute();
                     playbackService.setCanSkip(false);
                     playbackService.run();
-                //} else OptionPanes.message("Please, play something before");
+                } else {
+                    OptionPanes.message("No active devices found or unable to modify current playback");
+                }
             });
         }
 
@@ -210,6 +212,7 @@ public class StatsFrame extends AppFrame {
         JMenu viewMenu = new JMenu("View");
         JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
         JMenuItem jmiLocalTop100 = new JMenuItem("Local Top 100 Artists");
+        JMenuItem jmiTopGenres = new JMenuItem("Current Top Genres");
         JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
         JMenuItem jmiDailyMixes = new JMenuItem("Current Daily Mixes Stats");
         JMenuItem jmiFanaticism = new JMenuItem("Current Fanaticism");
@@ -224,6 +227,7 @@ public class StatsFrame extends AppFrame {
         jmiAlbumCovers.addActionListener(e -> changeAlbumCoversOption());
         jmiLocalTop10.addActionListener(e -> openLocalTop10());
         jmiLocalTop100.addActionListener(e -> openLocalTop100());
+        jmiTopGenres.addActionListener(e -> openCurrentTopGenres());
         jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
         jmiDailyMixes.addActionListener(e -> openCurrentDailyMixesStats());
         jmiFanaticism.addActionListener(e -> openFanaticismWindow());
@@ -238,6 +242,7 @@ public class StatsFrame extends AppFrame {
         fileMenu.add(jmiSaveAs);
         viewMenu.add(jmiLocalTop10);
         viewMenu.add(jmiLocalTop100);
+        viewMenu.add(jmiTopGenres);
         viewMenu.add(jmiCurrentCollab);
         viewMenu.add(jmiDailyMixes);
         viewMenu.add(jmiFanaticism);
@@ -439,6 +444,10 @@ public class StatsFrame extends AppFrame {
             }
             setTitle("Done");
         }, "Open Rankings Window").start();
+    }
+
+    private void openCurrentTopGenres(){
+        new GenreFrame(init.getGenresTracker().getGenres()).init();
     }
 
     private void openLocalTop10(){

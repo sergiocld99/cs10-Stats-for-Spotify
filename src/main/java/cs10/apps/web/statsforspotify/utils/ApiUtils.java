@@ -290,6 +290,11 @@ public class ApiUtils {
         return false;
     }
 
+    /**
+     * @param trackId the Spotify ID of the target track
+     * @param immediately true if you want to interrupt current playing track
+     * @return true if the request was successful
+     */
     public boolean playThis(String trackId, boolean immediately){
         try {
             Device[] devices = spotifyApi.getUsersAvailableDevices().build().execute();
@@ -388,6 +393,15 @@ public class ApiUtils {
         return result;
     }
 
+    public Artist getArtist(String id){
+        try {
+            return spotifyApi.getArtist(id).build().execute();
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+            return null;
+        }
+    }
+
     public void analyzeDailyMixes(){
         int dailyMixes = 6, count = 0;
         int[] tracks = new int[dailyMixes];
@@ -430,6 +444,15 @@ public class ApiUtils {
         new DailyMixesFrame(times).init();
     }
 
+    public Album getAlbum(String id){
+        try {
+            return spotifyApi.getAlbum(id).build().execute();
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+            return null;
+        }
+    }
+
     public void enqueueTwoTracksOfTheSameAlbum(Track track){
         int actualNumber = track.getTrackNumber() - 1;  // 1 -> 0
         if (track.getAlbum().getAlbumType() == AlbumType.SINGLE){
@@ -438,7 +461,7 @@ public class ApiUtils {
         }
 
         try {
-            Album album = spotifyApi.getAlbum(track.getAlbum().getId()).build().execute();
+            Album album = getAlbum(track.getAlbum().getId());
             int max = album.getTracks().getItems().length;
             if (max < 6) {
                 System.err.println("This album has less than 3 songs. That's not enough");

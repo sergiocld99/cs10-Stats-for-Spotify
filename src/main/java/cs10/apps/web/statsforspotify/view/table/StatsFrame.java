@@ -9,6 +9,7 @@ import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
+import cs10.apps.web.statsforspotify.core.GenresTracker;
 import cs10.apps.web.statsforspotify.core.Init;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
@@ -447,7 +448,13 @@ public class StatsFrame extends AppFrame {
     }
 
     private void openCurrentTopGenres(){
-        new GenreFrame(init.getGenresTracker().getGenres()).init();
+        new Thread(() -> {
+            setTitle("Please wait...");
+            GenresTracker genresTracker = new GenresTracker();
+            genresTracker.build(init.getResultTracks(), apiUtils);
+            new GenreFrame(genresTracker.getGenres()).init();
+            setTitle("Done");
+        }, "Open Top Genres").start();
     }
 
     private void openLocalTop10(){

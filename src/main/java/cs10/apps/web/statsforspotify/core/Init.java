@@ -18,7 +18,7 @@ public class Init {
     private Library library;
     private BigRanking apiRanking, diskRanking;
     private final ApiUtils apiUtils;
-    private final GenresTracker genresTracker = new GenresTracker();
+    private List<Track> resultTracks;
     private String userId;
 
     public Init(ApiUtils apiUtils) {
@@ -79,18 +79,14 @@ public class Init {
         }
 
         Track[] tracks2 = apiUtils.getTopTracks(TopTerms.MEDIUM.getKey());
-        List<Track> resultTracks = new ArrayList<>(Arrays.asList(tracks1));
+        resultTracks = new ArrayList<>(Arrays.asList(tracks1));
         List<Track> repeatTracks = new ArrayList<>();
         CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100, resultTracks, repeatTracks);
 
-        new Thread(() -> buildGenres(resultTracks), "Genres Builder").start();
+        //new Thread(() -> buildGenres(resultTracks), "Genres Builder").start();
         BigRanking bigRanking = new BigRanking(resultTracks);
         bigRanking.updateRepeated(repeatTracks);
         return bigRanking;
-    }
-
-    private void buildGenres(List<Track> resultTracks){
-        genresTracker.build(resultTracks, apiUtils);
     }
 
     private BigRanking getLastRankingFromDisk(){
@@ -113,7 +109,7 @@ public class Init {
         return apiRanking;
     }
 
-    public GenresTracker getGenresTracker() {
-        return genresTracker;
+    public List<Track> getResultTracks() {
+        return resultTracks;
     }
 }

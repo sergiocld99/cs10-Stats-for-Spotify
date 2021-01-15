@@ -7,6 +7,7 @@ import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
+import cs10.apps.web.statsforspotify.app.PersonalChartApp;
 import cs10.apps.web.statsforspotify.core.GenresTracker;
 import cs10.apps.web.statsforspotify.core.LastFmIntegration;
 import cs10.apps.web.statsforspotify.io.SongFile;
@@ -34,9 +35,8 @@ public class PlaybackService implements Runnable {
     private ScheduledExecutorService progressScheduler;
     private Set<String> avoidInitials;
     private Thread lastFmThread;
-    //private final GenresTracker genresTracker = new GenresTracker();
     private static final int AUTO_UPDATE_RATE = 24;
-    private boolean running, canSkip;
+    private boolean running, canSkip, userAgreedSkip, userWasAskedForSkip;
     private int time, requestsCount, idleCount;
     private long lastRequestTime;
     private static final boolean EXPERIMENTAL = false;
@@ -70,10 +70,22 @@ public class PlaybackService implements Runnable {
     }
 
     private boolean checkInitials(Track track){
-        if (!canSkip || requestsCount < 8) return false;
+        if (!canSkip) return false;
+        if (userWasAskedForSkip && !userAgreedSkip) return false;
 
         for (String s : avoidInitials){
             if (track.getName().startsWith(s)){
+                if (!userWasAskedForSkip){
+                    System.out.println("Asking user for AutoSkip...");
+                    int r = JOptionPane.showConfirmDialog(null,
+                            "Do you want to Auto-Skip repeated songs?",
+                            PersonalChartApp.APP_NAME, JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE);
+                    userWasAskedForSkip = true;
+                    if (r == -1 || r == 1) return false;
+                    userAgreedSkip = true;
+                }
+
                 System.out.println(track.getName() + " skipped for initials");
                 avoidInitials.remove(s);
                 playNext();
@@ -260,7 +272,7 @@ public class PlaybackService implements Runnable {
 
         lastFmThread = new Thread(() -> {
             try {
-                Thread.sleep(8000);
+                Thread.sleep(AUTO_UPDATE_RATE * 500);
             } catch (InterruptedException e){
                 Maintenance.writeErrorFile(e, false);
             }

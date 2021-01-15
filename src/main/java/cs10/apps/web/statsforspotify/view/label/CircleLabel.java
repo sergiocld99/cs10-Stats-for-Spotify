@@ -33,8 +33,7 @@ public class CircleLabel extends JLabel {
 
     public void setValue(int value) {
         this.value = value;
-        if (value <= 0) setVisible(false);
-        else setVisible(true);
+        setVisible(value > 0);
     }
 
     public void setAverage(int average) {
@@ -79,11 +78,11 @@ public class CircleLabel extends JLabel {
         graphics2D.setColor(Color.white);
         String scoreNumber;
 
-        if (isMinutes() && value > average){
+        if (isMinutes() && value > average * 3){
             setTitle("Hours");
             double hours = value / 60d;
-            if (hours >= 10) scoreNumber = String.valueOf((int) hours);
-            else scoreNumber = format.format(hours);
+            scoreNumber = String.valueOf(Math.round(hours));
+            //else scoreNumber = format.format(hours);
         } else scoreNumber = String.valueOf(value);
 
         CommonUtils.drawCenteredString(graphics2D, scoreNumber,

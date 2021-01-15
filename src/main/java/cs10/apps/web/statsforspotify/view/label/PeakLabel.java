@@ -1,12 +1,7 @@
 package cs10.apps.web.statsforspotify.view.label;
 
-import cs10.apps.web.statsforspotify.utils.CommonUtils;
-
-import java.awt.*;
-
 public class PeakLabel extends CircleLabel {
     private float originalMinutes;
-
 
     public PeakLabel(){
         super("--", true);

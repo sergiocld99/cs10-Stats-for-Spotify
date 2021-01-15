@@ -3,7 +3,6 @@ package cs10.apps.web.statsforspotify.view;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
-import cs10.apps.web.statsforspotify.core.LastFmIntegration;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.io.SongFile;
 import cs10.apps.web.statsforspotify.model.Collab;
@@ -106,7 +105,7 @@ public class CustomPlayer extends JPanel {
         int previousPop = 0;
 
         if (songFile != null)
-            previousPop = songFile.getAppearances().get(0).getPopularity();
+            previousPop = songFile.getMediumAppearance().getPopularity();
 
         if (track.getArtists().length > 1){
             this.scoreLabel.setCollab(true);
@@ -154,7 +153,7 @@ public class CustomPlayer extends JPanel {
         int minutes = timeInSeconds / 60;
         progressBar.setString(minutes + ":" + decimalFormat.format(seconds));
 
-        if (peakLabel.isMinutes()){
+        if (timeInSeconds > 0 && peakLabel.isMinutes()){
             peakLabel.updateMinutes(timeInSeconds);
         }
     }

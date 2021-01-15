@@ -8,7 +8,6 @@ import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
-import cs10.apps.web.statsforspotify.core.GenresTracker;
 import cs10.apps.web.statsforspotify.core.LastFmIntegration;
 import cs10.apps.web.statsforspotify.io.SongFile;
 import cs10.apps.web.statsforspotify.model.LastFmData;
@@ -277,6 +276,7 @@ public class PlaybackService implements Runnable {
                 Maintenance.writeErrorFile(e, false);
             }
 
+            if (!player.getCurrentSongId().equals(track.getId())) return;
             LastFmData data = LastFmIntegration.analyze(track, appOptions.getLastFmUser());
             //int playCount = LastFmIntegration.getPlayCount(track, appOptions.getLastFmUser());
             if (data.getUserPlayCount() > 0) {

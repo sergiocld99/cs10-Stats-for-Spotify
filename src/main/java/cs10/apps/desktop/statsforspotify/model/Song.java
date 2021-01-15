@@ -133,15 +133,15 @@ public class Song implements Comparable<Song> {
     }
 
     public PopularityStatus getPopularityStatus(){
-        int firstPopularity = songFile.getAppearances().get(0).getPopularity();
+        int comparative = songFile.getMediumAppearance().getPopularity();
 
-        if (firstPopularity == popularity) return PopularityStatus.NORMAL;
-        else if (firstPopularity > popularity) return PopularityStatus.DECREASING;
+        if (comparative == popularity) return PopularityStatus.NORMAL;
+        else if (comparative > popularity) return PopularityStatus.DECREASING;
         else return PopularityStatus.INCREASING;
     }
 
-    public boolean isMark() {
-        return mark;
+    public boolean isNotMarked() {
+        return !mark;
     }
 
     public void setMark(boolean mark) {

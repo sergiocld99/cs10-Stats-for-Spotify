@@ -15,6 +15,7 @@ import java.util.*;
 public class Library {
     private static final File BASE_DIR = new File("library//");
     private List<ArtistDirectory> artistDirectories;
+    private final List<Song> trends = new LinkedList<>();
     private static Library instance;
 
     private final int rankingsAmount;
@@ -142,5 +143,17 @@ public class Library {
     public ArtistDirectory next(){
         auxIndex += (int) (Math.random() * 4);
         return artistDirectories.get(auxIndex);
+    }
+
+    public void addTrend(Song song){
+        trends.add(song);
+    }
+
+    public Song getTrend(){
+        return trends.remove(0);
+    }
+
+    public boolean isTrendsEmpty(){
+        return trends.isEmpty();
     }
 }

@@ -1,7 +1,6 @@
 package cs10.apps.web.statsforspotify.view.table;
 
 import com.wrapper.spotify.model_objects.specification.Track;
-import com.wrapper.spotify.model_objects.specification.User;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
@@ -29,7 +28,6 @@ import cs10.apps.web.statsforspotify.view.chart.SongChartHistoryView;
 import cs10.apps.web.statsforspotify.view.histogram.ArtistFrame;
 import cs10.apps.web.statsforspotify.view.histogram.GenreFrame;
 import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
-import cs10.apps.web.statsforspotify.view.label.CustomThumbnail;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -41,8 +39,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static javax.swing.JOptionPane.CLOSED_OPTION;
 
 public class StatsFrame extends AppFrame {
     private final AppOptions appOptions;
@@ -384,8 +380,7 @@ public class StatsFrame extends AppFrame {
 
             if (s.getSongFile().getAppearancesCount() <= min){
                 int row = s.getRank()-1;
-                if (row % 2 == 0) model.setRowColor(row,
-                        s.getPopularityStatus().getTablePairColor());
+                if (row % 2 == 0) model.setRowColor(row, s.getPopularityStatus().getTablePairColor());
                 else model.setRowColor(row, s.getPopularityStatus().getTableUnpairColor());
             }
 
@@ -394,10 +389,21 @@ public class StatsFrame extends AppFrame {
     }
 
     private Object[] toRow(Song song){
+        int comp = song.getSongFile().getPreviousAppearance().getPopularity();
+        int diff = song.getPopularity() - comp;
+        String popStr;
+
+        if (diff != 0 && Math.abs(diff) < 10){
+            if (diff > 0) {
+                popStr = song.getPopularity() + " (+" + diff + ")";
+                library.addTrend(song);
+            } else popStr = song.getPopularity() + " (" + diff + ")";
+        } else popStr = String.valueOf(song.getPopularity());
+
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
                 "#" + song.getRank(), song.getInfoStatus(),
                 song.getName().split(" \\(")[0],
-                song.getArtists(), song.getPopularity()};
+                song.getArtists(), popStr};
     }
 
     private void changeAlbumCoversOption() {

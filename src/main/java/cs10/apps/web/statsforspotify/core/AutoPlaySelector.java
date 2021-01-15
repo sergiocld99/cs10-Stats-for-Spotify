@@ -71,6 +71,11 @@ public class AutoPlaySelector {
     }
 
     private void runOnce(){
+        if (!library.isTrendsEmpty()){
+            apiUtils.playThis(library.getTrend().getId(), false);
+            return;
+        }
+
         List<PlaylistTrack> dailyMix = data.get(dailyMixIndex++);
         if (dailyMixIndex == 6) dailyMixIndex = 0;
 

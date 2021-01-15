@@ -77,7 +77,7 @@ public class BigRanking extends Ranking {
         List<Song> result = new ArrayList<>();
 
         for (Song song : this){
-            if (!song.isMark())
+            if (song.isNotMarked())
                 result.add(song);
         }
 
@@ -163,7 +163,7 @@ public class BigRanking extends Ranking {
     public List<String> getLefts(){
         List<String> ids = new ArrayList<>();
         for (Song s : rankingToCompare){
-            if (!s.isMark()){
+            if (s.isNotMarked()){
                 ids.add(s.getId());
             }
         }

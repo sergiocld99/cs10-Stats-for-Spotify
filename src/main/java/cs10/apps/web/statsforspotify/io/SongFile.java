@@ -9,7 +9,7 @@ import java.util.List;
 
 public class SongFile {
     private String trackName;
-    private List<SongAppearance> appearances;
+    private ArrayList<SongAppearance> appearances;
     private SongPeak peak;
     private final File file;
     private float[] popularitySumByRank;
@@ -71,8 +71,17 @@ public class SongFile {
         }
     }
 
-    public SongAppearance getLastAppearance(){
-        return this.appearances.get(getAppearancesCount()-1);
+    public SongAppearance getFirstAppearance(){
+        return appearances.get(0);
+    }
+
+    public SongAppearance getMediumAppearance(){
+        return this.appearances.get(appearances.size() / 2);
+    }
+
+    public SongAppearance getPreviousAppearance(){
+        int index = Math.max(0, appearances.size() - 2);
+        return appearances.get(index);
     }
 
     public String getTrackName() {

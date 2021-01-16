@@ -84,6 +84,10 @@ public class SongFile {
         return appearances.get(index);
     }
 
+    public SongAppearance getLastAppearance(){
+        return appearances.get(appearances.size() - 1);
+    }
+
     public String getTrackName() {
         return trackName;
     }

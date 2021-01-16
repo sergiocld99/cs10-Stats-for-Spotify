@@ -6,11 +6,14 @@ import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.CustomList;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
+import cs10.apps.web.statsforspotify.view.CustomPlayer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Library {
     private static final File BASE_DIR = new File("library//");
@@ -21,27 +24,30 @@ public class Library {
     private final int rankingsAmount;
     private int auxIndex;
 
-    private Library(File rootFile){
+    private Library(File rootFile, CustomPlayer player){
         this.rankingsAmount = IOUtils.getRankingsAmount();
-        this.explore(rootFile);
+        this.explore(rootFile, player);
     }
 
-    public synchronized static Library getInstance(){
+    public synchronized static Library getInstance(CustomPlayer player){
         if (instance == null){
-            instance = new Library(BASE_DIR);
+            instance = new Library(BASE_DIR, player);
         }
 
         return instance;
     }
 
-    private void explore(File rootFile){
+    private void explore(File rootFile, CustomPlayer player){
         artistDirectories = new CustomList<>();
 
         File[] internalDirectories = rootFile.listFiles();
         if (internalDirectories != null){
+            int progress = 0, max = internalDirectories.length;
+            player.getProgressBar().setMaximum(max);
             for (File f : internalDirectories){
                 ArtistDirectory artistDirectory = new ArtistDirectory(f, rankingsAmount);
                 artistDirectories.add(artistDirectory);
+                player.setProgress(++progress);
             }
         }
     }

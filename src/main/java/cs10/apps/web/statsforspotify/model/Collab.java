@@ -9,7 +9,7 @@ public class Collab implements Comparable<Collab> {
     private String name, artists;
 
     public static float calcScore(String artists, int actualPopularity){
-        Library library = Library.getInstance();
+        Library library = Library.getInstance(null);
         float score = 0, multiplier = 1;
 
         for (String artist : artists.split(", ")){
@@ -22,7 +22,7 @@ public class Collab implements Comparable<Collab> {
     }
 
     public static float calcScore(ArtistSimplified[] artists, int actualPopularity){
-        Library library = Library.getInstance();
+        Library library = Library.getInstance(null);
         float score = 0, multiplier = 1;
 
         for (ArtistSimplified artist : artists){

@@ -8,6 +8,7 @@ import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
+import cs10.apps.web.statsforspotify.view.CustomPlayer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import java.util.ArrayList;
@@ -25,12 +26,12 @@ public class Init {
         this.apiUtils = apiUtils;
     }
 
-    public void execute(){
+    public void execute(CustomPlayer player){
         long startTime = System.currentTimeMillis();
         Thread apiThread = new Thread(() ->
                 apiRanking = selectCustomRankingFromAPI(), "Build Ranking from API");
         Thread libraryThread = new Thread(() ->
-                library = Library.getInstance(), "Get Instance of Library");
+                library = Library.getInstance(player), "Get Instance of Library");
 
         apiThread.start();
         libraryThread.start();

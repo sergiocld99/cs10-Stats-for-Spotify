@@ -192,12 +192,10 @@ public class PlaybackService implements Runnable {
 
             if (canSkip && isBecomingUnpopular){
                 //attemptQueue(track);
-                if (requestsCount % 2 == 0) {
-                    System.out.println(track.getName() + " is becoming unpopular");
-                    if (apiUtils.skipCurrentTrack()){
-                        run();
-                        return;
-                    }
+                System.out.println(track.getName() + " is becoming unpopular");
+                if (apiUtils.skipCurrentTrack()){
+                    run();
+                    return;
                 }
                 frame.setIconImage(new ImageIcon("appicon2.png").getImage());
             } else {
@@ -266,8 +264,7 @@ public class PlaybackService implements Runnable {
     private void attemptGetMinutes(Track track){
         AppOptions appOptions = player.getAppOptions();
         PeakLabel peakLabel = player.getPeakLabel();
-        if (lastFmThread != null && lastFmThread.isAlive())
-            lastFmThread.interrupt();
+        if (lastFmThread != null && lastFmThread.isAlive()) lastFmThread.interrupt();
 
         lastFmThread = new Thread(() -> {
             try {
@@ -276,6 +273,7 @@ public class PlaybackService implements Runnable {
                 Maintenance.writeErrorFile(e, false);
             }
 
+            if (!peakLabel.isReplaceable()) return;
             if (!player.getCurrentSongId().equals(track.getId())) return;
             LastFmData data = LastFmIntegration.analyze(track, appOptions.getLastFmUser());
             //int playCount = LastFmIntegration.getPlayCount(track, appOptions.getLastFmUser());

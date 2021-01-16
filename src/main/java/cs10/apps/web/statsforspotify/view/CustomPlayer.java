@@ -25,6 +25,7 @@ public class CustomPlayer extends JPanel {
     private String currentSongId;
     private Library library;
     private int average;
+    private long lastRankingCode;
 
     public CustomPlayer(int thumbSize, AppOptions appOptions) {
         this.appOptions = appOptions;
@@ -43,7 +44,7 @@ public class CustomPlayer extends JPanel {
     }
 
     public void enableLibrary(){
-        new Thread(() -> library = Library.getInstance()).start();
+        new Thread(() -> library = Library.getInstance(null)).start();
     }
 
     private void customizeProgressBar(){
@@ -69,6 +70,10 @@ public class CustomPlayer extends JPanel {
         this.average = average;
         this.popularityLabel.setAverage(average);
         this.peakLabel.setAverage(average / 3);
+    }
+
+    public void setLastRankingCode(long lastRankingCode) {
+        this.lastRankingCode = lastRankingCode;
     }
 
     public void clear(){
@@ -125,7 +130,14 @@ public class CustomPlayer extends JPanel {
         if (songFile != null){
             peakLabel.changeToPeak();
             peakLabel.setAverage(average / 3);
-            peakLabel.setValue(songFile.getPeak().getChartPosition());
+            int peak = songFile.getPeak().getChartPosition();
+            int comp = songFile.getLastAppearance().getChartPosition() * 2 / 3 + 1;
+            int code = songFile.getPeak().getRankingCode();
+            System.out.println(track.getName() + " peak ranking code: " + code);
+            if (peak > track.getPopularity() / 2) peakLabel.setOriginalValue(0);
+            else if (Math.abs(code - lastRankingCode) < 64) peakLabel.setOriginalValue(peak);
+            else peakLabel.setOriginalValue(comp);
+            peakLabel.setValue(peak);
             peakLabel.repaint();
         } else peakLabel.setValue(0);
 

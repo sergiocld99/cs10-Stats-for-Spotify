@@ -78,16 +78,18 @@ public class ApiUtils {
         }
     }
 
-    public void refreshToken(String code) {
+    public boolean refreshToken(String code) {
         try {
             AuthorizationCodeCredentials credentials = spotifyApi.
                     authorizationCode(code).build().execute();
             System.out.println("These credentials expires in " + credentials.getExpiresIn());
             spotifyApi.setAccessToken(credentials.getAccessToken());
             spotifyApi.setRefreshToken(credentials.getRefreshToken());
+            return true;
         } catch (Exception e){
             OptionPanes.showError("ApiUtils - Refresh Token", e);
             Maintenance.writeErrorFile(e, true);
+            return false;
         }
     }
 

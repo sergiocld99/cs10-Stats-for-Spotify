@@ -1,6 +1,5 @@
 package cs10.apps.web.statsforspotify.view.table;
 
-import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
 import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
@@ -14,7 +13,6 @@ import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.SimpleRanking;
-import cs10.apps.web.statsforspotify.model.TopTerms;
 import cs10.apps.web.statsforspotify.service.AutoPlayService;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
@@ -36,7 +34,6 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,7 +57,8 @@ public class StatsFrame extends AppFrame {
 
     public void init() {
         init = new Init(apiUtils);
-        Thread initThread = new Thread(() -> init.execute(), "Init Thread");
+        player = new CustomPlayer(70, appOptions);
+        Thread initThread = new Thread(() -> init.execute(player), "Init Thread");
         initThread.start();
 
         setTitle(PersonalChartApp.APP_AUTHOR + " - " +
@@ -74,7 +72,6 @@ public class StatsFrame extends AppFrame {
 
         // Player Panel
         JPanel playerPanel = new JPanel();
-        player = new CustomPlayer(70, appOptions);
         JButton autoPlayButton = new JButton(AutoPlayService.NAME + " (Premium)");
         JLabel textAboveButton = new JLabel("Loading...", JLabel.CENTER);
 
@@ -131,6 +128,7 @@ public class StatsFrame extends AppFrame {
         }
 
         bigRanking = init.getProcessedRanking();
+        player.setLastRankingCode(bigRanking.getCode());
         library = init.getLibrary();
         textAboveButton.setText(library.getSongCount() + " songs in your charts");
         //apiUtils.addToMissedTracks(apiUtils.findDailyMix(
@@ -286,61 +284,6 @@ public class StatsFrame extends AppFrame {
                 }
             }
         }
-    }
-
-    private void initRanking(){
-        // Step 1: get actual top tracks from Spotify
-        player.setString("Connecting to Spotify...");
-        Track[] tracks1 = apiUtils.getUntilMostPopular(TopTerms.SHORT.getKey(), 50);
-        if (tracks1 == null) System.exit(0);
-
-        player.setProgress(50);
-        Track[] tracks2 = apiUtils.getTopTracks(TopTerms.MEDIUM.getKey());
-        player.setProgress(100);
-
-        // Step 2: build actual ranking
-        List<Track> resultTracks = new ArrayList<>(Arrays.asList(tracks1));
-        List<Track> repeatTracks = new ArrayList<>();
-        CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100, resultTracks, repeatTracks);
-        bigRanking = new BigRanking(resultTracks);
-        bigRanking.updateRepeated(repeatTracks);
-
-        // Step 2.5: retrieve username
-        String userId;
-
-        try {
-            userId = apiUtils.getUser().getId();
-        } catch (Exception e){
-            Maintenance.writeErrorFile(e, true);
-            OptionPanes.showError("Stats Frame - Init", e);
-            System.exit(1);
-            return;
-        }
-
-        // Step 3: read last code
-        boolean showSummary = false;
-        long[] savedCodes = IOUtils.getSavedRankingCodes(userId);
-        if (bigRanking.getCode() > 0 && bigRanking.getCode() != savedCodes[1]){
-            IOUtils.updateRankingCodes(savedCodes[1], bigRanking.getCode(), userId);
-            IOUtils.save(bigRanking, true);
-            player.setString("Updating Library Files...");
-            IOUtils.updateLibrary(bigRanking, player.getProgressBar());
-            showSummary = true;
-        }
-
-        // Step 4: load compare ranking
-        BigRanking rankingToCompare = IOUtils.getLastRanking(userId);
-        bigRanking.updateAllStatus(rankingToCompare);
-
-        // Step 5: build and show UI
-        library = Library.getInstance();
-        buildTable();
-
-        // Step 6: show songs that left the chart
-        if (showSummary)
-            new Thread(() ->
-                CommonUtils.summary(bigRanking, rankingToCompare, apiUtils),
-                   "Summary of New Ranking").start();
     }
 
     private void startPlayback(){

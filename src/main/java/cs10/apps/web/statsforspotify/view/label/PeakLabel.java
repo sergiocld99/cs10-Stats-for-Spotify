@@ -15,6 +15,7 @@ public class PeakLabel extends CircleLabel {
     }
 
     public void changeToLastFM(float minutes, int playCount, int average){
+        setOriginalValue(0);
         setMinutes(true);
         originalMinutes = minutes;
         setValue(0);

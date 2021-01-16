@@ -1,7 +1,6 @@
 package cs10.apps.web.statsforspotify;
 
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
-import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
 
 public class Test {
@@ -12,7 +11,7 @@ public class Test {
         Maintenance.clearPreviousReport();
 
         if (APPLY_FIXES) Maintenance.fixSongFiles();
-        else if (TEST_ONLY) Library.getInstance();
+        //else if (TEST_ONLY) Library.getInstance();
         else new PersonalChartApp().init();
     }
 }

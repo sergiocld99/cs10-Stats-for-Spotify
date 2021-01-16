@@ -4,12 +4,10 @@ import cs10.apps.web.statsforspotify.core.AutoPlaySelector;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
-import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.swing.*;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 public class AutoPlayService {
     public static final String NAME = "AutoPlay";
@@ -44,7 +42,7 @@ public class AutoPlayService {
         public void run() {
             button.setEnabled(false);
 
-            new AutoPlaySelector(Library.getInstance(), apiUtils, ranking, this).run();
+            new AutoPlaySelector(Library.getInstance(null), apiUtils, ranking, this).run();
 
             /*int offset = (int) ranking.getCode() / 1000;
             if (offset == 0) offset = 10;

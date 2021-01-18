@@ -50,6 +50,10 @@ public class CircleLabel extends JLabel {
         this.minutes = minutes;
     }
 
+    public void setReplaceable(boolean replaceable) {
+        this.replaceable = replaceable;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

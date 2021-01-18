@@ -133,13 +133,15 @@ public class CustomPlayer extends JPanel {
             int peak = songFile.getPeak().getChartPosition();
             int comp = songFile.getLastAppearance().getChartPosition() * 2 / 3 + 1;
             int code = songFile.getPeak().getRankingCode();
-            System.out.println(track.getName() + " peak ranking code: " + code);
             if (peak > track.getPopularity() / 2) peakLabel.setOriginalValue(0);
             else if (Math.abs(code - lastRankingCode) < 64) peakLabel.setOriginalValue(peak);
             else peakLabel.setOriginalValue(comp);
             peakLabel.setValue(peak);
             peakLabel.repaint();
-        } else peakLabel.setValue(0);
+        } else {
+            peakLabel.setValue(0);
+            peakLabel.setReplaceable(true);
+        }
 
         //this.peakLabel.setValue(LastFmIntegration.getLastFmCount());
         //this.peakLabel.setValue(songFile == null ? 0 : songFile.getPeak().getChartPosition());

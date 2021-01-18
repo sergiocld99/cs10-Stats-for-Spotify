@@ -28,7 +28,6 @@ import cs10.apps.web.statsforspotify.view.histogram.GenreFrame;
 import cs10.apps.web.statsforspotify.view.histogram.LocalTop10Frame;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.awt.*;
@@ -65,7 +64,7 @@ public class StatsFrame extends AppFrame {
                 PersonalChartApp.APP_NAME + " v" + PersonalChartApp.APP_VERSION);
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1000, 600);
+        setSize(1000, 480);
 
         // Menu Bar
         JMenuBar menuBar = getCustomMenuBar();
@@ -75,7 +74,7 @@ public class StatsFrame extends AppFrame {
         JButton autoPlayButton = new JButton(AutoPlayService.NAME + " (Premium)");
         JLabel textAboveButton = new JLabel("Loading...", JLabel.CENTER);
 
-        playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
+        //playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
         playerPanel.add(player);
         JPanel autoPlayPanel = new JPanel(new GridLayout(2,1));
         textAboveButton.setFont(new Font("Arial",Font.BOLD,10));
@@ -113,7 +112,9 @@ public class StatsFrame extends AppFrame {
         // Add Components
         getContentPane().add(BorderLayout.NORTH, menuBar);
         getContentPane().add(BorderLayout.CENTER, playerPanel);
-        getContentPane().add(BorderLayout.SOUTH, new JScrollPane(table));
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(1000, 310));
+        getContentPane().add(BorderLayout.SOUTH, scrollPane);
 
         // Set Playback
         playbackService = new PlaybackService(apiUtils, table, this, player);
@@ -327,6 +328,10 @@ public class StatsFrame extends AppFrame {
                 else model.setRowColor(row, s.getPopularityStatus().getTableUnpairColor());
             }
 
+            // BETA 1.04.2
+            int comp = s.getSongFile().getMediumAppearance().getPopularity();
+            if (s.getPopularity() > comp + 2) library.addTrend(s);
+
             model.addRow(toRow(s));
         }
     }
@@ -337,10 +342,8 @@ public class StatsFrame extends AppFrame {
         String popStr;
 
         if (diff != 0 && Math.abs(diff) < 10){
-            if (diff > 0) {
-                popStr = song.getPopularity() + " (+" + diff + ")";
-                library.addTrend(song);
-            } else popStr = song.getPopularity() + " (" + diff + ")";
+            if (diff > 0) popStr = song.getPopularity() + " (+" + diff + ")";
+            else popStr = song.getPopularity() + " (" + diff + ")";
         } else popStr = String.valueOf(song.getPopularity());
 
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),

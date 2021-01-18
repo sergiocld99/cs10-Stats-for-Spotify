@@ -100,40 +100,55 @@ public class Library {
 
     public void update(BigRanking bigRanking){
         for (Song s : bigRanking){
-            for (String artist : s.getArtists().split(", ")) {
-                ArtistDirectory a = getArtistByName(artist);
-                if (a == null) {
-                    File dirCreated = ArtistDirectory.makeDirectory(BASE_DIR, artist);
-                    a = new ArtistDirectory(dirCreated, rankingsAmount);
-                }
+            updateSongFile(bigRanking.getCode(), s);
+        }
+    }
 
-                SongFile songFile = a.getSongById(s.getId());
-                if (songFile == null){
-                    try {
-                        File fileCreated = SongFile.createFile(a.getFile(), s);
-                        songFile = new SongFile(fileCreated);
-                        a.addSongFile(songFile);
-                    } catch (IOException e){
-                        Maintenance.writeErrorFile(e, true);
-                        OptionPanes.message("Unable to create " + s.getName() + " song file");
-                        continue;
-                    }
-                }
+    private void updateSongFile(long rankingCode, Song s) {
+        for (String artist : s.getArtists().split(", ")) {
+            ArtistDirectory a = getArtistByName(artist);
+            if (a == null) {
+                File dirCreated = ArtistDirectory.makeDirectory(BASE_DIR, artist);
+                a = new ArtistDirectory(dirCreated, rankingsAmount);
+            }
 
-                songFile.update(s, bigRanking.getCode());
-                s.setSongFile(songFile);
+            SongFile songFile = a.getSongById(s.getId());
+            if (songFile == null){
+                try {
+                    File fileCreated = SongFile.createFile(a.getFile(), s);
+                    songFile = new SongFile(fileCreated);
+                    a.addSongFile(songFile);
+                } catch (IOException e){
+                    Maintenance.writeErrorFile(e, true);
+                    OptionPanes.message("Unable to create " + s.getName() + " song file");
+                    continue;
+                }
+            }
+
+            songFile.update(s, rankingCode);
+            s.setSongFile(songFile);
+        }
+    }
+
+
+    public void relink(BigRanking bigRanking){
+        for (Song s : bigRanking){
+            if (!relinkSongFile(s)){
+                System.err.println(s + " not found");
+                updateSongFile(bigRanking.getCode(), s);
             }
         }
     }
 
-    public void relink(BigRanking bigRanking){
-        for (Song s : bigRanking){
-            for (String artist : s.getArtists().split(", ")) {
-                ArtistDirectory a = getArtistByName(artist);
-                SongFile songFile = a.getSongById(s.getId());
-                s.setSongFile(songFile);
-            }
+    private boolean relinkSongFile(Song s) {
+        for (String artist : s.getArtists().split(", ")) {
+            ArtistDirectory a = getArtistByName(artist);
+            if (a == null) return false;
+            SongFile songFile = a.getSongById(s.getId());
+            s.setSongFile(songFile);
         }
+
+        return true;
     }
 
     public int getSongCount(){
@@ -153,6 +168,10 @@ public class Library {
 
     public void addTrend(Song song){
         trends.add(song);
+    }
+
+    public void shuffleTrends(){
+        Collections.shuffle(trends);
     }
 
     public Song getTrend(){

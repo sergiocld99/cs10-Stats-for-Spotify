@@ -66,16 +66,12 @@ public class AutoPlaySelector {
             return;
         }
 
+        library.shuffleTrends();
         service = Executors.newSingleThreadScheduledExecutor();
         service.scheduleAtFixedRate(this::runOnce, 0, 3, TimeUnit.MINUTES);
     }
 
     private void runOnce(){
-        if (!library.isTrendsEmpty()){
-            apiUtils.playThis(library.getTrend().getId(), false);
-            return;
-        }
-
         List<PlaylistTrack> dailyMix = data.get(dailyMixIndex++);
         if (dailyMixIndex == 6) dailyMixIndex = 0;
 
@@ -85,16 +81,27 @@ public class AutoPlaySelector {
         boolean condition1 = isArtistSaved(selectedTrack.getArtists()[0].getName());
         boolean condition2 = isGoodPopularity(selectedTrack.getPopularity());
 
-        if (condition1 || condition2)
+        if (condition1 || condition2) {
+            System.out.println(selectedTrack.getName() + " selected from Daily Mixes");
             apiUtils.playThis(selectedTrack.getId(), false);
-        else {
-            System.out.println(selectedTrack.getName() + " was skipped for AutoPlay");
+        } else {
+            if (!library.isTrendsEmpty()){
+                Song s = library.getTrend();
+                System.out.println(s.getName() + " selected by Trends");
+                apiUtils.playThis(s.getId(), false);
+                minPopularity = s.getPopularity();
+                return;
+            }
+
             Song random = ranking.getRandomElement();
 
-            if (random.getSongFile().getPeak().getChartPosition() < minScore * 2)
+            if (random.getSongFile().getPeak().getChartPosition() < minScore * 2) {
+                System.out.println(random.getName() + " selected from Current Ranking");
                 apiUtils.playThis(random.getId(), false);
-            else apiUtils.autoQueue(ranking, selectedTrack);
-                //apiUtils.playThis(library.next().getRandom().getTrackId(), false);
+            } else {
+                System.out.println("Asking Spotify for recommendations...");
+                apiUtils.autoQueue(ranking, selectedTrack);
+            }
         }
     }
 

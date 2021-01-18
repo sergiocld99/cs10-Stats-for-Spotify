@@ -6,11 +6,10 @@ import cs10.apps.web.statsforspotify.io.SongAppearance;
 import cs10.apps.web.statsforspotify.io.SongFile;
 import cs10.apps.web.statsforspotify.io.SongPeak;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
+import cs10.apps.web.statsforspotify.view.OptionPanes;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.TickUnitSource;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -27,6 +26,11 @@ public class SongChartHistoryView extends AppFrame {
     }
 
     public void init(){
+        if (songFile.getAppearancesCount() < 4) {
+            OptionPanes.message("Not enough song appearances yet");
+            return;
+        }
+
         SongPeak peak = songFile.getPeak();
         setResizable(false);
         setTitle("Peak #" + peak.getChartPosition() + " on " +
@@ -52,6 +56,7 @@ public class SongChartHistoryView extends AppFrame {
         render(xyPlot, dataset);
 
         xyPlot.getDomainAxis().setRange(1,songFile.getAppearancesCount());
+        xyPlot.getRangeAxis().setRange(0,100);
         xyPlot.getRangeAxis().setInverted(true);
         ChartPanel chartPanel = new ChartPanel(chart);
         setContentPane(chartPanel);

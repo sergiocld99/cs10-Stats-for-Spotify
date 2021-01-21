@@ -179,8 +179,6 @@ public class PlaybackService implements Runnable {
                         frame.setTitle(track.getAlbum().getName());
                         return;
                 }
-            } else {
-                if (progressScheduler != null) progressScheduler.shutdown();
             }
 
             System.out.println(track.getName() + " set in Playback Service");
@@ -218,6 +216,7 @@ public class PlaybackService implements Runnable {
             int maximum = track.getDurationMs() / 1000;
             running = true;
 
+            if (progressScheduler != null && !progressScheduler.isTerminated()) progressScheduler.shutdown();
             progressScheduler = Executors.newSingleThreadScheduledExecutor();
             progressScheduler.scheduleAtFixedRate(() -> {
                 player.setTime(time);
@@ -280,7 +279,6 @@ public class PlaybackService implements Runnable {
             if (data.getUserPlayCount() > 0) {
                 int averageTime = player.getAverage() * 3;
                 float minutes = data.getUserPlayCount() * track.getDurationMs() / 60000f;
-                peakLabel.changeToLastFM(minutes, data.getUserPlayCount(), averageTime);
 
                 if (data.getFanaticism() != null){
                     ImageIcon icon = new ImageIcon(data.getFanaticism().getIconName());
@@ -288,9 +286,8 @@ public class PlaybackService implements Runnable {
                     frame.setTitle(data.getFanaticism().getLabel());
                 }
 
-                if (EXPERIMENTAL && minutes > 100 && minutes < averageTime){
-                    apiUtils.enqueueTwoTracksOfTheSameAlbum(track);
-                }
+                peakLabel.changeToLastFM(minutes, data.getUserPlayCount(), averageTime);
+                if (EXPERIMENTAL && minutes > 100 && minutes < averageTime) apiUtils.enqueueTwoTracksOfTheSameAlbum(track);
             }
         }, "Set Minutes Label");
 

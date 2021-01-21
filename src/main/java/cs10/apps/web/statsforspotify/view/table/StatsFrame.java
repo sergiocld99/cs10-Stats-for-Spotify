@@ -461,9 +461,10 @@ public class StatsFrame extends AppFrame {
             SongChartHistoryView view = new SongChartHistoryView(
                     library, selected.getMainArtist(), selected.getId());
 
-            view.init();
-            view.setSize(1000,500);
-            view.setVisible(true);
+            if (view.init()){
+                view.setSize(1000,500);
+                view.setVisible(true);
+            }
         });
     }
 }

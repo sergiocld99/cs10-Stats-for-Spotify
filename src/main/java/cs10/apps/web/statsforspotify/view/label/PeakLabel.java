@@ -18,7 +18,7 @@ public class PeakLabel extends CircleLabel {
         setOriginalValue(0);
         setMinutes(true);
         originalMinutes = minutes;
-        setValue(0);
+        //setValue(0);
         setTitle("Minutes");
         setAverage(average);
         setInverted(false);

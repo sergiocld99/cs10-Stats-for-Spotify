@@ -166,10 +166,7 @@ public class CustomPlayer extends JPanel {
         int seconds = timeInSeconds % 60;
         int minutes = timeInSeconds / 60;
         progressBar.setString(minutes + ":" + decimalFormat.format(seconds));
-
-        if (timeInSeconds > 0 && peakLabel.isMinutes()){
-            peakLabel.updateMinutes(timeInSeconds);
-        }
+        if (timeInSeconds > 0 && peakLabel.isMinutes()) peakLabel.updateMinutes(timeInSeconds);
     }
 
     public void setCurrentSongId(String currentSongId) {

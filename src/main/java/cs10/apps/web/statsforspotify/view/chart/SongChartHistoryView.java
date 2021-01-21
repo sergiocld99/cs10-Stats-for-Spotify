@@ -25,10 +25,10 @@ public class SongChartHistoryView extends AppFrame {
         songFile = library.getArtistByName(artist).getSongById(songId);
     }
 
-    public void init(){
+    public boolean init(){
         if (songFile.getAppearancesCount() < 4) {
             OptionPanes.message("Not enough song appearances yet");
-            return;
+            return false;
         }
 
         SongPeak peak = songFile.getPeak();
@@ -60,6 +60,7 @@ public class SongChartHistoryView extends AppFrame {
         xyPlot.getRangeAxis().setInverted(true);
         ChartPanel chartPanel = new ChartPanel(chart);
         setContentPane(chartPanel);
+        return true;
     }
 
     private void render(XYPlot plot, XYSeriesCollection dataset){

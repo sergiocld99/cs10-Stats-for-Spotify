@@ -19,6 +19,7 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
     }
 
     public static File makeDirectory(File parentFolder, String artistName){
+        artistName = artistName.replace("/\\","");
         File f = new File(parentFolder, artistName);
         System.out.println(f.getPath() + " created: " + f.mkdirs());
         return f;

@@ -15,7 +15,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CommonUtils {
 
@@ -138,6 +140,12 @@ public class CommonUtils {
 
         String message = sb.toString();
         if (!message.isEmpty()) OptionPanes.message(message);
+    }
+
+    public static int countArtists(Track[] tracks){
+        Set<String> set = new HashSet<>();
+        for (Track t : tracks) set.add(t.getArtists()[0].getId());
+        return set.size();
     }
 
     public static String toString(Track track){

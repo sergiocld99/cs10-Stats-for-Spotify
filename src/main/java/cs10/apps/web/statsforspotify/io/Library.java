@@ -105,11 +105,12 @@ public class Library {
     }
 
     private void updateSongFile(long rankingCode, Song s) {
-        for (String artist : s.getArtists().split(", ")) {
+        String artist = s.getArtists().split(", ")[0];
             ArtistDirectory a = getArtistByName(artist);
             if (a == null) {
                 File dirCreated = ArtistDirectory.makeDirectory(BASE_DIR, artist);
                 a = new ArtistDirectory(dirCreated, rankingsAmount);
+                artistDirectories.add(a);
             }
 
             SongFile songFile = a.getSongById(s.getId());
@@ -121,13 +122,12 @@ public class Library {
                 } catch (IOException e){
                     Maintenance.writeErrorFile(e, true);
                     OptionPanes.message("Unable to create " + s.getName() + " song file");
-                    continue;
+                    return;
                 }
             }
 
             songFile.update(s, rankingCode);
             s.setSongFile(songFile);
-        }
     }
 
 
@@ -141,12 +141,11 @@ public class Library {
     }
 
     private boolean relinkSongFile(Song s) {
-        for (String artist : s.getArtists().split(", ")) {
+        String artist = s.getArtists().split(", ")[0];
             ArtistDirectory a = getArtistByName(artist);
             if (a == null) return false;
             SongFile songFile = a.getSongById(s.getId());
             s.setSongFile(songFile);
-        }
 
         return true;
     }

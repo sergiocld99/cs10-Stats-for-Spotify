@@ -34,7 +34,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
-import java.util.List;
 
 public class StatsFrame extends AppFrame {
     private final AppOptions appOptions;
@@ -251,42 +250,6 @@ public class StatsFrame extends AppFrame {
         return menuBar;
     }
 
-    private void experimentalModifyArtistScore1() {
-        float average = bigRanking.getCode() / 100f;
-        int offset = (int) (average / 10);
-        for (int i=0; i<average; i+=offset){
-            List<Song> sublist = bigRanking.subList(i,i+offset);
-            int maxP = 0, maxIndex = 0;
-            for (Song s : sublist){
-                if (s.getPopularity() > maxP){
-                    maxP = s.getPopularity();
-                    maxIndex = s.getRank()-1;
-                }
-            }
-            Song selected = bigRanking.get(maxIndex);
-            for (String artist : selected.getArtists().split(", ")){
-                ArtistDirectory a = library.getArtistByName(artist);
-                a.multiplyScore(Math.sqrt(maxP / average));
-            }
-        }
-    }
-
-    private void experimentalModifyArtistScore2(){
-        float average = bigRanking.getCode() / 100f;
-        int max = (int) average;
-
-        for (Song s : bigRanking){
-            if (s.getPopularity() > max){
-                max = s.getPopularity();
-                double delta = s.getPopularity() - average;
-                for (String artist : s.getArtists().split(", ")){
-                    ArtistDirectory a = library.getArtistByName(artist);
-                    a.incrementScore(delta);
-                }
-            }
-        }
-    }
-
     private void startPlayback(){
         player.setString("");
         playbackService.setRanking(bigRanking);
@@ -298,9 +261,9 @@ public class StatsFrame extends AppFrame {
         table.getTableHeader().setDefaultRenderer(new CustomHeaderRenderer(table));
         float average = bigRanking.getCode() / 100f;
 
-        int min = 100;
+        int max = 10;
         for (int j=0; j<Math.min(5, bigRanking.size()); j++)
-            min = Math.min(min, bigRanking.get(j).getSongFile().getAppearancesCount());
+            max = Math.max(max, bigRanking.get(j).getPopularity());
 
         for (Song s : bigRanking){
             if (s.getStatus() == Status.NEW){
@@ -316,13 +279,14 @@ public class StatsFrame extends AppFrame {
             if (s.isRepeated()) {
                 //System.out.println(s + " is repeated");
                 double multiplier = Math.sqrt(s.getPopularity() / average);
-                for (String artist : s.getArtists().split(", ")){
+                String artist = s.getArtists().split(", ")[0];
                     ArtistDirectory a = library.getArtistByName(artist);
-                    a.multiplyScore(multiplier);
-                }
+                    if (a == null) System.err.println(artist + " not found");
+                    else a.incrementScore(multiplier);
+                    //else a.multiplyScore(multiplier);
             }
 
-            if (s.getSongFile().getAppearancesCount() <= min){
+            if (s.getPopularity() >= max){
                 int row = s.getRank()-1;
                 if (row % 2 == 0) model.setRowColor(row, s.getPopularityStatus().getTablePairColor());
                 else model.setRowColor(row, s.getPopularityStatus().getTableUnpairColor());

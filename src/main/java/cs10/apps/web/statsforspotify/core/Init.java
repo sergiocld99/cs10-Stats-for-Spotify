@@ -29,7 +29,7 @@ public class Init {
     public void execute(CustomPlayer player){
         long startTime = System.currentTimeMillis();
         Thread apiThread = new Thread(() ->
-                apiRanking = selectCustomRankingFromAPI(), "Build Ranking from API");
+                apiRanking = select2(), "Build Ranking from API (Beta 1.04.6)");
         Thread libraryThread = new Thread(() ->
                 library = Library.getInstance(player), "Get Instance of Library");
 
@@ -74,17 +74,31 @@ public class Init {
 
     private BigRanking selectCustomRankingFromAPI(){
         Track[] tracks1 = apiUtils.getUntilMostPopular(TopTerms.SHORT.getKey(), 50);
-        if (tracks1 == null) {
+        Track[] tracks2 = apiUtils.getTopTracks(TopTerms.MEDIUM.getKey());
+
+        if (tracks1.length == 0 || tracks2.length == 0) {
             OptionPanes.message("Unable to build Ranking. Cause: not enough songs");
             System.exit(1);
         }
 
-        Track[] tracks2 = apiUtils.getTopTracks(TopTerms.MEDIUM.getKey());
+        return buildRanking(tracks1, tracks2, 100);
+    }
+
+    private BigRanking select2(){
+        Track[] tracks2 = apiUtils.getUntilMostPopular(TopTerms.MEDIUM.getKey(), 50);
+        if (tracks2.length == 0) {
+            OptionPanes.message("Unable to build Ranking. Cause: not enough songs");
+            System.exit(1);
+        }
+
+        Track[] tracks1 = apiUtils.getUntilPosition(TopTerms.SHORT.getKey(), 50 + CommonUtils.countArtists(tracks2));
+        return buildRanking(tracks1, tracks2, 200);
+    }
+
+    private BigRanking buildRanking(Track[] tracks1, Track[] tracks2, int maxSize){
         resultTracks = new ArrayList<>(Arrays.asList(tracks1));
         List<Track> repeatTracks = new ArrayList<>();
-        CommonUtils.combineWithoutRepeats(tracks1, tracks2, 100, resultTracks, repeatTracks);
-
-        //new Thread(() -> buildGenres(resultTracks), "Genres Builder").start();
+        CommonUtils.combineWithoutRepeats(tracks1, tracks2, maxSize, resultTracks, repeatTracks);
         BigRanking bigRanking = new BigRanking(resultTracks);
         bigRanking.updateRepeated(repeatTracks);
         return bigRanking;

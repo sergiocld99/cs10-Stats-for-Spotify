@@ -269,7 +269,8 @@ public class PlaybackService implements Runnable {
             try {
                 Thread.sleep(AUTO_UPDATE_RATE * 500);
             } catch (InterruptedException e){
-                Maintenance.writeErrorFile(e, false);
+                System.err.println("Attempt Get Minutes interrupted");
+                return;
             }
 
             if (!peakLabel.isReplaceable()) return;

@@ -224,29 +224,42 @@ public class ApiUtils {
         return result;
     }
 
+    public Track[] getUntilPosition(String termKey, int pos){
+        int min = Math.min(pos, 49);
+
+        try {
+            Track[] tracks1 = spotifyApi.getUsersTopTracks().time_range(termKey).limit(min).build().execute().getItems();
+            if (min < pos){
+                Track[] tracks2 = spotifyApi.getUsersTopTracks().time_range(termKey).limit(pos-min).offset(min).build().execute().getItems();
+                Track[] result = new Track[tracks1.length + tracks2.length];
+                System.arraycopy(tracks1, 0, result, 0, tracks1.length);
+                System.arraycopy(tracks2, 0, result, tracks1.length, tracks2.length);
+                return result;
+            } else return tracks1;
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+            return new Track[0];
+        }
+    }
+
     public Track[] getUntilMostPopular(String termKey, int min){
-        Track[] result = null;
         min = Math.min(min, 49);
 
         try {
-            Track[] tracks1 = spotifyApi.getUsersTopTracks().time_range(termKey)
-                    .limit(min).build().execute().getItems();
-            Track[] tracks2 = spotifyApi.getUsersTopTracks().time_range(termKey)
-                    .limit(50).offset(min).build().execute().getItems();
-
+            Track[] tracks1 = spotifyApi.getUsersTopTracks().time_range(termKey).limit(min).build().execute().getItems();
+            Track[] tracks2 = spotifyApi.getUsersTopTracks().time_range(termKey).limit(50).offset(min).build().execute().getItems();
             int mostPopularIndex2 = findMostPopular(tracks2);
-            result = new Track[tracks1.length + mostPopularIndex2 + 1];
+            Track[] result = new Track[tracks1.length + mostPopularIndex2 + 1];
             System.arraycopy(tracks1, 0, result, 0, tracks1.length);
             System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
             missedTracks = new ArrayList<>();
             missedTracks.addAll(Arrays.asList(tracks2).subList(mostPopularIndex2 + 1, tracks2.length));
             Collections.shuffle(missedTracks);
+            return result;
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
+            return new Track[0];
         }
-
-        if (result == null) result = new Track[0];
-        return result;
     }
 
     public void addToMissedTracks(Collection<Track> tracks){
@@ -258,8 +271,7 @@ public class ApiUtils {
     public Track[] getTopTracks(String termKey){
 
         try {
-            return spotifyApi.getUsersTopTracks().time_range(termKey)
-                    .limit(50).build().execute().getItems();
+            return spotifyApi.getUsersTopTracks().time_range(termKey).limit(50).build().execute().getItems();
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
             return new Track[0];

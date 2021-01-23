@@ -57,7 +57,7 @@ public class SongFile {
     }
 
     public void analyzeAppearances(){
-        popularitySumByRank = new float[10];
+        popularitySumByRank = new float[20];
         peak = new SongPeak();
 
         for (SongAppearance a : appearances){

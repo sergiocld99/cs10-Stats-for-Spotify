@@ -12,7 +12,7 @@ public class CustomTableModel extends DefaultTableModel {
     public CustomTableModel(Object[] columnNames, int rowCount) {
         super(columnNames, rowCount);
 
-        for (int i=0; i<100; i++){
+        for (int i=0; i<200; i++){
             highlighted.add(false);
             if (i % 2 == 0) colors.add(Color.white);
             else colors.add(Color.lightGray);

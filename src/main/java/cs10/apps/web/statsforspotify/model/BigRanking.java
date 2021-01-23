@@ -23,9 +23,9 @@ public class BigRanking extends Ranking {
 
     public BigRanking(Collection<Track> tracks){
         for (Track track : tracks){
-            code += track.getPopularity();
             Song song = new Song(track);
             song.setRank(size() + 1);
+            if (size() % 10 == 0) code += track.getPopularity();
             super.add(song);
         }
     }
@@ -141,7 +141,7 @@ public class BigRanking extends Ranking {
             else song.setStatus(Status.UP);
         }
 
-        code += song.getPopularity();
+        //code += song.getPopularity();
         super.add(song);
     }
 

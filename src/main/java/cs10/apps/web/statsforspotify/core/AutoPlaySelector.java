@@ -20,7 +20,7 @@ public class AutoPlaySelector {
     private final Library library;
     private final ApiUtils apiUtils;
     private final BigRanking ranking;
-    private int dailyMixIndex, itemIndex, minScore, minPopularity;
+    private int dailyMixIndex, itemIndex, minScore, minPopularity, trendsOffset;
     private final List<List<PlaylistTrack>> data;
     private final List<Integer> magicNumbers;
     private ScheduledExecutorService service;
@@ -45,19 +45,26 @@ public class AutoPlaySelector {
         for (Playlist p : list){
             List<PlaylistTrack> tracks = Arrays.asList(p.getTracks().getItems());
             Collections.shuffle(tracks);
+            Collections.shuffle(tracks);
+            Collections.shuffle(tracks);
             data.add(tracks);
+        }
+
+        if (library.isTrendsEmpty()) for (Song s : ranking){
+            ArtistDirectory ad = s.getSongFile().getArtistReference();
+            if (s.getPopularity() > ad.getAveragePopularity() + ad.getRank()) library.addTrend(s);
         }
     }
 
     private void setConstants(){
         minPopularity = ranking.getAverage();
         minScore = minPopularity / 8;
+        trendsOffset = (minScore + 3) / 2;
     }
 
     public void run(){
         if (data.size() < 6) {
-            OptionPanes.message("Unable to start AutoPlay: " +
-                    "Make sure that your Daily Mixes are at the top of your library");
+            OptionPanes.message("Unable to start AutoPlay: Make sure that your Daily Mixes are at the top of your library");
             return;
         }
 
@@ -67,6 +74,14 @@ public class AutoPlaySelector {
     }
 
     private void runOnce(){
+        if (!library.isTrendsEmpty() && System.currentTimeMillis() % trendsOffset == 0){
+            Song s = library.getTrend();
+            System.out.println(s.getName() + " selected by Trends");
+            apiUtils.playThis(s.getId(), false);
+            minPopularity = s.getPopularity();
+            return;
+        }
+
         List<PlaylistTrack> dailyMix = data.get(dailyMixIndex++);
         if (dailyMixIndex == 6) dailyMixIndex = 0;
 

@@ -8,9 +8,10 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
     private CustomList<SongFile> songFiles;
     private final File file;
 
-    private float artistScore;
+    private float artistScore, averagePopularity, averagePeak;
     private float[] popularitySumByRank;
     private final int rankingsAmount;
+    private int rank;
 
     public ArtistDirectory(File file, int rankingsAmount){
         this.rankingsAmount = rankingsAmount;
@@ -35,7 +36,7 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
         File[] filesInsideDirectory = file.listFiles();
         if (filesInsideDirectory != null){
             for (File f : filesInsideDirectory){
-                SongFile songFile = new SongFile(f);
+                SongFile songFile = new SongFile(f, this);
                 songFiles.add(songFile);
             }
         }
@@ -43,13 +44,13 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
 
     public void analyzeSongs(){
         popularitySumByRank = new float[10];
+        float popularitySum = 0, peakSum = 0;
 
         for (SongFile f : songFiles){
             f.analyzeAppearances();
-
-            for (int i=0; i<popularitySumByRank.length; i++){
-                popularitySumByRank[i] += f.getPopularitySumByRank()[i];
-            }
+            peakSum += f.getPeak().getChartPosition();
+            popularitySum += f.getLastAppearance().getPopularity();
+            for (int i=0; i<popularitySumByRank.length; i++) popularitySumByRank[i] += f.getPopularitySumByRank()[i];
         }
 
         for (int i=1; i<=popularitySumByRank.length; i++){
@@ -57,6 +58,12 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
         }
 
         artistScore = artistScore * 3 / rankingsAmount;
+        averagePopularity = popularitySum / songFiles.size();
+        averagePeak = peakSum / songFiles.size();
+    }
+
+    public float getAveragePeak() {
+        return averagePeak;
     }
 
     public String getArtistName() {
@@ -98,6 +105,18 @@ public class ArtistDirectory implements Comparable<ArtistDirectory> {
 
     public SongFile getRandom(){
         return songFiles.getRandomElement();
+    }
+
+    public float getAveragePopularity() {
+        return averagePopularity;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
+    }
+
+    public int getRank() {
+        return rank;
     }
 
     @Override

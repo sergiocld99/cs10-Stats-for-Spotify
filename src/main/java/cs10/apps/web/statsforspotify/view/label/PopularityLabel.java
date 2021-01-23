@@ -6,12 +6,4 @@ public class PopularityLabel extends CircleLabel {
         super("Popularity", false);
         setVisible(true);
     }
-
-    @Override
-    public void setValue(int value) {
-        if (getOriginalValue() != 0 && value > getOriginalValue() + 2) setTitle("Trending");
-        else setTitle("Popularity");
-
-        super.setValue(value);
-    }
 }

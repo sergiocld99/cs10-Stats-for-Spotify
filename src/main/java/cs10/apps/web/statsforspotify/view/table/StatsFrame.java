@@ -292,10 +292,6 @@ public class StatsFrame extends AppFrame {
                 else model.setRowColor(row, s.getPopularityStatus().getTableUnpairColor());
             }
 
-            // BETA 1.04.2
-            int comp = s.getSongFile().getMediumAppearance().getPopularity();
-            if (s.getPopularity() > comp + 2) library.addTrend(s);
-
             model.addRow(toRow(s));
         }
     }

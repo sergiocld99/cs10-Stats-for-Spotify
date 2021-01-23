@@ -3,6 +3,7 @@ package cs10.apps.web.statsforspotify.view;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
+import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.io.SongFile;
 import cs10.apps.web.statsforspotify.model.Collab;
@@ -106,17 +107,23 @@ public class CustomPlayer extends JPanel {
         this.progressBar.setMaximum(track.getDurationMs() / 1000 + 1);
         this.progressBar.setValue(0);
 
-        SongFile songFile = library.getSongFile(track);
+        ArtistDirectory a = library.getArtistByName(track.getArtists()[0].getName());
+        SongFile songFile;
         int previousPop = 0;
 
-        if (songFile != null)
-            previousPop = songFile.getMediumAppearance().getPopularity();
+        if (a == null) songFile = null;
+        else {
+            songFile = a.getSongById(track.getId());
+            previousPop = (int) a.getAveragePopularity();
+            System.out.println("Average popularity of " + a.getArtistName() + " is " + previousPop);
+        }
+
+        //if (songFile != null) previousPop = songFile.getMediumAppearance().getPopularity();
 
         if (track.getArtists().length > 1){
             this.scoreLabel.setCollab(true);
             this.scoreLabel.setAverage(average / 2);
-            this.scoreLabel.setValue((int) Collab.calcScore(track.getArtists(),
-                    track.getPopularity()));
+            this.scoreLabel.setValue((int) Collab.calcScore(track.getArtists(), track.getPopularity()));
         } else {
             this.scoreLabel.setCollab(false);
             this.scoreLabel.setAverage(average / 3);
@@ -129,13 +136,16 @@ public class CustomPlayer extends JPanel {
 
         if (songFile != null){
             peakLabel.changeToPeak();
-            peakLabel.setAverage(average / 3);
+            //peakLabel.setAverage(average / 3);
+            int average = (int) a.getAveragePeak();
+            System.out.println("Average Peak of " + a.getArtistName() + " is " + average);
+            peakLabel.setOriginalValue(average);
             int peak = songFile.getPeak().getChartPosition();
-            int comp = songFile.getLastAppearance().getChartPosition() * 2 / 3 + 1;
-            int code = songFile.getPeak().getRankingCode();
-            if (peak > track.getPopularity() / 2) peakLabel.setOriginalValue(0);
-            else if (Math.abs(code - lastRankingCode) < 64) peakLabel.setOriginalValue(peak);
-            else peakLabel.setOriginalValue(comp);
+            //int comp = songFile.getLastAppearance().getChartPosition() * 2 / 3 + 1;
+            //int code = songFile.getPeak().getRankingCode();
+            //if (peak > track.getPopularity() / 2) peakLabel.setOriginalValue(0);
+            //else if (Math.abs(code - lastRankingCode) < 64) peakLabel.setOriginalValue(peak);
+            //else peakLabel.setOriginalValue(comp);
             peakLabel.setValue(peak);
             peakLabel.repaint();
         } else {
@@ -143,12 +153,11 @@ public class CustomPlayer extends JPanel {
             peakLabel.setReplaceable(true);
         }
 
-        if (previousPop > 0 && track.getPopularity() < previousPop - 2){
+        if (previousPop > 0 && track.getPopularity() < previousPop){
             changeProgressColor(Color.orange);
             return true;
         } else {
-            if (previousPop == track.getPopularity())
-                changeProgressColor(Color.cyan);
+            if (previousPop == track.getPopularity()) changeProgressColor(Color.cyan);
             else changeProgressColor(Color.green);
             return false;
         }

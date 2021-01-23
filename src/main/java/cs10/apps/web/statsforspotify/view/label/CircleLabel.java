@@ -64,8 +64,17 @@ public class CircleLabel extends JLabel {
         if (originalValue > 0){
             if (value == originalValue) graphics2D.setColor(CircleColors.LIGHT_BLUE_COLOR.get());
             else {
-                if (value < originalValue) graphics2D.setColor(Color.red);
-                else graphics2D.setColor(CircleColors.GREEN_COLOR.get());
+                if (inverted){
+                    if (value > originalValue + 8) graphics2D.setColor(Color.red);
+                    else if (value > originalValue) graphics2D.setColor(CircleColors.ORANGE_COLOR.get());
+                    else if (value < originalValue - 8) graphics2D.setColor(CircleColors.GREEN_COLOR.get());
+                    else graphics2D.setColor(CircleColors.DARK_GREEN_COLOR.get());
+                } else {
+                    if (value < originalValue - 8) graphics2D.setColor(Color.red);
+                    else if (value < originalValue) graphics2D.setColor(CircleColors.ORANGE_COLOR.get());
+                    else if (value > originalValue + 8) graphics2D.setColor(CircleColors.GREEN_COLOR.get());
+                    else graphics2D.setColor(CircleColors.DARK_GREEN_COLOR.get());
+                }
             }
         } else if (!inverted) {
             if (value < average) graphics2D.setColor(CircleColors.ORANGE_COLOR.get());

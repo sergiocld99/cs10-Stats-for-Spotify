@@ -10,12 +10,14 @@ import java.util.List;
 public class SongFile {
     private String trackName;
     private ArrayList<SongAppearance> appearances;
+    private final ArtistDirectory artistReference;
     private SongPeak peak;
     private final File file;
     private float[] popularitySumByRank;
 
-    public SongFile(File file){
+    public SongFile(File file, ArtistDirectory artistReference){
         this.file = file;
+        this.artistReference = artistReference;
 
         try {
             this.read();
@@ -73,6 +75,10 @@ public class SongFile {
 
     public SongAppearance getFirstAppearance(){
         return appearances.get(0);
+    }
+
+    public ArtistDirectory getArtistReference() {
+        return artistReference;
     }
 
     public SongAppearance getMediumAppearance(){

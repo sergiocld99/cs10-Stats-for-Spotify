@@ -92,6 +92,8 @@ public class Library {
 
     public void sort(){
         Collections.sort(artistDirectories);
+        int rank = 1;
+        for (ArtistDirectory ad : artistDirectories) ad.setRank(rank++);
     }
 
     public List<ArtistDirectory> getTop(int size){
@@ -117,7 +119,7 @@ public class Library {
             if (songFile == null){
                 try {
                     File fileCreated = SongFile.createFile(a.getFile(), s);
-                    songFile = new SongFile(fileCreated);
+                    songFile = new SongFile(fileCreated, a);
                     a.addSongFile(songFile);
                 } catch (IOException e){
                     Maintenance.writeErrorFile(e, true);

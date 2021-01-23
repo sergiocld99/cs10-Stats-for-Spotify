@@ -54,7 +54,7 @@ public class PlaybackService implements Runnable {
     private void setAvoidInitials(){
         avoidInitials = new HashSet<>();
         for (PlayHistory ph : apiUtils.getRecentTracks())
-            avoidInitials.add(initials(ph.getTrack().getName()));
+            avoidInitials.add(ph.getTrack().getId());
         System.out.println("Avoid Initials Size: " + avoidInitials.size());
     }
 
@@ -65,6 +65,7 @@ public class PlaybackService implements Runnable {
         System.out.println("Play Next: " + nextSong);
         apiUtils.playThis(nextSong.getTrackId(),false);
         apiUtils.skipCurrentTrack();
+        canSkip = false;
         run();
     }
 
@@ -73,14 +74,13 @@ public class PlaybackService implements Runnable {
         if (userWasAskedForSkip && !userAgreedSkip) return false;
 
         for (String s : avoidInitials){
-            if (track.getName().startsWith(s)){
+            if (track.getId().equals(s)){
                 if (!userWasAskedForSkip){
-                    System.out.println("Asking user for AutoSkip...");
+                    userWasAskedForSkip = true;
                     int r = JOptionPane.showConfirmDialog(null,
                             "Do you want to Auto-Skip repeated songs?",
                             PersonalChartApp.APP_NAME, JOptionPane.YES_NO_OPTION,
                             JOptionPane.QUESTION_MESSAGE);
-                    userWasAskedForSkip = true;
                     if (r == -1 || r == 1) return false;
                     userAgreedSkip = true;
                 }
@@ -185,25 +185,17 @@ public class PlaybackService implements Runnable {
             if (checkInitials(track)) return;
 
             player.setCurrentSongId(track.getId());
-            boolean isBecomingUnpopular = player.setTrack(track);
+            boolean isUnpopular = player.setTrack(track);
             this.attemptGetMinutes(track);
 
-            if (canSkip && isBecomingUnpopular){
-                //attemptQueue(track);
-                System.out.println(track.getName() + " is becoming unpopular");
-                if (apiUtils.skipCurrentTrack()){
-                    run();
-                    return;
-                }
-                frame.setIconImage(new ImageIcon("appicon2.png").getImage());
-            } else {
+            if (isUnpopular) frame.setIconImage(new ImageIcon("appicon2.png").getImage());
+            else {
                 frame.setIconImage(new ImageIcon("appicon.png").getImage());
                 setCanSkip(true);
             }
 
             // Only if the track wasn't skipped
             frame.setTitle("Now Playing: " + CommonUtils.toString(track));
-            //genresTracker.update(apiUtils.getArtist(track.getArtists()[0].getId()));
 
             // Update table scroll
             SwingUtilities.invokeLater(()->{

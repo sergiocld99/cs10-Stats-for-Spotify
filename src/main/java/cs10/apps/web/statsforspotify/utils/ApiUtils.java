@@ -135,9 +135,14 @@ public class ApiUtils {
                 Track mt = missedTracks.remove(0);
                 if (missedTracks.size() % 3 == 0){
                     Track pt = findPopularTrackOfArtist(mt.getArtists()[0].getId());
-                    if (pt != null) queue(pt.getUri());
-                } else queue(mt.getUri());
-                System.out.println(missedTracks.size() + " missed tracks left");
+                    if (pt != null) {
+                        System.out.println(CommonUtils.toString(pt) + " selected from Artist Top Tracks");
+                        queue(pt.getUri());
+                    }
+                } else {
+                    System.out.println(CommonUtils.toString(mt) + " selected from Missed Tracks");
+                    queue(mt.getUri());
+                }
             } catch (Exception e){
                 Maintenance.writeErrorFile(e, true);
             }
@@ -158,8 +163,8 @@ public class ApiUtils {
         }
 
         if (tracks1[0].getPopularity() < 70) {
-            Maintenance.log("AU || Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
-            Maintenance.log("AU || Cause: popularity is " + tracks1[0].getPopularity());
+            System.err.println("AU || Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
+            System.err.println("AU || Cause: popularity is " + tracks1[0].getPopularity());
             return;
         }
 
@@ -340,6 +345,10 @@ public class ApiUtils {
             Maintenance.writeErrorFile(e, true);
             return new PlayHistory[0];
         }
+    }
+
+    public Track getTrackByID(String id) throws Exception {
+        return spotifyApi.getTrack(id).build().execute();
     }
 
     public Collection<Track> findDailyMix(int number, int minPopularity){

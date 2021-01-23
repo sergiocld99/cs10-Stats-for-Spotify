@@ -1,12 +1,74 @@
 package cs10.apps.web.statsforspotify.utils;
 
+import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import java.io.*;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Maintenance {
     private static final String LOGS_FILE = "logs.txt";
+
+    /**
+     * @param apiUtils an authorized instance of spotify api utils
+     * @return size of duplicated ids set
+     */
+    public static int removeRedundantFiles(ApiUtils apiUtils){
+        Set<String> duplicates = findDuplicatedIds();
+        removeRedundantFiles(apiUtils, duplicates);
+        int sum = duplicates.size();
+
+        if (sum > 0) {
+            removeEmptyFoldersInLibrary();
+            sum += removeRedundantFiles(apiUtils);
+        }
+
+        return sum;
+    }
+
+    public static void removeEmptyFoldersInLibrary(){
+        File[] folders = new File("library").listFiles();
+        if (folders != null) for (File artistFolder : folders){
+            File[] files = artistFolder.listFiles();
+            if (files != null && files.length == 0 && artistFolder.delete())
+                System.out.println(artistFolder.getName() + " folder has been deleted");
+        }
+    }
+
+    public static Set<String> findDuplicatedIds(){
+        Set<String> duplicates = new HashSet<>();
+        Set<String> ids = new HashSet<>();
+        File[] folders = new File("library").listFiles();
+        if (folders != null) for (File artistFolder : folders){
+            File[] files = artistFolder.listFiles();
+            if (files != null) for (File songFile : files){
+                String songId = songFile.getName();
+                if (ids.contains(songId)) duplicates.add(songId);
+                else ids.add(songId);
+            }
+        }
+
+        return duplicates;
+    }
+
+    private static void removeRedundantFiles(ApiUtils apiUtils, Set<String> ids){
+        for (String songId : ids) try {
+            Track t = apiUtils.getTrackByID(songId);
+            System.out.println("Removing redundant files for " + CommonUtils.toString(t));
+             if (t.getArtists().length == 1) throw new RuntimeException(CommonUtils.toString(t) + " is not a collaboration");
+             for (int i=1; i<t.getArtists().length; i++) removeFile(t.getArtists()[i].getName(), t.getId());
+        } catch (Exception e){
+            System.err.println("Unable to analyze " + songId + ". Error: " + e.getMessage());
+        }
+    }
+
+    public static void removeFile(String artistName, String songId){
+        File file = new File("library\\" + artistName + "\\" + songId);
+        if (!file.exists()) throw new RuntimeException(file.getAbsolutePath() + " doesn't exist!");
+        else if (file.delete()) System.out.println(file + " deleted successfully");
+    }
 
     public static void fixSongFiles(){
         File[] folders = new File("library").listFiles();

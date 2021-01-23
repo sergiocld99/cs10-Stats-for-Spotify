@@ -53,6 +53,15 @@ public class Init {
         System.out.println("Actual Code is " + actualCode);
         System.out.println("Saved Code is " + savedCodes[1]);
 
+        if (savedCodes[1] > 2000){
+            player.getProgressBar().setString("Fixing library for new update...");
+            int size = Maintenance.removeRedundantFiles(apiUtils);
+            if (size > 0) {
+                OptionPanes.message("Almost there. Please, restart the app");
+                System.exit(0);
+            }
+        }
+
         if (actualCode > 0 && actualCode != savedCodes[1]){
             IOUtils.updateRankingCodes(savedCodes[1], actualCode, userId);
             IOUtils.save(apiRanking, true);

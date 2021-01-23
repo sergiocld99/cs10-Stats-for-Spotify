@@ -136,7 +136,7 @@ public class StatsFrame extends AppFrame {
 
         // When ranking is totally loaded
         buildTable();
-        player.setAverage((int) (bigRanking.getCode() / 100));
+        player.setAverage(bigRanking.getAverage());
         player.enableLibrary();
 
         // Hard tasks

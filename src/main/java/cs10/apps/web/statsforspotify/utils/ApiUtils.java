@@ -123,7 +123,7 @@ public class ApiUtils {
         }
     }
 
-    public ArrayList<String> autoQueue(Ranking ranking, Track current){
+    public void autoQueue(Ranking ranking, Track current){
         Song song1 = ranking.getRandomElement();
         Song song2 = ranking.getRandomElement();
 
@@ -143,7 +143,7 @@ public class ApiUtils {
             }
 
             // do not continue
-            return null;
+            return;
         }
 
         try {
@@ -152,16 +152,15 @@ public class ApiUtils {
             t2 = r.getTracks()[random.nextInt(r.getTracks().length)];
             tracks1 = spotifyApi.getArtistsTopTracks(t2.getArtists()[0].getId(), CountryCode.AR)
                     .build().execute();
-            System.out.println(Arrays.toString(tracks1));
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
-            return null;
+            return;
         }
 
         if (tracks1[0].getPopularity() < 70) {
             Maintenance.log("AU || Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
             Maintenance.log("AU || Cause: popularity is " + tracks1[0].getPopularity());
-            return null;
+            return;
         }
 
         Track t1 = tracks1[random.nextInt(tracks1.length)];
@@ -199,16 +198,6 @@ public class ApiUtils {
             Maintenance.writeErrorFile(e, false);
         }
 
-        return uris;
-    }
-
-    public Track getTrackById(String id){
-        try {
-            return spotifyApi.getTrack(id).build().execute();
-        } catch (Exception e){
-            Maintenance.writeErrorFile(e, true);
-            return null;
-        }
     }
 
     private int findMostPopular(Track[] tracks){
@@ -260,12 +249,6 @@ public class ApiUtils {
             Maintenance.writeErrorFile(e, true);
             return new Track[0];
         }
-    }
-
-    public void addToMissedTracks(Collection<Track> tracks){
-        System.out.println(tracks.size() + " tracks added to Missed List");
-        missedTracks.addAll(tracks);
-        Collections.shuffle(missedTracks);
     }
 
     public Track[] getTopTracks(String termKey){

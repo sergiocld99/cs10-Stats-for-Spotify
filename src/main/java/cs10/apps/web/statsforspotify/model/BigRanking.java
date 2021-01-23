@@ -25,8 +25,8 @@ public class BigRanking extends Ranking {
         for (Track track : tracks){
             Song song = new Song(track);
             song.setRank(size() + 1);
-            if (size() % 10 == 0) code += track.getPopularity();
-            super.add(song);
+            //if (size() % 10 == 0) code += track.getPopularity();
+            this.add(song);
         }
     }
 
@@ -150,14 +150,20 @@ public class BigRanking extends Ranking {
         return code;
     }
 
+    public int getAverage() {
+        return (int) (code / 16);
+    }
+
     @Override
     public boolean addAll(Collection<? extends Song> c) {
-        for (Song s : c){
-            super.add(s);
-            code += s.getPopularity();
-        }
-
+        for (Song s : c) this.add(s);
         return true;
+    }
+
+    @Override
+    public boolean add(Song song) {
+        if (size() % 10 == 0) code += song.getPopularity();
+        return super.add(song);
     }
 
     public List<String> getLefts(){

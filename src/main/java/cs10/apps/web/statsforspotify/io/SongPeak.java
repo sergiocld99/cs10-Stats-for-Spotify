@@ -4,7 +4,7 @@ public class SongPeak {
     private int chartPosition, rankingCode;
 
     public SongPeak(){
-        this.chartPosition = 100;
+        this.chartPosition = 200;
     }
 
     public boolean isPeak(int chartPosition){

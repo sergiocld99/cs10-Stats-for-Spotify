@@ -114,7 +114,7 @@ public class CustomPlayer extends JPanel {
 
         if (track.getArtists().length > 1){
             this.scoreLabel.setCollab(true);
-            this.scoreLabel.setAverage(average);
+            this.scoreLabel.setAverage(average / 2);
             this.scoreLabel.setValue((int) Collab.calcScore(track.getArtists(),
                     track.getPopularity()));
         } else {
@@ -143,10 +143,7 @@ public class CustomPlayer extends JPanel {
             peakLabel.setReplaceable(true);
         }
 
-        //this.peakLabel.setValue(LastFmIntegration.getLastFmCount());
-        //this.peakLabel.setValue(songFile == null ? 0 : songFile.getPeak().getChartPosition());
-
-        if (previousPop > 0 && track.getPopularity() < previousPop){
+        if (previousPop > 0 && track.getPopularity() < previousPop - 2){
             changeProgressColor(Color.orange);
             return true;
         } else {

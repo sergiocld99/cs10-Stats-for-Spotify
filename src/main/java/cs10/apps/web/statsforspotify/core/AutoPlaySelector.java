@@ -35,11 +35,6 @@ public class AutoPlaySelector {
         this.data = new ArrayList<>(6);
         this.magicNumbers = new LinkedList<>();
         this.runnable = runnable;
-
-        /*int hour = Calendar.getInstance().get(Calendar.HOUR);
-        this.switcher = hour % 2 == 0;
-        this.itemIndex = hour;*/
-
         prepare();
         setConstants();
     }
@@ -55,8 +50,8 @@ public class AutoPlaySelector {
     }
 
     private void setConstants(){
-        minPopularity = (int) ranking.getCode() / 100;
-        minScore = minPopularity / 10;
+        minPopularity = ranking.getAverage();
+        minScore = minPopularity / 8;
     }
 
     public void run(){

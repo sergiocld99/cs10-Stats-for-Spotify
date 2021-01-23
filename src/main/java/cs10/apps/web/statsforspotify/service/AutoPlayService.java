@@ -41,30 +41,7 @@ public class AutoPlayService {
         @Override
         public void run() {
             button.setEnabled(false);
-
             new AutoPlaySelector(Library.getInstance(null), apiUtils, ranking, this).run();
-
-            /*int offset = (int) ranking.getCode() / 1000;
-            if (offset == 0) offset = 10;
-
-            for (int i=0; i<ranking.size(); i+=offset){
-
-                try {
-                    apiUtils.playThis(ranking.get(i).getId(), false);
-                    int percentage = i * 100 / ranking.size();
-                    button.setText(NAME + " (" + percentage + "%)");
-                    TimeUnit.SECONDS.sleep(150);
-                    apiUtils.autoQueue(ranking, null);
-                    percentage += offset / 2;
-                    button.setText(NAME + " (" + percentage + "%)");
-                    TimeUnit.SECONDS.sleep(300);
-                } catch (InterruptedException e){
-                    Maintenance.writeErrorFile(e, false);
-                    break;
-                }
-            }
-
-            enable()*/
         }
 
         public void enable(){

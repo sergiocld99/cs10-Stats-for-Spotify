@@ -96,11 +96,15 @@ public class Init {
     private BigRanking select2(){
         Track[] tracks2 = apiUtils.getUntilMostPopular(TopTerms.MEDIUM.getKey(), 50);
         if (tracks2.length == 0) {
-            OptionPanes.message("Unable to build Ranking. Cause: not enough songs");
+            OptionPanes.showError("Init", new RuntimeException("Unable to build Ranking. Cause: not enough songs"));
             System.exit(1);
         }
 
         Track[] tracks1 = apiUtils.getUntilPosition(TopTerms.SHORT.getKey(), 50 + CommonUtils.countArtists(tracks2));
+        if (tracks1.length == 0) {
+            OptionPanes.showError("Init", new RuntimeException("Something gone wrong with Last 4 Weeks Ranking"));
+            System.exit(2);
+        }
         return buildRanking(tracks1, tracks2, 200);
     }
 

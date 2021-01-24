@@ -12,8 +12,7 @@ import javax.swing.*;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 
 public class IOUtils {
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -194,6 +193,44 @@ public class IOUtils {
         long code = getSavedRankingCodes(userId)[0];
         if (code == 0) return ranking;
         else return getRanking(String.valueOf(code), false);
+    }
+
+    public static List<String> getRankingSongIds(int code, int limit){
+        File file = new File(RANKING_FOLDER+"//"+ code);
+        List<String> result = new ArrayList<>(limit);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))){
+            br.readLine();
+            String line;
+            while (result.size() < limit && (line = br.readLine()) != null){
+                String[] params = line.split("--");
+                result.add(params[1]);
+            }
+        } catch (IOException e){
+            Maintenance.writeErrorFile(e, true);
+        }
+
+        return result;
+    }
+
+    public static List<String> getRelationIds(int rankingCode, int position){
+        List<String> result = new ArrayList<>(8);
+        List<String> ids = getRankingSongIds(rankingCode, position + 8);
+
+        if (position >= 8){
+            result.add(ids.get(position - 8));
+            result.add(ids.get(position - 4));
+            result.add(ids.get(position - 2));
+            result.add(ids.get(position - 1));
+        }
+
+        if (position < ids.size() - 9){
+            result.add(ids.get(position + 1));
+            result.add(ids.get(position + 2));
+            result.add(ids.get(position + 4));
+            result.add(ids.get(position + 8));
+        }
+
+        return result;
     }
 
     public static SimpleRanking[] getAvailableRankings(){

@@ -6,9 +6,11 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
+import cs10.apps.web.statsforspotify.io.SongPeak;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.service.AutoPlayService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
+import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import java.util.*;
@@ -25,7 +27,8 @@ public class AutoPlaySelector {
     private final List<Integer> magicNumbers;
     private ScheduledExecutorService service;
     private final AutoPlayService.AutoPlayRunnable runnable;
-    //private final boolean switcher;
+    private final Set<String> ids = new HashSet<>();
+    private final Queue<String> pendingIds = new LinkedList<>();
 
     public AutoPlaySelector(Library library, ApiUtils apiUtils, BigRanking ranking,
                             AutoPlayService.AutoPlayRunnable runnable) {
@@ -62,6 +65,25 @@ public class AutoPlaySelector {
         trendsOffset = (minScore + 3) / 2;
     }
 
+    private void run2(){
+        if (pendingIds.isEmpty()){
+            runOnce();
+            Song random = ranking.getRandomElement();
+            SongPeak peak = random.getSongFile().getPeak();
+            System.out.println(random + " was selected for Relation Ids, using " + peak.getRankingCode() + " as code");
+            List<String> relationIds = IOUtils.getRelationIds(peak.getRankingCode(), peak.getChartPosition());
+            for (String s : relationIds) {
+                if (!ids.contains(s)) {
+                    pendingIds.add(s);
+                    ids.add(s);
+                } else {
+                    runSimplified();
+                    break;
+                }
+            }
+        } else apiUtils.playThis(pendingIds.remove(), false);
+    }
+
     public void run(){
         if (data.size() < 6) {
             OptionPanes.message("Unable to start AutoPlay: Make sure that your Daily Mixes are at the top of your library");
@@ -70,7 +92,26 @@ public class AutoPlaySelector {
 
         library.shuffleTrends();
         service = Executors.newSingleThreadScheduledExecutor();
-        service.scheduleAtFixedRate(this::runOnce, 0, 3, TimeUnit.MINUTES);
+        service.scheduleAtFixedRate(this::run2, 0, 3, TimeUnit.MINUTES);
+    }
+
+    private void runSimplified(){
+        List<PlaylistTrack> dailyMix = data.get(dailyMixIndex++);
+        if (dailyMixIndex == 6) dailyMixIndex = 0;
+
+        Track selectedTrack = (Track) dailyMix.get(itemIndex++).getTrack();
+        if (itemIndex == 50) shutdown();
+
+        boolean condition1 = isArtistSaved(selectedTrack.getArtists()[0].getName());
+        boolean condition2 = isGoodPopularity(selectedTrack.getPopularity());
+
+        if (condition1 || condition2) {
+            System.out.println(selectedTrack.getName() + " selected from Daily Mixes");
+            apiUtils.playThis(selectedTrack.getId(), false);
+        } else {
+            System.out.println("Asking Spotify for recommendations...");
+            apiUtils.autoQueue(ranking, selectedTrack);
+        }
     }
 
     private void runOnce(){
@@ -95,17 +136,10 @@ public class AutoPlaySelector {
             System.out.println(selectedTrack.getName() + " selected from Daily Mixes");
             apiUtils.playThis(selectedTrack.getId(), false);
         } else {
-            if (!library.isTrendsEmpty()){
-                Song s = library.getTrend();
-                System.out.println(s.getName() + " selected by Trends");
-                apiUtils.playThis(s.getId(), false);
-                minPopularity = s.getPopularity();
-                return;
-            }
-
             Song random = ranking.getRandomElement();
+            ranking.remove(random.getRank());
 
-            if (random.getSongFile().getPeak().getChartPosition() < minScore * 2) {
+            if (random.getPopularity() >= random.getSongFile().getMediumAppearance().getPopularity()) {
                 System.out.println(random.getName() + " selected from Current Ranking");
                 apiUtils.playThis(random.getId(), false);
             } else {

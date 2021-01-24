@@ -10,7 +10,7 @@ public class Test {
     public static void main(String[] args) {
         Maintenance.clearPreviousReport();
 
-        if (APPLY_FIXES) Maintenance.fixSongFiles();
+        if (APPLY_FIXES) Maintenance.fixSongFiles(872);
         //else if (TEST_ONLY) Library.getInstance();
         else new PersonalChartApp().init();
     }

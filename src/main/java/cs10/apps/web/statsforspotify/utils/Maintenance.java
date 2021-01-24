@@ -70,18 +70,17 @@ public class Maintenance {
         else if (file.delete()) System.out.println(file + " deleted successfully");
     }
 
-    public static void fixSongFiles(){
+    public static void fixSongFiles(int sinceRankingCode){
         File[] folders = new File("library").listFiles();
         if (folders != null) for (File artistFolder : folders){
             File[] files = artistFolder.listFiles();
             if (files != null) for (File songFile : files){
-                fixSongFile(songFile);
+                fixSongFile(songFile, sinceRankingCode);
             }
         }
     }
 
-    private static void fixSongFile(File file){
-        int lastCodeRead = 0;
+    private static void fixSongFile(File file, int sinceRankingCode){
         boolean fixed = false;
         StringBuilder sb = new StringBuilder();
 
@@ -94,10 +93,12 @@ public class Maintenance {
 
             while ((line = br.readLine()) != null){
                 int codeRead = Integer.parseInt(line.split("--")[2]);
-                if (codeRead != lastCodeRead){
-                    lastCodeRead = codeRead;
+                if (codeRead != sinceRankingCode){
                     sb.append(line).append('\n');
-                } else fixed = true;
+                } else {
+                    fixed = true;
+                    break;
+                }
             }
 
         } catch (IOException e){

@@ -109,11 +109,11 @@ public class StatsFrame extends AppFrame {
         //customizeTexts();
 
         // Add Components
-        getContentPane().add(BorderLayout.NORTH, menuBar);
+        getContentPane().add(BorderLayout.SOUTH, menuBar);
         getContentPane().add(BorderLayout.CENTER, playerPanel);
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setPreferredSize(new Dimension(1000, 310));
-        getContentPane().add(BorderLayout.SOUTH, scrollPane);
+        getContentPane().add(BorderLayout.NORTH, scrollPane);
 
         // Set Playback
         playbackService = new PlaybackService(apiUtils, table, this, player);

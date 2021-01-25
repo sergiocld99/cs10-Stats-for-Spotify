@@ -216,18 +216,18 @@ public class IOUtils {
         List<String> result = new ArrayList<>(8);
         List<String> ids = getRankingSongIds(rankingCode, position + 8);
 
-        if (position >= 8){
-            result.add(ids.get(position - 8));
-            result.add(ids.get(position - 4));
+        if (position >= 9){
+            result.add(ids.get(position - 9));
+            result.add(ids.get(position - 5));
+            result.add(ids.get(position - 3));
             result.add(ids.get(position - 2));
-            result.add(ids.get(position - 1));
         }
 
-        if (position < ids.size() - 9){
+        if (ids.size() == position + 8){
+            result.add(ids.get(position));
             result.add(ids.get(position + 1));
-            result.add(ids.get(position + 2));
-            result.add(ids.get(position + 4));
-            result.add(ids.get(position + 8));
+            result.add(ids.get(position + 3));
+            result.add(ids.get(position + 7));
         }
 
         return result;

@@ -53,8 +53,7 @@ public class PlaybackService implements Runnable {
 
     private void setAvoidInitials(){
         avoidInitials = new HashSet<>();
-        for (PlayHistory ph : apiUtils.getRecentTracks())
-            avoidInitials.add(ph.getTrack().getId());
+        for (PlayHistory ph : apiUtils.getRecentTracks()) avoidInitials.add(ph.getTrack().getId());
         System.out.println("Avoid Initials Size: " + avoidInitials.size());
     }
 
@@ -77,6 +76,7 @@ public class PlaybackService implements Runnable {
             if (track.getId().equals(s)){
                 if (!userWasAskedForSkip){
                     userWasAskedForSkip = true;
+                    frame.setVisible(true);
                     int r = JOptionPane.showConfirmDialog(null,
                             "Do you want to Auto-Skip repeated songs?",
                             PersonalChartApp.APP_NAME, JOptionPane.YES_NO_OPTION,

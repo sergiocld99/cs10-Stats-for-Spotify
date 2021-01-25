@@ -40,8 +40,8 @@ public class CustomPlayer extends JPanel {
         this.add(thumbnail);
         this.add(popularityLabel);
         this.add(scoreLabel);
-        this.add(peakLabel);
         this.add(progressBar);
+        this.add(peakLabel);
     }
 
     public void enableLibrary(){
@@ -115,7 +115,6 @@ public class CustomPlayer extends JPanel {
         else {
             songFile = a.getSongById(track.getId());
             previousPop = (int) a.getAveragePopularity();
-            System.out.println("Average popularity of " + a.getArtistName() + " is " + previousPop);
         }
 
         //if (songFile != null) previousPop = songFile.getMediumAppearance().getPopularity();
@@ -130,15 +129,13 @@ public class CustomPlayer extends JPanel {
             this.scoreLabel.setValue(library.getArtistRank(track.getArtists()[0].getName()));
         }
 
-        this.popularityLabel.setOriginalValue(previousPop);
-        this.popularityLabel.setValue(track.getPopularity());
         this.peakLabel.setValue(-1);
 
         if (songFile != null){
+            previousPop = songFile.getMediumAppearance().getPopularity();
             peakLabel.changeToPeak();
             //peakLabel.setAverage(average / 3);
             int average = (int) a.getAveragePeak();
-            System.out.println("Average Peak of " + a.getArtistName() + " is " + average);
             peakLabel.setOriginalValue(average);
             int peak = songFile.getPeak().getChartPosition();
             //int comp = songFile.getLastAppearance().getChartPosition() * 2 / 3 + 1;
@@ -152,6 +149,9 @@ public class CustomPlayer extends JPanel {
             peakLabel.setValue(0);
             peakLabel.setReplaceable(true);
         }
+
+        this.popularityLabel.setOriginalValue(previousPop);
+        this.popularityLabel.setValue(track.getPopularity());
 
         if (previousPop > 0 && track.getPopularity() < previousPop){
             changeProgressColor(Color.orange);

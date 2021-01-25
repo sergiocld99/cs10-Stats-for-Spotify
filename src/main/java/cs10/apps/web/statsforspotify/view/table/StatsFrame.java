@@ -200,53 +200,39 @@ public class StatsFrame extends AppFrame {
 
     private JMenuBar getCustomMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
-        JMenuItem jmiOpen = new JMenuItem("Open...");
-        JMenuItem jmiSave = new JMenuItem("Save");
-        JMenuItem jmiSaveAs = new JMenuItem("Save As...");
-        JMenu viewMenu = new JMenu("View");
+        JMenu viewMenu = new JMenu("More Stats");
         JMenuItem jmiLocalTop10 = new JMenuItem("Local Top 10 Artists");
         JMenuItem jmiLocalTop100 = new JMenuItem("Local Top 100 Artists");
-        JMenuItem jmiTopGenres = new JMenuItem("Current Top Genres");
         JMenuItem jmiCurrentCollab = new JMenuItem("Current Collab Scores");
+        JMenuItem jmiTopGenres = new JMenuItem("Current Top Genres");
         JMenuItem jmiDailyMixes = new JMenuItem("Current Daily Mixes Stats");
-        JMenuItem jmiFanaticism = new JMenuItem("Current Fanaticism");
+        //JMenuItem jmiFanaticism = new JMenuItem("Current Fanaticism");
         JMenu optionsMenu = new JMenu("Options");
         JMenuItem jmiAlbumCovers = new JMenuItem("Toggle Album Covers");
         JMenuItem jmiLastFmUser = new JMenuItem("Last FM Username");
-        JMenu helpMenu = new JMenu("Help");
 
-        jmiOpen.addActionListener(e -> openRankingsWindow());
-        jmiSave.addActionListener(e -> System.out.println("Save pressed"));
-        jmiSaveAs.addActionListener(e -> System.out.println("Save As pressed"));
         jmiAlbumCovers.addActionListener(e -> changeAlbumCoversOption());
         jmiLocalTop10.addActionListener(e -> openLocalTop10());
         jmiLocalTop100.addActionListener(e -> openLocalTop100());
         jmiTopGenres.addActionListener(e -> openCurrentTopGenres());
         jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
         jmiDailyMixes.addActionListener(e -> openCurrentDailyMixesStats());
-        jmiFanaticism.addActionListener(e -> openFanaticismWindow());
+        //jmiFanaticism.addActionListener(e -> openFanaticismWindow());
         jmiLastFmUser.addActionListener(e -> {
             boolean restart = OptionPanes.inputUsername(appOptions);
             if (restart) playbackService.restart();
         });
-        helpMenu.addActionListener(e -> System.out.println("Help pressed"));
 
-        fileMenu.add(jmiOpen);
-        fileMenu.add(jmiSave);
-        fileMenu.add(jmiSaveAs);
         viewMenu.add(jmiLocalTop10);
         viewMenu.add(jmiLocalTop100);
         viewMenu.add(jmiTopGenres);
         viewMenu.add(jmiCurrentCollab);
         viewMenu.add(jmiDailyMixes);
-        viewMenu.add(jmiFanaticism);
+        //viewMenu.add(jmiFanaticism);
         optionsMenu.add(jmiAlbumCovers);
         optionsMenu.add(jmiLastFmUser);
-        menuBar.add(fileMenu);
         menuBar.add(viewMenu);
         menuBar.add(optionsMenu);
-        menuBar.add(helpMenu);
         return menuBar;
     }
 
@@ -302,8 +288,10 @@ public class StatsFrame extends AppFrame {
         String popStr;
 
         if (diff != 0 && Math.abs(diff) < 10){
-            if (diff > 0) popStr = song.getPopularity() + " (+" + diff + ")";
-            else popStr = song.getPopularity() + " (" + diff + ")";
+            if (diff > 0) {
+                popStr = song.getPopularity() + " (+" + diff + ")";
+                library.addTrend(song);
+            } else popStr = song.getPopularity() + " (" + diff + ")";
         } else popStr = String.valueOf(song.getPopularity());
 
         return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),

@@ -1,16 +1,19 @@
 package cs10.apps.web.statsforspotify.core;
 
+import com.wrapper.spotify.model_objects.specification.PlayHistory;
 import com.wrapper.spotify.model_objects.specification.Playlist;
 import com.wrapper.spotify.model_objects.specification.PlaylistTrack;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
-import cs10.apps.web.statsforspotify.io.SongPeak;
+import cs10.apps.web.statsforspotify.io.SongAppearance;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.service.AutoPlayService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
+import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import java.util.*;
@@ -57,6 +60,9 @@ public class AutoPlaySelector {
             ArtistDirectory ad = s.getSongFile().getArtistReference();
             if (s.getPopularity() > ad.getAveragePopularity() + ad.getRank()) library.addTrend(s);
         }
+
+        PlayHistory[] ph = apiUtils.getRecentTracks();
+        for (PlayHistory p : ph) ids.add(p.getTrack().getId());
     }
 
     private void setConstants(){
@@ -67,20 +73,21 @@ public class AutoPlaySelector {
 
     private void run2(){
         if (pendingIds.isEmpty()){
-            runOnce();
             Song random = ranking.getRandomElement();
-            SongPeak peak = random.getSongFile().getPeak();
-            System.out.println(random + " was selected for Relation Ids, using " + peak.getRankingCode() + " as code");
-            List<String> relationIds = IOUtils.getRelationIds(peak.getRankingCode(), peak.getChartPosition());
+            SongAppearance medium = random.getSongFile().getMediumAppearance();
+            Maintenance.log(random + " was selected for Relation Ids, using " + medium.getRankingCode() + " as code");
+            List<String> relationIds = IOUtils.getRelationIds(medium.getRankingCode(), medium.getChartPosition());
+            if (relationIds.contains(random.getId())) throw new DevelopException("Incorrect Relation Ids");
             for (String s : relationIds) {
                 if (!ids.contains(s)) {
                     pendingIds.add(s);
                     ids.add(s);
                 } else {
                     runSimplified();
-                    break;
+                    return;
                 }
             }
+            run2();
         } else apiUtils.playThis(pendingIds.remove(), false);
     }
 

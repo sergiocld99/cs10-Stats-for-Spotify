@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SongFile {
+public class SongFile implements Comparable<SongFile> {
     private String trackName;
     private ArrayList<SongAppearance> appearances;
     private final ArtistDirectory artistReference;
@@ -66,6 +66,10 @@ public class SongFile {
             if (peak.isPeak(a.getChartPosition())){
                 peak.setChartPosition(a.getChartPosition());
                 peak.setRankingCode(a.getRankingCode());
+                peak.resetTimes();
+                peak.incrementTimes();
+            } else if (peak.getChartPosition() == a.getChartPosition()){
+                peak.incrementTimes();
             }
 
             int arrayIndex = (a.getChartPosition()-1) / 10;
@@ -124,6 +128,12 @@ public class SongFile {
 
     @Override
     public String toString() {
-        return getTrackName() + " - Peak: " + getPeak().getChartPosition();
+        return trackName + " - Peak: " + peak;
+    }
+
+    @Override
+    public int compareTo(SongFile o) {
+        int comp1 = Integer.compare(this.peak.getChartPosition(), o.getPeak().getChartPosition());
+        return comp1 == 0 ? Integer.compare(o.getPeak().getTimes(), this.peak.getTimes()) : comp1;
     }
 }

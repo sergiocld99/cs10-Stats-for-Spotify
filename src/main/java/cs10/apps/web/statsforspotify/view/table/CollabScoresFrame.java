@@ -5,8 +5,10 @@ import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
 import cs10.apps.web.statsforspotify.model.BigRanking;
 import cs10.apps.web.statsforspotify.model.Collab;
+import cs10.apps.web.statsforspotify.view.CustomTableCellRenderer;
 
 import javax.swing.*;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,10 +43,43 @@ public class CollabScoresFrame extends AppFrame {
         System.out.println("Preparing table...");
         String[] columnsNames = new String[]{"Rank", "Song Name", "Artists", "Score", "Preference"};
         CustomTableModel model = new CustomTableModel(columnsNames, 0);
-        JTable table = new JTable(model);
+
+        JTable table = new JTable(model) {
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+            @Override
+            public TableCellRenderer getCellRenderer(int row, int column) {
+                CustomTableCellRenderer renderer = new CustomTableCellRenderer();
+                renderer.setHorizontalAlignment(JLabel.CENTER);
+
+                switch (column){
+                    case 0:
+                        getColumnModel().getColumn(column).setPreferredWidth(50);
+                        break;
+                    case 1:
+                        getColumnModel().getColumn(column).setPreferredWidth(400);
+                        break;
+                    case 2:
+                        getColumnModel().getColumn(column).setPreferredWidth(420);
+                        break;
+                    case 3:
+                    case 4:
+                        getColumnModel().getColumn(column).setPreferredWidth(70);
+                        break;
+                }
+
+                return renderer;
+            }
+        };
+
+        table.getTableHeader().setDefaultRenderer(new CustomHeaderRenderer(table));
         table.setRowHeight(50);
-        super.customizeTexts(table, model);
-        this.modifyColumnsWidth(table);
+        //super.customizeTexts(table, model);
+        //this.modifyColumnsWidth(table);
 
         double maxPreference = Math.log(1 + list.get(0).getTotalScore()) +
                 Math.log(1 + list.get(list.size() / 2).getTotalScore());

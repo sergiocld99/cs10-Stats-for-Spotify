@@ -171,7 +171,7 @@ public class StatsFrame extends AppFrame {
                             "Select an option", PersonalChartApp.APP_NAME,
                             JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
                             null, new String[]{"Play this now", "View Song Chart",
-                                    "View Artist Histogram"}, null);
+                                    "View Artist Fav Songs", "View Artist Histogram"}, null);
 
                     table.setRowSelectionInterval(selected,selected);
 
@@ -187,6 +187,9 @@ public class StatsFrame extends AppFrame {
                             openSongChartHistory();
                             break;
                         case 2:
+                            openArtistFavSongs();
+                            break;
+                        case 3:
                             openArtistWindow();
                             break;
                     }
@@ -391,6 +394,16 @@ public class StatsFrame extends AppFrame {
             new FanaticismFrame(bigRanking, appOptions).init();
             setTitle("Done");
         }, "Open Fanaticism Window").start();
+    }
+
+    private void openArtistFavSongs(){
+        new Thread(() -> {
+            String artistsNames = bigRanking.get(table.getSelectedRow()).getArtists();
+            String[] artists = artistsNames.split(", ");
+            String mainName = artists[0];
+            ArtistPeaksFrame f = new ArtistPeaksFrame(library.getArtistByName(mainName));
+            f.init();
+        }, "Open Artist Fav Songs").start();
     }
 
     private void openArtistWindow(){

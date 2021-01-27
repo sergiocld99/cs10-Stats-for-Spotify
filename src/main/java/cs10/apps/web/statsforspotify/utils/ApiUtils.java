@@ -20,8 +20,8 @@ import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class ApiUtils {
@@ -35,7 +35,7 @@ public class ApiUtils {
     private static final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost:8080");
     private static final String SCOPE = "user-top-read " +
             "user-read-currently-playing user-read-playback-state user-read-recently-played " +
-            "user-modify-playback-state playlist-read-private";
+            "user-modify-playback-state playlist-read-private playlist-modify-public playlist-modify-private";
 
 
     public ApiUtils(){
@@ -105,7 +105,10 @@ public class ApiUtils {
     private Track findPopularTrackOfArtist(String artistId){
         try {
             Track[] tracks = spotifyApi.getArtistsTopTracks(artistId, CountryCode.AR).build().execute();
-            if (tracks.length > 0) return tracks[random.nextInt(tracks.length)];
+            if (tracks.length > 0) {
+                System.out.println(tracks.length + " tracks found in Artist Top Tracks");
+                return tracks[random.nextInt(tracks.length)];
+            }
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
         }
@@ -123,9 +126,10 @@ public class ApiUtils {
         }
     }
 
-    public void autoQueue(Ranking ranking, Track current){
+    public List<String> autoQueue(Ranking ranking, Track current, boolean queue){
         Song song1 = ranking.getRandomElement();
         Song song2 = ranking.getRandomElement();
+        List<String> selectedIds = new LinkedList<>();
 
         Track[] tracks1;
         TrackSimplified t2;
@@ -135,66 +139,67 @@ public class ApiUtils {
                 Track mt = missedTracks.remove(0);
                 if (missedTracks.size() % 3 == 0){
                     Track pt = findPopularTrackOfArtist(mt.getArtists()[0].getId());
-                    if (pt != null) {
-                        System.out.println(CommonUtils.toString(pt) + " selected from Artist Top Tracks");
-                        queue(pt.getUri());
+                    if (pt != null){
+                        TrackSimplified at = pickRandomTrackFromAlbum(pt.getAlbum().getId());
+                        System.out.println(CommonUtils.toString(at) + " selected from " + pt.getAlbum().getName());
+                        selectedIds.add(at.getId());
+                        if (queue) queue(at.getUri());
                     }
                 } else {
                     System.out.println(CommonUtils.toString(mt) + " selected from Missed Tracks");
-                    queue(mt.getUri());
+                    selectedIds.add(mt.getId());
+                    if (queue) queue(mt.getUri());
                 }
             } catch (Exception e){
                 Maintenance.writeErrorFile(e, true);
             }
 
             // do not continue
-            return;
+            return selectedIds;
         }
 
         try {
             Recommendations r = getRecommendations(song1.getId(), song2.getId(),
                     (current == null) ? ranking.getRandomElement().getId() : current.getId());
             t2 = r.getTracks()[random.nextInt(r.getTracks().length)];
-            tracks1 = spotifyApi.getArtistsTopTracks(t2.getArtists()[0].getId(), CountryCode.AR)
-                    .build().execute();
+            tracks1 = spotifyApi.getArtistsTopTracks(t2.getArtists()[0].getId(), CountryCode.AR).build().execute();
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
-            return;
+            return selectedIds;
         }
 
         if (tracks1[0].getPopularity() < 70) {
             System.err.println("AU || Bad Recommendation: " + CommonUtils.toString(tracks1[0]));
             System.err.println("AU || Cause: popularity is " + tracks1[0].getPopularity());
-            return;
+            return selectedIds;
         }
 
         Track t1 = tracks1[random.nextInt(tracks1.length)];
         Song t3 = IOUtils.pickRandomSongFromLibrary();
 
         ArrayList<String> uris = new ArrayList<>();
-        StringBuilder errorSb = new StringBuilder("Failed to queue: \n\n");
 
         if (IOUtils.existsArtist(t1.getArtists()[0].getName())){
             Maintenance.log("AU || Added from Artist Top Tracks: " + CommonUtils.toString(t1));
             uris.add(t1.getUri());
-            errorSb.append(CommonUtils.toString(t1)).append('\n');
+            selectedIds.add(t1.getId());
             if (!t2.getName().equals(t1.getName())) {
                 Maintenance.log("AU || Added from Recommendations: " + CommonUtils.toString(t2));
-                errorSb.append(CommonUtils.toString(t2));
+                selectedIds.add(t2.getId());
                 uris.add(t2.getUri());
             }
         } else {
             Maintenance.log("AU || Added from Recommendations: " + CommonUtils.toString(t2));
             uris.add(t2.getUri());
-            errorSb.append(CommonUtils.toString(t2)).append('\n');
+            selectedIds.add(t2.getId());
             if (t3 != null){
                 Maintenance.log("AU || Added from Library: " + t3.toStringWithArtist());
-                errorSb.append(t3.toStringWithArtist());
+                selectedIds.add(t3.getId());
                 uris.add("spotify:track:"+t3.getId());
             }
         }
 
-        try {
+        if (queue) try {
             for (String uri : uris){
                 queue(uri);
                 TimeUnit.SECONDS.sleep(1);
@@ -203,6 +208,7 @@ public class ApiUtils {
             Maintenance.writeErrorFile(e, false);
         }
 
+        return selectedIds;
     }
 
     private int findMostPopular(Track[] tracks){
@@ -487,6 +493,31 @@ public class ApiUtils {
         } catch (Exception e) {
             Maintenance.writeErrorFile(e, true);
             e.printStackTrace();
+        }
+    }
+
+    public void createPlaylist(String name, Set<String> trackIDs){
+        System.out.println("Creating playlist with " + trackIDs.size() + " tracks");
+
+        try {
+            Playlist p = spotifyApi.createPlaylist(getUser().getId(), name).public_(false).build().execute();
+            String[] uris = new String[trackIDs.size()];
+            int i = 0;
+            for (String id : trackIDs) uris[i++] = "spotify:track:" + id;
+            spotifyApi.addItemsToPlaylist(p.getId(), uris).build().execute();
+            OptionPanes.message("Playlist " + name + " created successfully");
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+        }
+    }
+
+    public TrackSimplified pickRandomTrackFromAlbum(String albumId){
+        try {
+            Album a = spotifyApi.getAlbum(albumId).build().execute();
+            return a.getTracks().getItems()[random.nextInt(a.getTracks().getTotal())];
+        } catch (Exception e){
+            Maintenance.writeErrorFile(e, true);
+            return null;
         }
     }
 }

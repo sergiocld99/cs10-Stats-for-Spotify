@@ -31,7 +31,10 @@ public class AutoPlaySelector {
     private ScheduledExecutorService service;
     private final AutoPlayService.AutoPlayRunnable runnable;
     private final Set<String> ids = new HashSet<>();
+    private final Set<String> recentIds = new HashSet<>();
+    private final Set<String> names = new HashSet<>();
     private final Queue<String> pendingIds = new LinkedList<>();
+    private static final int MAX_ITERATIONS = 64;
 
     public AutoPlaySelector(Library library, ApiUtils apiUtils, BigRanking ranking,
                             AutoPlayService.AutoPlayRunnable runnable) {
@@ -63,6 +66,7 @@ public class AutoPlaySelector {
 
         PlayHistory[] ph = apiUtils.getRecentTracks();
         for (PlayHistory p : ph) ids.add(p.getTrack().getId());
+        recentIds.addAll(ids);
     }
 
     private void setConstants(){
@@ -71,7 +75,37 @@ public class AutoPlaySelector {
         trendsOffset = (minScore + 3) / 2;
     }
 
-    private void run2(){
+    private boolean preRun(){
+        if (data.size() < 6) {
+            OptionPanes.message("Unable to start AutoPlay: Make sure that your Daily Mixes are at the top of your library");
+            return false;
+        }
+
+        library.shuffleTrends();
+        return true;
+    }
+
+    public void run(){
+        if (!preRun()) return;
+        service = Executors.newSingleThreadScheduledExecutor();
+        service.scheduleAtFixedRate(() -> run2(true), 0, 3, TimeUnit.MINUTES);
+    }
+
+    public void createPlaylist(){
+        if (!preRun()) return;
+        new Thread(() -> {
+            for (int i=0; i<MAX_ITERATIONS; i++){
+                System.out.println("Creating Playlist: " + (i+1) + "/" + MAX_ITERATIONS);
+                run2(false);
+            }
+            ids.removeAll(recentIds);
+            apiUtils.createPlaylist("AutoPlay " + ranking.getCode(), ids);
+        }, "Creating AutoPlay Playlist").start();
+        //service = Executors.newSingleThreadScheduledExecutor();
+        //service.scheduleAtFixedRate(() -> run2(false), 0, 3, TimeUnit.SECONDS);
+    }
+
+    private void run2(boolean queue){
         if (pendingIds.isEmpty()){
             Song random = ranking.getRandomElement();
             SongAppearance medium = random.getSongFile().getMediumAppearance();
@@ -80,79 +114,48 @@ public class AutoPlaySelector {
             if (relationIds.contains(random.getId())) throw new DevelopException("Incorrect Relation Ids");
             for (String s : relationIds) {
                 if (!ids.contains(s)) {
-                    pendingIds.add(s);
-                    ids.add(s);
+                    try {
+                        Track t = apiUtils.getTrackByID(s);
+                        if (!names.contains(t.getName())){
+                            names.add(t.getName());
+                            pendingIds.add(s);
+                            ids.add(s);
+                        } else System.err.println(t.getName() + " is repeated");
+                    } catch (Exception e){
+                        Maintenance.writeErrorFile(e, true);
+                        break;
+                    }
                 } else {
-                    runSimplified();
+                    runSimplified(queue);
                     return;
                 }
             }
-            run2();
-        } else apiUtils.playThis(pendingIds.remove(), false);
-    }
-
-    public void run(){
-        if (data.size() < 6) {
-            OptionPanes.message("Unable to start AutoPlay: Make sure that your Daily Mixes are at the top of your library");
-            return;
+            run2(queue);
+        } else {
+            String nextId = pendingIds.remove();
+            if (queue) apiUtils.playThis(nextId, false);
         }
-
-        library.shuffleTrends();
-        service = Executors.newSingleThreadScheduledExecutor();
-        service.scheduleAtFixedRate(this::run2, 0, 3, TimeUnit.MINUTES);
     }
 
-    private void runSimplified(){
+    private void runSimplified(boolean queue){
         List<PlaylistTrack> dailyMix = data.get(dailyMixIndex++);
         if (dailyMixIndex == 6) dailyMixIndex = 0;
 
         Track selectedTrack = (Track) dailyMix.get(itemIndex++).getTrack();
         if (itemIndex == 50) shutdown();
 
+        if (ids.contains(selectedTrack.getId()) || names.contains(selectedTrack.getName())) return;
         boolean condition1 = isArtistSaved(selectedTrack.getArtists()[0].getName());
         boolean condition2 = isGoodPopularity(selectedTrack.getPopularity());
 
         if (condition1 || condition2) {
             System.out.println(selectedTrack.getName() + " selected from Daily Mixes");
-            apiUtils.playThis(selectedTrack.getId(), false);
+            names.add(selectedTrack.getName());
+            ids.add(selectedTrack.getId());
+            if (queue) apiUtils.playThis(selectedTrack.getId(), false);
         } else {
             System.out.println("Asking Spotify for recommendations...");
-            apiUtils.autoQueue(ranking, selectedTrack);
-        }
-    }
-
-    private void runOnce(){
-        if (!library.isTrendsEmpty() && System.currentTimeMillis() % trendsOffset == 0){
-            Song s = library.getTrend();
-            System.out.println(s.getName() + " selected by Trends");
-            apiUtils.playThis(s.getId(), false);
-            minPopularity = s.getPopularity();
-            return;
-        }
-
-        List<PlaylistTrack> dailyMix = data.get(dailyMixIndex++);
-        if (dailyMixIndex == 6) dailyMixIndex = 0;
-
-        Track selectedTrack = (Track) dailyMix.get(itemIndex++).getTrack();
-        if (itemIndex == 50) shutdown();
-
-        boolean condition1 = isArtistSaved(selectedTrack.getArtists()[0].getName());
-        boolean condition2 = isGoodPopularity(selectedTrack.getPopularity());
-
-        if (condition1 || condition2) {
-            System.out.println(selectedTrack.getName() + " selected from Daily Mixes");
-            apiUtils.playThis(selectedTrack.getId(), false);
-        } else {
-            Song random = ranking.getRandomElement();
-            ranking.remove(random.getRank());
-
-            if (random.getPopularity() >= random.getSongFile().getMediumAppearance().getPopularity()) {
-                System.out.println(random.getName() + " selected from Current Ranking");
-                apiUtils.playThis(random.getId(), false);
-            } else {
-                System.out.println("Asking Spotify for recommendations...");
-                apiUtils.autoQueue(ranking, selectedTrack);
-            }
+            ids.addAll(apiUtils.autoQueue(ranking, selectedTrack, queue));
         }
     }
 

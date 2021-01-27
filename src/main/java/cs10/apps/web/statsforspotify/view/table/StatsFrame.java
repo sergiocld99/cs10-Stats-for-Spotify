@@ -131,8 +131,6 @@ public class StatsFrame extends AppFrame {
         player.setLastRankingCode(bigRanking.getCode());
         library = init.getLibrary();
         textAboveButton.setText(library.getSongCount() + " songs in your charts");
-        //apiUtils.addToMissedTracks(apiUtils.findDailyMix(
-        //        library.getSongCount() % 10, (int) bigRanking.getCode() / 100));
 
         // When ranking is totally loaded
         buildTable();
@@ -154,12 +152,11 @@ public class StatsFrame extends AppFrame {
             AutoPlayService autoPlayService = new AutoPlayService(bigRanking, apiUtils, autoPlayButton);
             autoPlayButton.addActionListener(e -> {
                 if (apiUtils.playThis(bigRanking.getRandomElement().getId(), true)){
+                    autoPlayService.setModifyPlayback(true);
                     autoPlayService.execute();
                     playbackService.setCanSkip(false);
                     playbackService.run();
-                } else {
-                    OptionPanes.message("No active devices found or unable to modify current playback");
-                }
+                } else OptionPanes.message("No active devices found or unable to modify current playback");
             });
         }
 
@@ -210,6 +207,7 @@ public class StatsFrame extends AppFrame {
         JMenu optionsMenu = new JMenu("Options");
         JMenuItem jmiAlbumCovers = new JMenuItem("Toggle Album Covers");
         JMenuItem jmiLastFmUser = new JMenuItem("Last FM Username");
+        JMenuItem jmiPlaylist = new JMenuItem("Create AutoPlay playlist");
 
         jmiAlbumCovers.addActionListener(e -> changeAlbumCoversOption());
         jmiLocalTop10.addActionListener(e -> openLocalTop10());
@@ -217,6 +215,12 @@ public class StatsFrame extends AppFrame {
         jmiTopGenres.addActionListener(e -> openCurrentTopGenres());
         jmiCurrentCollab.addActionListener(e -> openCurrentCollabScores());
         jmiDailyMixes.addActionListener(e -> openCurrentDailyMixesStats());
+        jmiPlaylist.addActionListener(e -> {
+            AutoPlayService autoPlayService = new AutoPlayService(bigRanking, apiUtils, null);
+            autoPlayService.setModifyPlayback(false);
+            autoPlayService.execute();
+            jmiPlaylist.setEnabled(false);
+        });
         //jmiFanaticism.addActionListener(e -> openFanaticismWindow());
         jmiLastFmUser.addActionListener(e -> {
             boolean restart = OptionPanes.inputUsername(appOptions);
@@ -231,6 +235,7 @@ public class StatsFrame extends AppFrame {
         //viewMenu.add(jmiFanaticism);
         optionsMenu.add(jmiAlbumCovers);
         optionsMenu.add(jmiLastFmUser);
+        optionsMenu.add(jmiPlaylist);
         menuBar.add(viewMenu);
         menuBar.add(optionsMenu);
         return menuBar;

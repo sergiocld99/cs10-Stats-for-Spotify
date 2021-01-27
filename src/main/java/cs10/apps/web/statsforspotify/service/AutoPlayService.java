@@ -15,6 +15,7 @@ public class AutoPlayService {
     private final ApiUtils apiUtils;
     private final JButton button;
     private Thread thread;
+    private boolean modifyPlayback;
 
     public AutoPlayService(BigRanking originalRanking, ApiUtils apiUtils, JButton button) {
         this.apiUtils = apiUtils;
@@ -24,12 +25,16 @@ public class AutoPlayService {
         ranking.addAll(originalRanking);
     }
 
+    public void setModifyPlayback(boolean modifyPlayback) {
+        this.modifyPlayback = modifyPlayback;
+    }
+
     public void execute() {
         if (thread == null || !thread.isAlive()) {
             Collections.shuffle(ranking);
             thread = new Thread(new AutoPlayRunnable(), NAME + " Service");
             thread.start();
-            OptionPanes.message(thread.getName() + " is running now");
+            if (modifyPlayback) OptionPanes.message(thread.getName() + " is running now");
         } else {
             thread.interrupt();
             OptionPanes.message(thread.getName() + " stopped");
@@ -40,11 +45,14 @@ public class AutoPlayService {
 
         @Override
         public void run() {
-            button.setEnabled(false);
-            new AutoPlaySelector(Library.getInstance(null), apiUtils, ranking, this).run();
+            if (button != null) button.setEnabled(false);
+            AutoPlaySelector selector = new AutoPlaySelector(Library.getInstance(null), apiUtils, ranking, this);
+            if (modifyPlayback) selector.run();
+            else selector.createPlaylist();
         }
 
         public void enable(){
+            if (button == null) return;
             button.setText(NAME + " (Premium)");
             button.setEnabled(true);
         }

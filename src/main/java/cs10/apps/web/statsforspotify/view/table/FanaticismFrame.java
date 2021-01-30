@@ -4,7 +4,7 @@ import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.core.LastFmIntegration;
-import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.model.Fanaticism;
 import cs10.apps.web.statsforspotify.view.CustomTableCellRenderer;
 import cs10.apps.web.statsforspotify.view.OptionPanes;

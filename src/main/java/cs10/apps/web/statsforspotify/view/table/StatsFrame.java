@@ -2,7 +2,6 @@ package cs10.apps.web.statsforspotify.view.table;
 
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
-import cs10.apps.desktop.statsforspotify.utils.OldIOUtils;
 import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
 import cs10.apps.web.statsforspotify.app.AppOptions;
@@ -11,8 +10,8 @@ import cs10.apps.web.statsforspotify.core.GenresTracker;
 import cs10.apps.web.statsforspotify.core.Init;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
-import cs10.apps.web.statsforspotify.model.BigRanking;
-import cs10.apps.web.statsforspotify.model.SimpleRanking;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.SimpleRanking;
 import cs10.apps.web.statsforspotify.service.AutoPlayService;
 import cs10.apps.web.statsforspotify.service.PlaybackService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
@@ -33,7 +32,9 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.Random;
 
 public class StatsFrame extends AppFrame {
     private final AppOptions appOptions;
@@ -71,9 +72,9 @@ public class StatsFrame extends AppFrame {
         // Player Panel
         JPanel playerPanel = new JPanel();
         JButton autoPlayButton = new JButton(AutoPlayService.NAME + " (Premium)");
-        JLabel textAboveButton = new JLabel("Loading...", JLabel.CENTER);
+        JLabel textAboveButton = new JLabel("Session Score: 0", JLabel.CENTER);
 
-        //playerPanel.setBorder(new EmptyBorder(0, 16, 0, 16));
+        player.setSessionLabel(textAboveButton);
         playerPanel.add(player);
         JPanel autoPlayPanel = new JPanel(new GridLayout(2,1));
         textAboveButton.setFont(new Font("Arial",Font.BOLD,10));
@@ -127,10 +128,8 @@ public class StatsFrame extends AppFrame {
             System.exit(4);
         }
 
-        bigRanking = init.getProcessedRanking();
-        player.setLastRankingCode(bigRanking.getCode());
         library = init.getLibrary();
-        textAboveButton.setText(library.getSongCount() + " songs in your charts");
+        bigRanking = init.getProcessedRanking();
 
         // When ranking is totally loaded
         buildTable();
@@ -151,7 +150,8 @@ public class StatsFrame extends AppFrame {
         else {
             AutoPlayService autoPlayService = new AutoPlayService(bigRanking, apiUtils, autoPlayButton);
             autoPlayButton.addActionListener(e -> {
-                if (apiUtils.playThis(bigRanking.getRandomElement().getId(), true)){
+                Song s = bigRanking.get(new Random().nextInt(16));
+                if (apiUtils.playThis(s.getId(), true)){
                     autoPlayService.setModifyPlayback(true);
                     autoPlayService.execute();
                     playbackService.setCanSkip(false);
@@ -302,7 +302,12 @@ public class StatsFrame extends AppFrame {
             } else popStr = song.getPopularity() + " (" + diff + ")";
         } else popStr = String.valueOf(song.getPopularity());
 
-        return new Object[]{OldIOUtils.getImageIcon(song.getStatus()),
+        BufferedImage bi = IOUtils.getIcon(getClass(), song.getStatus().getPath());
+        ImageIcon ii = (bi != null) ? new ImageIcon(bi) : new ImageIcon("");
+
+        return new Object[]{
+                ii,
+                //OldIOUtils.getImageIcon(song.getStatus()),
                 "#" + song.getRank(), song.getInfoStatus(),
                 song.getName().split(" \\(")[0],
                 song.getArtists(), popStr};

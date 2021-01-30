@@ -3,7 +3,7 @@ package cs10.apps.web.statsforspotify.core;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
-import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.model.Fanaticism;
 import cs10.apps.web.statsforspotify.model.LastFmData;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
@@ -11,9 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;

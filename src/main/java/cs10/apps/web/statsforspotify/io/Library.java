@@ -2,7 +2,7 @@ package cs10.apps.web.statsforspotify.io;
 
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.model.CustomList;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;

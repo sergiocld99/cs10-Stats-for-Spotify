@@ -5,10 +5,12 @@ import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.model.Artist;
-import cs10.apps.web.statsforspotify.model.BigRanking;
-import cs10.apps.web.statsforspotify.model.SimpleRanking;
+import cs10.apps.web.statsforspotify.model.BlockedItem;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.SimpleRanking;
 
-import javax.swing.*;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -16,6 +18,8 @@ import java.util.*;
 
 public class IOUtils {
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final String BLACKLIST_FILE = "blacklist.dat";
+    private static final String ICON_PATH = "/icons/";
     private static final String APP_DATA_FILE = "appdata.bin";
     private static final String LIBRARY_FOLDER = "library";
     private static final String RANKING_FOLDER = "ranking";
@@ -66,18 +70,6 @@ public class IOUtils {
             System.err.println("The file " + userId + " doesn't exist!");
         } catch (IOException e){
             Maintenance.writeErrorFile(e, false);
-        }
-    }
-
-    // --------------------------------- LIBRARY -------------------------------------
-
-    public static void updateLibrary(Ranking ranking, JProgressBar progressBar){
-        int total = ranking.size(), i = 0;
-
-        for (Song s : ranking){
-            progressBar.setValue((i++) * 100 / total);
-            String[] artists = s.getArtists().split(", ");
-            for (String a : artists) updateSongFile(a, s, ranking.getCode());
         }
     }
 
@@ -453,4 +445,52 @@ public class IOUtils {
         }
     }
 
+    // -------------------------------------------- ICON ---------------------
+
+    public static BufferedImage getIcon(Class<?> clazz, String name){
+        try {
+            String path = ICON_PATH + name + ".png";
+            InputStream inputStream = clazz.getResourceAsStream(path);
+            if (inputStream == null) return null;
+            return ImageIO.read(inputStream);
+        } catch (IOException e){
+            Maintenance.writeErrorFile(e, true);
+            System.exit(9);
+            return null;
+        }
+    }
+
+    // ----------------------------------------- BLACKLIST -----------------
+
+    public static Set<BlockedItem> loadBlackList(){
+        Set<BlockedItem> result = new HashSet<>();
+
+        try {
+            File file = new File(BLACKLIST_FILE);
+            if (!file.exists()) return result;
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+
+            while ((line = br.readLine()) != null){
+                String[] params = line.split("--");
+                BlockedItem bi = new BlockedItem(params[1]);
+                bi.setTimesUntilUnlock(Integer.parseInt(params[0]));
+            }
+        } catch (IOException e){
+            Maintenance.writeErrorFile(e, true);
+        }
+
+        return result;
+    }
+
+    public static void saveBlacklist(Set<BlockedItem> blockedItems){
+        try {
+            File file = new File(BLACKLIST_FILE);
+            FileWriter fw = new FileWriter(file, false);
+            for (BlockedItem bi : blockedItems) fw.write(bi.toString());
+            fw.close();
+        } catch (IOException e){
+            Maintenance.writeErrorFile(e, true);
+        }
+    }
 }

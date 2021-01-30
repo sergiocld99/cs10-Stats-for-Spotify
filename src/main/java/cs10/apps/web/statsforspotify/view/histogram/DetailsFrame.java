@@ -1,6 +1,7 @@
 package cs10.apps.web.statsforspotify.view.histogram;
 
 import cs10.apps.desktop.statsforspotify.view.Histograma;
+import cs10.apps.web.statsforspotify.utils.IOUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +13,7 @@ public abstract class DetailsFrame extends JFrame {
     public DetailsFrame(String title, String labelText, int width, int height) {
         this.lblHistograma = new JLabel(labelText);
         this.histograma = new Histograma();
-        setIconImage(new ImageIcon("appicon.png").getImage());
+        setIconImage(IOUtils.getIcon(getClass(), "stats"));
         setMinimumSize(new Dimension(width, height));
         setTitle(title);
     }

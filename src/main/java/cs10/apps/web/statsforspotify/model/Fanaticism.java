@@ -19,8 +19,8 @@ public class Fanaticism {
     }
 
     public String getIconName(){
-        if (topFan > 1) return "star.png";
-        else return "star_half.png";
+        if (topFan > 1) return "star";
+        else return "fan";
     }
 
     public String getLabel(){

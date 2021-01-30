@@ -1,15 +1,15 @@
 package cs10.apps.web.statsforspotify.io;
 
 import cs10.apps.desktop.statsforspotify.model.Song;
+import cs10.apps.web.statsforspotify.model.CustomList;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SongFile implements Comparable<SongFile> {
     private String trackName;
-    private ArrayList<SongAppearance> appearances;
+    private CustomList<SongAppearance> appearances;
     private final ArtistDirectory artistReference;
     private SongPeak peak;
     private final File file;
@@ -36,7 +36,7 @@ public class SongFile implements Comparable<SongFile> {
     }
 
     private void read() throws IOException {
-        appearances = new ArrayList<>();
+        appearances = new CustomList<>();
 
         BufferedReader br = new BufferedReader(new FileReader(file));
         trackName = br.readLine();
@@ -92,6 +92,10 @@ public class SongFile implements Comparable<SongFile> {
     public SongAppearance getPreviousAppearance(){
         int index = Math.max(0, appearances.size() - 2);
         return appearances.get(index);
+    }
+
+    public SongAppearance getRandomAppearance(){
+        return appearances.getRandomElement();
     }
 
     public SongAppearance getLastAppearance(){

@@ -9,7 +9,8 @@ import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.io.SongAppearance;
-import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.io.SongFile;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.service.AutoPlayService;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
@@ -25,7 +26,7 @@ public class AutoPlaySelector {
     private final Library library;
     private final ApiUtils apiUtils;
     private final BigRanking ranking;
-    private int dailyMixIndex, itemIndex, minScore, minPopularity, trendsOffset;
+    private int itemIndex, minScore, minPopularity;
     private final List<List<PlaylistTrack>> data;
     private final List<Integer> magicNumbers;
     private ScheduledExecutorService service;
@@ -34,6 +35,7 @@ public class AutoPlaySelector {
     private final Set<String> recentIds = new HashSet<>();
     private final Set<String> names = new HashSet<>();
     private final Queue<String> pendingIds = new LinkedList<>();
+    private final Random random = new Random();
     private static final int MAX_ITERATIONS = 64;
 
     public AutoPlaySelector(Library library, ApiUtils apiUtils, BigRanking ranking,
@@ -54,8 +56,6 @@ public class AutoPlaySelector {
         for (Playlist p : list){
             List<PlaylistTrack> tracks = Arrays.asList(p.getTracks().getItems());
             Collections.shuffle(tracks);
-            Collections.shuffle(tracks);
-            Collections.shuffle(tracks);
             data.add(tracks);
         }
 
@@ -72,7 +72,6 @@ public class AutoPlaySelector {
     private void setConstants(){
         minPopularity = ranking.getAverage();
         minScore = minPopularity / 8;
-        trendsOffset = (minScore + 3) / 2;
     }
 
     private boolean preRun(){
@@ -107,28 +106,43 @@ public class AutoPlaySelector {
 
     private void run2(boolean queue){
         if (pendingIds.isEmpty()){
-            Song random = ranking.getRandomElement();
-            SongAppearance medium = random.getSongFile().getMediumAppearance();
-            Maintenance.log(random + " was selected for Relation Ids, using " + medium.getRankingCode() + " as code");
-            List<String> relationIds = IOUtils.getRelationIds(medium.getRankingCode(), medium.getChartPosition());
-            if (relationIds.contains(random.getId())) throw new DevelopException("Incorrect Relation Ids");
+            final Set<String> relationIds = new HashSet<>();
+            runSimplified(queue);
+
+            if (!library.isTrendsEmpty()){
+                Song s = library.getTrend();
+                relationIds.add(s.getId());
+                SongAppearance[] appearances = new SongAppearance[2];
+                appearances[0] = s.getSongFile().getFirstAppearance();
+                appearances[1] = s.getSongFile().getLastAppearance();
+                for (SongAppearance a : appearances) relationIds.addAll(IOUtils.getRelationIds(a.getRankingCode(), a.getChartPosition()));
+                Maintenance.log(s + " selected from Library Trends");
+            } else {
+                Song song = ranking.getRandomElement();
+                SongAppearance appearance = song.getSongFile().getMediumAppearance();
+
+                if (song.getPopularity() > appearance.getPopularity()){
+                    relationIds.add(song.getId());
+                    Maintenance.log(song + " is a trending song. Avoiding relation ids");
+                } else {
+                    relationIds.addAll(IOUtils.getRelationIds(appearance.getRankingCode(), appearance.getChartPosition()));
+                    if (relationIds.contains(song.getId())) throw new DevelopException("Incorrect Relation Ids");
+                    Maintenance.log(song + " was selected for Relation Ids, using " + appearance.getRankingCode() + " as code");
+                }
+            }
+
             for (String s : relationIds) {
                 if (!ids.contains(s)) {
                     try {
                         Track t = apiUtils.getTrackByID(s);
-                        if (!names.contains(t.getName())){
-                            names.add(t.getName());
-                            pendingIds.add(s);
-                            ids.add(s);
-                        } else System.err.println(t.getName() + " is repeated");
+                        ArtistDirectory a = library.getArtistByName(t.getArtists()[0].getName());
+                        SongFile songFile = (a == null ? null : a.getSongById(t.getId()));
+                        if (!names.contains(t.getName()) && !isBecomingVeryUnpopular(songFile, t.getPopularity())) queue(t.getName(), s);
                     } catch (Exception e){
                         Maintenance.writeErrorFile(e, true);
                         break;
                     }
-                } else {
-                    runSimplified(queue);
-                    return;
-                }
+                } else return;
             }
             run2(queue);
         } else {
@@ -137,10 +151,15 @@ public class AutoPlaySelector {
         }
     }
 
-    private void runSimplified(boolean queue){
-        List<PlaylistTrack> dailyMix = data.get(dailyMixIndex++);
-        if (dailyMixIndex == 6) dailyMixIndex = 0;
+    private void queue(String name, String id){
+        System.out.println(name + " was selected by Relation Ids");
+        names.add(name);
+        ids.add(id);
+        pendingIds.add(id);
+    }
 
+    private void runSimplified(boolean queue){
+        List<PlaylistTrack> dailyMix = data.get(random.nextInt(6));
         Track selectedTrack = (Track) dailyMix.get(itemIndex++).getTrack();
         if (itemIndex == 50) shutdown();
 
@@ -153,10 +172,7 @@ public class AutoPlaySelector {
             names.add(selectedTrack.getName());
             ids.add(selectedTrack.getId());
             if (queue) apiUtils.playThis(selectedTrack.getId(), false);
-        } else {
-            System.out.println("Asking Spotify for recommendations...");
-            ids.addAll(apiUtils.autoQueue(ranking, selectedTrack, queue));
-        }
+        } else ids.addAll(apiUtils.autoQueue(ranking, selectedTrack, queue));
     }
 
     private boolean isArtistSaved(String artistName){
@@ -181,6 +197,11 @@ public class AutoPlaySelector {
     private void shutdown(){
         service.shutdown();
         runnable.enable();
+    }
+
+    private boolean isBecomingVeryUnpopular(SongFile songFile, int popularity){
+        if (songFile == null) return false;
+        return songFile.getMediumAppearance().getPopularity() > popularity + 8;
     }
 
 }

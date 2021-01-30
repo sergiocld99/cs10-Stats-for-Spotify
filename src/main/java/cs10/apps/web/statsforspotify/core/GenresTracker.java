@@ -4,7 +4,7 @@ import com.wrapper.spotify.model_objects.specification.Artist;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.web.statsforspotify.model.Genre;
-import cs10.apps.web.statsforspotify.model.RankingArtist;
+import cs10.apps.web.statsforspotify.model.ranking.RankingArtist;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 
 import java.util.*;

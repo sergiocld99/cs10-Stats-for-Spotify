@@ -6,7 +6,9 @@ import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.io.SongFile;
+import cs10.apps.web.statsforspotify.model.BlockedItem;
 import cs10.apps.web.statsforspotify.model.Collab;
+import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.view.label.*;
 
 import javax.swing.*;
@@ -14,6 +16,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 import java.text.DecimalFormat;
+import java.util.Set;
 
 public class CustomPlayer extends JPanel {
     private final DecimalFormat decimalFormat = new DecimalFormat("#00");
@@ -25,8 +28,9 @@ public class CustomPlayer extends JPanel {
     private final AppOptions appOptions;
     private String currentSongId;
     private Library library;
-    private int average;
-    private long lastRankingCode;
+    private JLabel sessionLabel;
+    private Set<BlockedItem> blacklist;
+    private int average, sessionScore, pendingScore, timeCount;
 
     public CustomPlayer(int thumbSize, AppOptions appOptions) {
         this.appOptions = appOptions;
@@ -71,10 +75,6 @@ public class CustomPlayer extends JPanel {
         this.average = average;
         this.popularityLabel.setAverage(average);
         this.peakLabel.setAverage(average / 3);
-    }
-
-    public void setLastRankingCode(long lastRankingCode) {
-        this.lastRankingCode = lastRankingCode;
     }
 
     public void clear(){
@@ -133,6 +133,8 @@ public class CustomPlayer extends JPanel {
 
         if (songFile != null){
             previousPop = songFile.getMediumAppearance().getPopularity();
+            System.out.println(track.getName() + " normal popularity is " + previousPop);
+            pendingScore = (track.getPopularity() - previousPop);
             peakLabel.changeToPeak();
             //peakLabel.setAverage(average / 3);
             int average = (int) a.getAveragePeak();
@@ -148,10 +150,13 @@ public class CustomPlayer extends JPanel {
         } else {
             peakLabel.setValue(0);
             peakLabel.setReplaceable(true);
+            pendingScore = (track.getPopularity() / 10);
         }
 
         this.popularityLabel.setOriginalValue(previousPop);
         this.popularityLabel.setValue(track.getPopularity());
+        timeCount = 0;
+        //System.out.println("Session Score: " + sessionScore);
 
         if (previousPop > 0 && track.getPopularity() < previousPop){
             changeProgressColor(Color.orange);
@@ -173,6 +178,24 @@ public class CustomPlayer extends JPanel {
         int minutes = timeInSeconds / 60;
         progressBar.setString(minutes + ":" + decimalFormat.format(seconds));
         if (timeInSeconds > 0 && peakLabel.isMinutes()) peakLabel.updateMinutes(timeInSeconds);
+
+        // Beta 1.05.3
+        if (++timeCount == 100){
+            sessionScore += pendingScore;
+            sessionLabel.setText("Session Score: " + sessionScore);
+            timeCount = 0;
+            checkScore();
+        }
+    }
+
+    private void checkScore(){
+        if (sessionScore < 0 && sessionScore % 8 == 0) {
+            BlockedItem bi = new BlockedItem(currentSongId);
+            bi.setTimesUntilUnlock(4);
+            sessionScore = 0;
+            blacklist.add(bi);
+            IOUtils.saveBlacklist(blacklist);
+        }
     }
 
     public void setCurrentSongId(String currentSongId) {
@@ -197,5 +220,17 @@ public class CustomPlayer extends JPanel {
 
     public int getAverage() {
         return average;
+    }
+
+    public void setSessionLabel(JLabel sessionLabel) {
+        this.sessionLabel = sessionLabel;
+    }
+
+    public int getSessionScore() {
+        return sessionScore;
+    }
+
+    public void setBlacklist(Set<BlockedItem> blacklist) {
+        this.blacklist = blacklist;
     }
 }

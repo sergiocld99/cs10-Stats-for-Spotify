@@ -1,8 +1,7 @@
 package cs10.apps.desktop.statsforspotify.model;
 
 public enum Status {
-    NEW("new.png"), UP("up.png"), DOWN("down.png"),
-    NOTHING(""), LEFT("left.png");
+    NEW("new"), UP("up"), DOWN("down"), NOTHING(""), LEFT("left");
 
     private final String path;
 

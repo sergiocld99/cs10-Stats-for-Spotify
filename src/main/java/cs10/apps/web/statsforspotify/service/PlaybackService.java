@@ -9,10 +9,11 @@ import cs10.apps.web.statsforspotify.app.AppOptions;
 import cs10.apps.web.statsforspotify.app.DevelopException;
 import cs10.apps.web.statsforspotify.app.PersonalChartApp;
 import cs10.apps.web.statsforspotify.core.LastFmIntegration;
-import cs10.apps.web.statsforspotify.io.SongFile;
+import cs10.apps.web.statsforspotify.model.BlockedItem;
 import cs10.apps.web.statsforspotify.model.LastFmData;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.utils.CommonUtils;
+import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.CustomPlayer;
 import cs10.apps.web.statsforspotify.view.label.PeakLabel;
@@ -34,6 +35,7 @@ public class PlaybackService implements Runnable {
     private ScheduledExecutorService progressScheduler;
     private Set<String> avoidInitials;
     private Thread lastFmThread;
+    private final Set<BlockedItem> blacklist;
     private static final int AUTO_UPDATE_RATE = 24;
     private boolean running, canSkip, userAgreedSkip, userWasAskedForSkip;
     private int time, requestsCount, idleCount;
@@ -42,13 +44,28 @@ public class PlaybackService implements Runnable {
 
     public PlaybackService(ApiUtils apiUtils, JTable table, JFrame frame, CustomPlayer player) {
         progressScheduler = Executors.newSingleThreadScheduledExecutor();
+        this.blacklist = IOUtils.loadBlackList();
         this.apiUtils = apiUtils;
         this.table = table;
         this.frame = frame;
         this.player = player;
         this.canSkip = true;
 
+        player.setBlacklist(blacklist);
         setAvoidInitials();
+    }
+
+    private boolean isBlocked(String trackId){
+        for (BlockedItem bi : blacklist){
+            if (bi.getId().equals(trackId)){
+                bi.decrementTimesUntilUnlock();
+                if (bi.getTimesUntilUnlock() == 0) blacklist.remove(bi);
+                IOUtils.saveBlacklist(blacklist);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void setAvoidInitials(){
@@ -58,11 +75,9 @@ public class PlaybackService implements Runnable {
     }
 
     private void playNext(){
-        SongFile nextSong = player.getLibrary().next().getRandom();
-        Song avoidSong = ranking.getRandomElement();
-        if (avoidSong.getRank() > 16) avoidInitials.add(initials(avoidSong.getId()));
+        Song nextSong = ranking.get(requestsCount);
         System.out.println("Play Next: " + nextSong);
-        apiUtils.playThis(nextSong.getTrackId(),false);
+        apiUtils.playThis(nextSong.getId(),false);
         apiUtils.skipCurrentTrack();
         canSkip = false;
         run();
@@ -181,16 +196,19 @@ public class PlaybackService implements Runnable {
                 }
             }
 
-            System.out.println(track.getName() + " set in Playback Service");
+            if (isBlocked(track.getId())) return;
             if (checkInitials(track)) return;
-
             player.setCurrentSongId(track.getId());
             boolean isUnpopular = player.setTrack(track);
             this.attemptGetMinutes(track);
 
-            if (isUnpopular) frame.setIconImage(new ImageIcon("appicon2.png").getImage());
+            if (isUnpopular) {
+                frame.setIconImage(IOUtils.getIcon(getClass(), "unpopular"));
+                //frame.setIconImage(new ImageIcon("appicon2.png").getImage());
+            }
             else {
-                frame.setIconImage(new ImageIcon("appicon.png").getImage());
+                frame.setIconImage(IOUtils.getIcon(getClass(), "stats"));
+                //frame.setIconImage(new ImageIcon("appicon.png").getImage());
                 setCanSkip(true);
             }
 
@@ -274,8 +292,9 @@ public class PlaybackService implements Runnable {
                 float minutes = data.getUserPlayCount() * track.getDurationMs() / 60000f;
 
                 if (data.getFanaticism() != null){
-                    ImageIcon icon = new ImageIcon(data.getFanaticism().getIconName());
-                    frame.setIconImage(icon.getImage());
+                    //ImageIcon icon = new ImageIcon(data.getFanaticism().getIconName());
+                    frame.setIconImage(IOUtils.getIcon(getClass(), data.getFanaticism().getIconName()));
+                    //frame.setIconImage(icon.getImage());
                     frame.setTitle(data.getFanaticism().getLabel());
                 }
 

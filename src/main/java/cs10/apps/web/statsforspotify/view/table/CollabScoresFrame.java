@@ -3,7 +3,7 @@ package cs10.apps.web.statsforspotify.view.table;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
-import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.model.Collab;
 import cs10.apps.web.statsforspotify.view.CustomTableCellRenderer;
 

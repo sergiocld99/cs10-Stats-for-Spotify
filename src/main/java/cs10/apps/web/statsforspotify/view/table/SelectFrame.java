@@ -2,8 +2,8 @@ package cs10.apps.web.statsforspotify.view.table;
 
 import cs10.apps.desktop.statsforspotify.view.CustomTableModel;
 import cs10.apps.web.statsforspotify.app.AppFrame;
-import cs10.apps.web.statsforspotify.model.BigRanking;
-import cs10.apps.web.statsforspotify.model.SimpleRanking;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.SimpleRanking;
 
 import javax.swing.*;
 import java.awt.*;

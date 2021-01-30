@@ -5,7 +5,7 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.model_objects.specification.TrackSimplified;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.desktop.statsforspotify.model.Status;
-import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 
 import javax.imageio.ImageIO;

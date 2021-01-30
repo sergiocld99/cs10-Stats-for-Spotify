@@ -2,7 +2,7 @@ package cs10.apps.web.statsforspotify.service;
 
 import cs10.apps.web.statsforspotify.core.AutoPlaySelector;
 import cs10.apps.web.statsforspotify.io.Library;
-import cs10.apps.web.statsforspotify.model.BigRanking;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.utils.ApiUtils;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 

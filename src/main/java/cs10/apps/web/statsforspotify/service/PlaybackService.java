@@ -56,11 +56,15 @@ public class PlaybackService implements Runnable {
     }
 
     private boolean isBlocked(String trackId){
+        if (apiUtils.getRankingImprover().isTrackBlocked(trackId))
+            return true;
+
         for (BlockedItem bi : blacklist){
             if (bi.getId().equals(trackId)){
                 bi.decrementTimesUntilUnlock();
                 if (bi.getTimesUntilUnlock() == 0) blacklist.remove(bi);
                 IOUtils.saveBlacklist(blacklist);
+                playNext();
                 return true;
             }
         }
@@ -77,9 +81,9 @@ public class PlaybackService implements Runnable {
     private void playNext(){
         Song nextSong = ranking.get(requestsCount);
         System.out.println("Play Next: " + nextSong);
-        apiUtils.playThis(nextSong.getId(),false);
+        apiUtils.playThis(nextSong.getId(), true);
         apiUtils.skipCurrentTrack();
-        canSkip = false;
+        //canSkip = false;
         run();
     }
 
@@ -139,7 +143,7 @@ public class PlaybackService implements Runnable {
     public void restart(){
         System.out.println("Restarting Playback Service");
         player.setCurrentSongId("..");
-        canSkip = false;
+        //canSkip = false;
         run();
     }
 
@@ -209,7 +213,6 @@ public class PlaybackService implements Runnable {
             else {
                 frame.setIconImage(IOUtils.getIcon(getClass(), "stats"));
                 //frame.setIconImage(new ImageIcon("appicon.png").getImage());
-                setCanSkip(true);
             }
 
             // Only if the track wasn't skipped
@@ -234,6 +237,7 @@ public class PlaybackService implements Runnable {
                     player.setCurrentSongId("--");
                     progressScheduler.shutdown();
                     player.setTime(0);
+                    setCanSkip(true);
                     runWithoutDelay();
                 } else time++;
             }, 0, 1, TimeUnit.SECONDS);

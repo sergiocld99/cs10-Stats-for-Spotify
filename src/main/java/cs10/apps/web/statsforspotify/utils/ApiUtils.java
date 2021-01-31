@@ -14,6 +14,7 @@ import com.wrapper.spotify.model_objects.specification.*;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.Private;
+import cs10.apps.web.statsforspotify.core.RankingImprover;
 import cs10.apps.web.statsforspotify.view.OptionPanes;
 import cs10.apps.web.statsforspotify.view.histogram.DailyMixesFrame;
 
@@ -27,7 +28,8 @@ import java.util.concurrent.TimeUnit;
 public class ApiUtils {
     private final SpotifyApi spotifyApi;
     private final Random random;
-    private ArrayList<Track> missedTracks;
+    private final ArrayList<Track> missedTracks = new ArrayList<>();
+    private final RankingImprover rankingImprover = new RankingImprover();
     private final Set<String> enqueuedUris = new HashSet<>();
     private final boolean ready;
 
@@ -134,10 +136,10 @@ public class ApiUtils {
         Track[] tracks1;
         TrackSimplified t2;
 
-        if (missedTracks != null && missedTracks.size() > 1){
+        if (!missedTracks.isEmpty()){
             try {
                 Track mt = missedTracks.remove(0);
-                if (missedTracks.size() % 3 == 0){
+                if (missedTracks.size() % 3 == 2){
                     Track pt = findPopularTrackOfArtist(mt.getArtists()[0].getId());
                     if (pt != null){
                         TrackSimplified at = pickRandomTrackFromAlbum(pt.getAlbum().getId());
@@ -252,9 +254,15 @@ public class ApiUtils {
             Track[] result = new Track[tracks1.length + mostPopularIndex2 + 1];
             System.arraycopy(tracks1, 0, result, 0, tracks1.length);
             System.arraycopy(tracks2, 0, result, tracks1.length, mostPopularIndex2 + 1);
-            missedTracks = new ArrayList<>();
-            missedTracks.addAll(Arrays.asList(tracks2).subList(mostPopularIndex2 + 1, tracks2.length));
-            Collections.shuffle(missedTracks);
+
+            if (mostPopularIndex2 < 8) {
+                System.err.println("Most popular track of " + termKey + " is at #" + (mostPopularIndex2+50));
+                rankingImprover.addBlockedTracks(result);
+                missedTracks.add(rankingImprover.getTargetTrack());
+            } else {
+                missedTracks.addAll(Arrays.asList(tracks2).subList(mostPopularIndex2 + 1, tracks2.length));
+                Collections.shuffle(missedTracks);
+            }
             return result;
         } catch (Exception e){
             Maintenance.writeErrorFile(e, true);
@@ -519,5 +527,9 @@ public class ApiUtils {
             Maintenance.writeErrorFile(e, true);
             return null;
         }
+    }
+
+    public RankingImprover getRankingImprover() {
+        return rankingImprover;
     }
 }

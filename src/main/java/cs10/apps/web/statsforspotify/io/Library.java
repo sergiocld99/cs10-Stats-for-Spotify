@@ -1,9 +1,8 @@
 package cs10.apps.web.statsforspotify.io;
 
-import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Song;
-import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.model.CustomList;
+import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.utils.IOUtils;
 import cs10.apps.web.statsforspotify.utils.Maintenance;
 import cs10.apps.web.statsforspotify.view.CustomPlayer;
@@ -17,12 +16,10 @@ import java.util.List;
 
 public class Library {
     private static final File BASE_DIR = new File("library//");
-    private List<ArtistDirectory> artistDirectories;
+    private CustomList<ArtistDirectory> artistDirectories;
     private final List<Song> trends = new LinkedList<>();
     private static Library instance;
-
     private final int rankingsAmount;
-    private int auxIndex;
 
     private Library(File rootFile, CustomPlayer player){
         this.rankingsAmount = IOUtils.getRankingsAmount();
@@ -82,12 +79,6 @@ public class Library {
         }
 
         return 0;
-    }
-
-    public SongFile getSongFile(Track track){
-        ArtistDirectory d = getArtistByName(track.getArtists()[0].getName());
-        if (d != null) return d.getSongById(track.getId());
-        else return null;
     }
 
     public void sort(){
@@ -152,21 +143,6 @@ public class Library {
         return true;
     }
 
-    public int getSongCount(){
-        int count = 0;
-
-        for (ArtistDirectory a : artistDirectories){
-            count += a.getSongCount();
-        }
-
-        return count;
-    }
-
-    public ArtistDirectory next(){
-        auxIndex += (int) (Math.random() * 4);
-        return artistDirectories.get(auxIndex);
-    }
-
     public void addTrend(Song song){
         trends.add(song);
     }
@@ -181,5 +157,49 @@ public class Library {
 
     public boolean isTrendsEmpty(){
         return trends.isEmpty();
+    }
+
+    public SongFile findById(String songId){
+        for (ArtistDirectory a : artistDirectories){
+            for (SongFile sf : a.getSongFiles()){
+                if (sf.getTrackId().equals(songId))
+                    return sf;
+            }
+        }
+
+        return null;
+    }
+
+    public String selectBestId(String id1, String id2, String id3, String id4){
+        SongFile sf1 = findById(id1);
+        if (sf1 == null) return id1;
+        SongFile sf2 = findById(id2);
+        if (sf2 == null) return id2;
+        SongFile sf3 = findById(id3);
+        if (sf3 == null) return id3;
+        SongFile sf4 = findById(id4);
+        if (sf4 == null) return id4;
+        return selectBestSong(sf1, sf2, sf3, sf4).getTrackId();
+    }
+
+    public SongFile selectBestSong(SongFile sf1, SongFile sf2){
+        float score1 = getScore(sf1);
+        float score2 = getScore(sf2);
+        return (score1 > score2 ? sf1 : sf2);
+    }
+
+    public SongFile selectBestSong(SongFile sf1, SongFile sf2, SongFile sf3, SongFile sf4){
+        return selectBestSong(selectBestSong(sf1, sf2), selectBestSong(sf3, sf4));
+    }
+
+    private float getScore(SongFile sf){
+        int diff = sf.getLastAppearance().getPopularity() - sf.getMediumAppearance().getPopularity() + 1;
+        return diff * sf.getRandomAppearance().getPopularity() - sf.getAppearancesCount();
+    }
+
+    public SongFile getRandomSong(){
+        SongFile[] arr = new SongFile[4];
+        for (int i=0; i<4; i++) arr[i] = artistDirectories.getRandomElement().getRandom();
+        return selectBestSong(arr[0], arr[1], arr[2], arr[3]);
     }
 }

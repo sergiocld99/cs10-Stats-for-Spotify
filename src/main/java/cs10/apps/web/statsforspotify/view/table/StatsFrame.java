@@ -10,6 +10,7 @@ import cs10.apps.web.statsforspotify.core.GenresTracker;
 import cs10.apps.web.statsforspotify.core.Init;
 import cs10.apps.web.statsforspotify.io.ArtistDirectory;
 import cs10.apps.web.statsforspotify.io.Library;
+import cs10.apps.web.statsforspotify.io.SongFile;
 import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
 import cs10.apps.web.statsforspotify.model.ranking.SimpleRanking;
 import cs10.apps.web.statsforspotify.service.AutoPlayService;
@@ -34,7 +35,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
-import java.util.Random;
 
 public class StatsFrame extends AppFrame {
     private final AppOptions appOptions;
@@ -150,8 +150,8 @@ public class StatsFrame extends AppFrame {
         else {
             AutoPlayService autoPlayService = new AutoPlayService(bigRanking, apiUtils, autoPlayButton);
             autoPlayButton.addActionListener(e -> {
-                Song s = bigRanking.get(new Random().nextInt(16));
-                if (apiUtils.playThis(s.getId(), true)){
+                SongFile sf = library.getRandomSong();
+                if (apiUtils.playThis(sf.getTrackId(), true)){
                     autoPlayService.setModifyPlayback(true);
                     autoPlayService.execute();
                     playbackService.setCanSkip(false);
@@ -286,6 +286,7 @@ public class StatsFrame extends AppFrame {
                 else model.setRowColor(row, s.getPopularityStatus().getTableUnpairColor());
             }
 
+            apiUtils.getRankingImprover().analyze(s);
             model.addRow(toRow(s));
         }
     }

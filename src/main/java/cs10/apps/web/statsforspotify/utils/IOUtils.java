@@ -4,6 +4,7 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import cs10.apps.desktop.statsforspotify.model.Ranking;
 import cs10.apps.desktop.statsforspotify.model.Song;
 import cs10.apps.web.statsforspotify.app.AppOptions;
+import cs10.apps.web.statsforspotify.io.Library;
 import cs10.apps.web.statsforspotify.model.Artist;
 import cs10.apps.web.statsforspotify.model.BlockedItem;
 import cs10.apps.web.statsforspotify.model.ranking.BigRanking;
@@ -204,22 +205,24 @@ public class IOUtils {
         return result;
     }
 
-    public static List<String> getRelationIds(int rankingCode, int position){
+    public static List<String> getRelationIds(int rankingCode, int position, Library library){
         List<String> result = new ArrayList<>(8);
         List<String> ids = getRankingSongIds(rankingCode, position + 8);
 
         if (position >= 9){
-            result.add(ids.get(position - 9));
-            result.add(ids.get(position - 5));
-            result.add(ids.get(position - 3));
-            result.add(ids.get(position - 2));
+            String id1 = ids.get(position-9);
+            String id2 = ids.get(position-5);
+            String id3 = ids.get(position-3);
+            String id4 = ids.get(position-2);
+            result.add(library.selectBestId(id1, id2, id3, id4));
         }
 
         if (ids.size() == position + 8){
-            result.add(ids.get(position));
-            result.add(ids.get(position + 1));
-            result.add(ids.get(position + 3));
-            result.add(ids.get(position + 7));
+            String id1 = ids.get(position);
+            String id2 = ids.get(position+1);
+            String id3 = ids.get(position+3);
+            String id4 = ids.get(position+7);
+            result.add(library.selectBestId(id1, id2, id3, id4));
         }
 
         return result;

@@ -134,7 +134,7 @@ public class CustomPlayer extends JPanel {
         if (songFile != null){
             previousPop = songFile.getMediumAppearance().getPopularity();
             System.out.println(track.getName() + " normal popularity is " + previousPop);
-            pendingScore = (track.getPopularity() - previousPop);
+            pendingScore = (track.getPopularity() - previousPop + 1);
             peakLabel.changeToPeak();
             //peakLabel.setAverage(average / 3);
             int average = (int) a.getAveragePeak();
@@ -150,7 +150,7 @@ public class CustomPlayer extends JPanel {
         } else {
             peakLabel.setValue(0);
             peakLabel.setReplaceable(true);
-            pendingScore = (track.getPopularity() / 10);
+            pendingScore = (track.getPopularity() / 16);
         }
 
         this.popularityLabel.setOriginalValue(previousPop);
@@ -189,7 +189,7 @@ public class CustomPlayer extends JPanel {
     }
 
     private void checkScore(){
-        if (sessionScore < 0 && sessionScore % 8 == 0) {
+        if (pendingScore < 0 && sessionScore < 0 && sessionScore % 8 == 0) {
             BlockedItem bi = new BlockedItem(currentSongId);
             bi.setTimesUntilUnlock(4);
             sessionScore = 0;
